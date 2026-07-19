@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\BillFoundry.Application\BillFoundry.Application.csproj" />
+    <ProjectReference Include="..\BillFoundry.Domain\BillFoundry.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BillFoundry.Application\BillFoundry.Application.csproj" />
+    <ProjectReference Include="..\BillFoundry.Infrastructure\BillFoundry.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

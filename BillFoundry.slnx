@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BillFoundry.Application/BillFoundry.Application.csproj" />
+    <Project Path="src/BillFoundry.Domain/BillFoundry.Domain.csproj" />
+    <Project Path="src/BillFoundry.Infrastructure/BillFoundry.Infrastructure.csproj" />
+    <Project Path="src/BillFoundry.Web/BillFoundry.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BillFoundry.Application.Tests/BillFoundry.Application.Tests.csproj" />
+    <Project Path="tests/BillFoundry.Domain.Tests/BillFoundry.Domain.Tests.csproj" />
+    <Project Path="tests/BillFoundry.IntegrationTests/BillFoundry.IntegrationTests.csproj" />
+  </Folder>
+</Solution>
