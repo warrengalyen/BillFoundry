@@ -6,14 +6,6 @@ also showing modern professional .NET development practices.
 
 Copyright (C) 2026 Warren Galyen
 
-## Project goals
-
-- Provide a complete, useful Community Edition for freelance invoicing.
-- Demonstrate production-quality .NET architecture, testing, and accessibility.
-- Keep the Community Edition licensed under GNU AGPLv3.
-- Preserve modular boundaries so a separate commercial Pro edition can exist later
-  without collapsing the Community Edition.
-
 ## Technology stack
 
 - .NET 10 LTS
@@ -23,18 +15,6 @@ Copyright (C) 2026 Warren Galyen
 - Entity Framework Core 10
 - SQL Server
 - xUnit
-
-## Current development status
-
-BillFoundry is in **Phase 0: solution foundation**.
-
-The repository now has the modular solution, a professional Blazor application
-shell, EF Core and SQL Server infrastructure (no business entities yet),
-centralized exception handling, structured logging, health checks, licensing,
-and smoke tests.
-
-Authentication, clients, invoices, estimates, payments, and other product
-features are not implemented yet.
 
 ## Getting started
 
