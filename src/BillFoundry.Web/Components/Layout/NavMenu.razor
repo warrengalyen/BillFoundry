@@ -1,0 +1,32 @@
+<header class="app-header">
+    <button type="button"
+            class="nav-toggle"
+            aria-controls="app-sidebar"
+            aria-expanded="@_navOpen"
+            aria-label="@(_navOpen ? "Close navigation" : "Open navigation")"
+            @onclick="ToggleNav">
+        <span class="nav-toggle-bar" aria-hidden="true"></span>
+        <span class="nav-toggle-bar" aria-hidden="true"></span>
+        <span class="nav-toggle-bar" aria-hidden="true"></span>
+    </button>
+    <a class="app-brand" href="/" @onclick="CloseNav">BillFoundry</a>
+    <span class="app-edition">Community</span>
+</header>
+
+@if (_navOpen)
+{
+    <div class="nav-backdrop" @onclick="CloseNav"></div>
+}
+
+<nav id="app-sidebar"
+     class="app-sidebar@(_navOpen ? " is-open" : string.Empty)"
+     aria-label="Primary"
+     @onkeydown="OnNavKeyDown">
+    <ul class="nav-list">
+        <li>
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="CloseNav">
+                Dashboard
+            </NavLink>
+        </li>
+    </ul>
+</nav>
