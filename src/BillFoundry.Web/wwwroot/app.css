@@ -293,6 +293,135 @@ code {
     color: var(--color-danger);
 }
 
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.account-main {
+    max-width: 28rem;
+    margin: 2rem auto 3rem;
+    padding: 0 1.25rem;
+}
+
+.account-panel {
+    max-width: none;
+}
+
+.form-field {
+    margin-bottom: 1rem;
+}
+
+.form-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.form-input,
+.form-field input[type="text"],
+.form-field input[type="password"],
+.form-field input[type="email"] {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font: inherit;
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.form-field-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-field-checkbox label {
+    margin: 0;
+    font-weight: 500;
+}
+
+.form-alert,
+.form-errors {
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
+    border: 1px solid #f0b4b4;
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-footer {
+    margin: 1.25rem 0 0;
+}
+
+.button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.45rem 1.1rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--color-accent);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.button-primary:hover {
+    background: var(--color-accent-hover);
+}
+
+.definition-list {
+    margin: 0 0 1rem;
+}
+
+.definition-list div {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+}
+
+.definition-list dt {
+    font-weight: 600;
+    margin: 0;
+}
+
+.definition-list dd {
+    margin: 0;
+}
+
+.nav-footer {
+    margin-top: auto;
+    padding: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.nav-user {
+    margin: 0 0 0.5rem;
+    padding: 0 0.85rem;
+    color: var(--color-sidebar-muted);
+    font-size: 0.875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-sidebar {
+    display: flex;
+    flex-direction: column;
+}
+
 @media (min-width: 48rem) {
     .nav-toggle,
     .nav-backdrop {

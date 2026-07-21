@@ -22,11 +22,35 @@
      class="app-sidebar@(_navOpen ? " is-open" : string.Empty)"
      aria-label="Primary"
      @onkeydown="OnNavKeyDown">
-    <ul class="nav-list">
-        <li>
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="CloseNav">
-                Dashboard
-            </NavLink>
-        </li>
-    </ul>
+    <AuthorizeView>
+        <Authorized>
+            <ul class="nav-list">
+                <li>
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="CloseNav">
+                        Dashboard
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink class="nav-link" href="Account/Manage" @onclick="CloseNav">
+                        Account
+                    </NavLink>
+                </li>
+            </ul>
+            <div class="nav-footer">
+                <p class="nav-user">@context.User.Identity?.Name</p>
+                <NavLink class="nav-link" href="Account/Logout" @onclick="CloseNav">
+                    Log out
+                </NavLink>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <ul class="nav-list">
+                <li>
+                    <NavLink class="nav-link" href="Account/Login" @onclick="CloseNav">
+                        Log in
+                    </NavLink>
+                </li>
+            </ul>
+        </NotAuthorized>
+    </AuthorizeView>
 </nav>

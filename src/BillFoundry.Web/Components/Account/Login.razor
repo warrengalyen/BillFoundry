@@ -1,0 +1,119 @@
+@page "/Account/Login"
+@attribute [AllowAnonymous]
+@layout AccountLayout
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@inject ILogger<Login> Logger
+
+<PageTitle>Log in - BillFoundry</PageTitle>
+
+<section class="panel account-panel" aria-labelledby="login-heading">
+    <h1 id="login-heading">Log in</h1>
+    <p class="lede">Sign in with your BillFoundry account.</p>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="form-alert" role="alert">@ErrorMessage</div>
+    }
+
+    <EditForm Model="Input" method="post" OnValidSubmit="LoginAsync" FormName="login">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="form-errors" />
+
+        <div class="form-field">
+            <label for="email">Email</label>
+            <InputText id="email"
+                       class="form-input"
+                       @bind-Value="Input.Email"
+                       autocomplete="username"
+                       aria-required="true" />
+            <ValidationMessage For="() => Input.Email" />
+        </div>
+
+        <div class="form-field">
+            <label for="password">Password</label>
+            <InputText id="password"
+                       type="password"
+                       class="form-input"
+                       @bind-Value="Input.Password"
+                       autocomplete="current-password"
+                       aria-required="true" />
+            <ValidationMessage For="() => Input.Password" />
+        </div>
+
+        <div class="form-field form-field-checkbox">
+            <InputCheckbox id="remember-me" @bind-Value="Input.RememberMe" />
+            <label for="remember-me">Remember me</label>
+        </div>
+
+        <button type="submit" class="button-primary">Log in</button>
+    </EditForm>
+
+    <p class="form-footer">
+        <a href="/Account/ForgotPassword">Forgot your password?</a>
+    </p>
+</section>
+
+@code {
+    [SupplyParameterFromForm]
+    private LoginInput Input { get; set; } = null!;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    protected override void OnInitialized() => Input ??= new();
+
+    public async Task LoginAsync()
+    {
+        ApplicationUser? user = await UserManager.FindByEmailAsync(Input.Email);
+        if (user is null)
+        {
+            Logger.LogInformation("A sign-in attempt failed.");
+            ErrorMessage = "Invalid email or password.";
+            return;
+        }
+
+        SignInResult result = await SignInManager.PasswordSignInAsync(
+            user,
+            Input.Password,
+            Input.RememberMe,
+            lockoutOnFailure: true);
+
+        if (result.Succeeded)
+        {
+            Navigation.NavigateTo(LocalUrl.Resolve(ReturnUrl), forceLoad: true);
+            return;
+        }
+
+        if (result.IsLockedOut)
+        {
+            ErrorMessage = "This account is locked. Try again later.";
+            return;
+        }
+
+        if (result.IsNotAllowed)
+        {
+            ErrorMessage = "This account is disabled or is not allowed to sign in.";
+            return;
+        }
+
+        Logger.LogInformation("A sign-in attempt failed.");
+        ErrorMessage = "Invalid email or password.";
+    }
+
+    private sealed class LoginInput
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
+    }
+}

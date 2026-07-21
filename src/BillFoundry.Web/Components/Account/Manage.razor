@@ -1,0 +1,45 @@
+@page "/Account/Manage"
+@attribute [Authorize]
+@inject UserManager<ApplicationUser> UserManager
+@inject ICurrentUser CurrentUser
+
+<PageTitle>Account - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>Account</h1>
+    <p class="lede">Manage your BillFoundry sign-in details.</p>
+</section>
+
+<section class="panel" aria-labelledby="profile-heading">
+    <h2 id="profile-heading">Profile</h2>
+    @if (Account is null)
+    {
+        <p>Your account could not be loaded.</p>
+    }
+    else
+    {
+        <dl class="definition-list">
+            <div>
+                <dt>Email</dt>
+                <dd>@Account.Email</dd>
+            </div>
+            <div>
+                <dt>Status</dt>
+                <dd>@(Account.IsDisabled ? "Disabled" : "Active")</dd>
+            </div>
+        </dl>
+        <p><a href="/Account/Manage/ChangePassword">Change password</a></p>
+    }
+</section>
+
+@code {
+    private ApplicationUser? Account { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentUser.UserId is Guid userId)
+        {
+            Account = await UserManager.FindByIdAsync(userId.ToString());
+        }
+    }
+}

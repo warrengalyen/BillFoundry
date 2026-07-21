@@ -1,0 +1,23 @@
+@page "/Account/Logout"
+@attribute [Authorize]
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Log out - BillFoundry</PageTitle>
+
+<section class="panel" aria-labelledby="logout-heading">
+    <h1 id="logout-heading">Log out</h1>
+    <p>You are about to end your BillFoundry session.</p>
+
+    <EditForm Model="this" method="post" OnValidSubmit="LogoutAsync" FormName="logout">
+        <button type="submit" class="button-primary">Log out</button>
+    </EditForm>
+</section>
+
+@code {
+    public async Task LogoutAsync()
+    {
+        await SignInManager.SignOutAsync();
+        Navigation.NavigateTo("/Account/Login", forceLoad: true);
+    }
+}
