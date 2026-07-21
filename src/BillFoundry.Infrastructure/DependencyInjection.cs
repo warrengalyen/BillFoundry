@@ -1,5 +1,9 @@
 using BillFoundry.Application.Configuration;
+using BillFoundry.Application.Notifications;
+using BillFoundry.Infrastructure.Identity;
+using BillFoundry.Infrastructure.Notifications;
 using BillFoundry.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +36,7 @@ public static class DependencyInjection
                 $"Connection string '{DatabaseOptions.ConnectionStringName}' is not configured.");
         }
 
+        services.AddScoped<AuditableInterceptor>();
         services.AddDbContext<BillFoundryDbContext>((serviceProvider, options) =>
         {
             var resolvedConnectionString = configuration.GetConnectionString(DatabaseOptions.ConnectionStringName);
@@ -42,6 +47,7 @@ public static class DependencyInjection
             }
 
             var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+            options.AddInterceptors(serviceProvider.GetRequiredService<AuditableInterceptor>());
             options.UseSqlServer(
                 resolvedConnectionString,
                 sqlServer =>
@@ -51,10 +57,37 @@ public static class DependencyInjection
                 });
         });
 
+        services.AddIdentityCore<ApplicationUser>(options => ConfigureIdentity(options))
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<BillFoundryDbContext>()
+            .AddSignInManager<BillFoundrySignInManager>()
+            .AddDefaultTokenProviders();
+
+        services.Configure<IdentityOptions>(configuration.GetSection("Identity"));
+
+        services.AddScoped<IAccountNotificationService, LoggingAccountNotificationService>();
+        services.AddScoped<IEmailSender<ApplicationUser>, IdentityAccountEmailSender>();
+        services.AddHostedService<IdentitySeedHostedService>();
+
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
             .AddDbContextCheck<BillFoundryDbContext>("database", tags: ["ready"]);
 
         return services;
+    }
+
+    private static void ConfigureIdentity(IdentityOptions options)
+    {
+        options.User.RequireUniqueEmail = true;
+        options.SignIn.RequireConfirmedAccount = false;
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        options.Password.RequiredLength = 12;
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Password.RequiredUniqueChars = 1;
     }
 }
