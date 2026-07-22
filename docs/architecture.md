@@ -47,12 +47,17 @@ application services.
 EF Core is used directly. Repository abstractions over `DbContext` are not
 introduced unless a concrete requirement appears.
 
-`BillFoundryDbContext` currently has no business entity mappings. Configurations
-are applied from the Infrastructure assembly so future entity configurations can
-be added as explicit, readable classes.
+`BillFoundryDbContext` is an Identity `DbContext` (`ApplicationUser` and
+`IdentityRole<Guid>`). Configurations are applied from the Infrastructure
+assembly. The initial Identity schema is the `AddIdentity` EF Core migration.
 
-Migrations are not created in Phase 0. When they exist, they will live with the
-Infrastructure project, using Web as the startup project.
+Migrations live in Infrastructure. Generate and apply them with Web as the
+startup project.
+
+```bash
+dotnet ef migrations add MigrationName --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
+dotnet ef database update --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
+```
 
 ## Configuration and time
 
@@ -62,24 +67,27 @@ The SQL Server connection string uses the standard
 
 Application code should use `TimeProvider` rather than `DateTime.Now` or
 `DateTime.UtcNow`. `TimeProvider.System` is registered in Application DI.
+`ICurrentUser` is the Application identity abstraction; the Web host supplies the
+HTTP implementation. See [security.md](security.md).
 
 ## Hosting concerns
 
 `BillFoundry.Web` is the composition root. `Program.cs` registers Application
-and Infrastructure services, Razor components with Interactive Server support,
-ProblemDetails, a centralized `IExceptionHandler`, logging, and health checks.
+and Infrastructure services, Identity cookies, Razor components with Interactive
+Server support, ProblemDetails, a centralized `IExceptionHandler`, logging, and
+health checks.
 
-- `/health` is a liveness probe and does not require SQL Server.
-- `/health/ready` includes an EF Core database check.
+- `/health` is a liveness probe, allows anonymous access, and does not require SQL Server.
+- `/health/ready` includes an EF Core database check and allows anonymous access.
 
-Interactive Server is enabled per component, not globally, so later Identity
-pages can remain static SSR. The shell navigation is the interactive island
-needed for mobile menu behavior.
+Interactive Server is enabled per component, not globally. Identity account pages
+use static SSR. The shell navigation is interactive so the mobile menu can work.
+
+Application pages require authentication unless marked `[AllowAnonymous]`.
 
 ## Testing
 
-- Domain and Application tests cover rules and application services.
+- Domain and Application tests cover rules, identity abstractions, and authorization policies.
 - Integration tests use `WebApplicationFactory` against the Web host.
-
-Phase 0 includes smoke tests only. Business-rule coverage will land with the
-features that introduce those rules.
+- Authentication tests disable development identity seeding and do not require SQL Server
+  except when a test explicitly exercises the database.

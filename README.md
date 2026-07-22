@@ -14,6 +14,7 @@ Copyright (C) 2026 Warren Galyen
 - Blazor Web App with Interactive Server rendering
 - Entity Framework Core 10
 - SQL Server
+- ASP.NET Core Identity
 - xUnit
 
 ## Getting started
@@ -23,8 +24,9 @@ Copyright (C) 2026 Warren Galyen
 - .NET 10 SDK (see `global.json`)
 - SQL Server LocalDB, or another SQL Server instance, for database connectivity
 
-LocalDB is optional for browsing the UI and for the `/health` liveness check.
-The `/health/ready` endpoint requires a reachable SQL Server.
+The `/health` liveness check does not require SQL Server. Signing in and the
+rest of the application require a configured SQL Server database. The
+`/health/ready` endpoint also requires a reachable database.
 
 ### Build
 
@@ -67,6 +69,7 @@ See [docs/development.md](docs/development.md) for more detail.
 
 - [Architecture](docs/architecture.md)
 - [Development](docs/development.md)
+- [Security](docs/security.md)
 
 ## License
 

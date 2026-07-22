@@ -76,24 +76,48 @@ Production (non-Development) startup fails if
 
 ## Database
 
-EF Core is registered against SQL Server through `BillFoundryDbContext`. There
-are no business entities or migrations yet.
-
-When migrations are introduced:
+EF Core is registered against SQL Server through `BillFoundryDbContext`, which
+includes ASP.NET Core Identity. Apply migrations before first sign-in:
 
 ```bash
 dotnet ef migrations add MigrationName --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
 dotnet ef database update --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
 ```
 
-The `dotnet-ef` tool is not required for Phase 0.
+The Web project references `Microsoft.EntityFrameworkCore.Design` so the EF tools
+can use it as the startup project.
+
+## Identity seed (Development)
+
+`appsettings.Development.json` can enable `IdentitySeed` to create the
+Administrator and User roles plus local demo accounts. Those passwords are
+development placeholders. Override them with User Secrets if you prefer not to
+use the committed Development values, and never use them in production.
+
+Seeding runs only when `IdentitySeed:Enabled` is true **and** the environment is
+Development. If SQL Server is unavailable, seed failure is logged and startup
+continues.
+
+```bash
+dotnet user-secrets set "IdentitySeed:AdministratorPassword" "YOUR_DEV_PASSWORD" --project src/BillFoundry.Web
+dotnet user-secrets set "IdentitySeed:UserPassword" "YOUR_DEV_PASSWORD" --project src/BillFoundry.Web
+```
+
+## Demo Mode
+
+`DemoMode:Enabled` defaults to false. `IDemoMode` and the `NotDemoMode` policy
+are available for later features. They do not yet restrict application writes.
+
+See [security.md](security.md) for authentication, authorization, and account
+notification details.
 
 ## Health checks
 
 - `GET /health` — liveness. Does not contact SQL Server.
 - `GET /health/ready` — readiness, including an EF Core database check.
 
-Smoke tests use `/health` so they can run without a database.
+Smoke tests use `/health` so they can run without a database. Unauthenticated
+requests to application pages should redirect to `/Account/Login`.
 
 ## Logging and errors
 
