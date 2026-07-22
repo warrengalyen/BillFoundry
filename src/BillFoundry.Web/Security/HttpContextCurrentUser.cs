@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using BillFoundry.Application.Security;
 using Microsoft.AspNetCore.Http;
 
@@ -15,6 +16,8 @@ internal sealed class HttpContextCurrentUser(IHttpContextAccessor httpContextAcc
     public string? Email => Inner.Email;
 
     public bool IsAdministrator => Inner.IsAdministrator;
+
+    public ClaimsPrincipal Principal => Inner.Principal;
 
     public bool IsInRole(string role) => Inner.IsInRole(role);
 }

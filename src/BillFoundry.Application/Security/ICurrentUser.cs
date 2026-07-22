@@ -1,3 +1,5 @@
+using System.Security.Claims;
+
 namespace BillFoundry.Application.Security;
 
 public interface ICurrentUser
@@ -9,6 +11,8 @@ public interface ICurrentUser
     string? Email { get; }
 
     bool IsAdministrator { get; }
+
+    ClaimsPrincipal Principal { get; }
 
     bool IsInRole(string role);
 }

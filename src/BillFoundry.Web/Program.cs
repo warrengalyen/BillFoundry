@@ -3,6 +3,7 @@ using BillFoundry.Application.Security;
 using BillFoundry.Infrastructure;
 using BillFoundry.Web.Components;
 using BillFoundry.Web.Hosting;
+using BillFoundry.Web.Organizations;
 using BillFoundry.Web.Security;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -38,6 +39,11 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.Configure<Microsoft.AspNetCore.SignalR.HubOptions>(options =>
+{
+    options.MaximumReceiveMessageSize = 2 * 1024 * 1024;
+});
+
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
@@ -59,6 +65,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapOrganizationLogo();
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {

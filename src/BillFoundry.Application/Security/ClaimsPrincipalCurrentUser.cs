@@ -22,6 +22,8 @@ public sealed class ClaimsPrincipalCurrentUser : ICurrentUser
 
     public bool IsAdministrator => IsInRole(AppRoles.Administrator);
 
+    public ClaimsPrincipal Principal => _principal;
+
     public bool IsInRole(string role)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(role);

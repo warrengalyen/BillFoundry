@@ -1,3 +1,5 @@
+using System.Security.Claims;
+
 namespace BillFoundry.Application.Security;
 
 public sealed class UnauthenticatedCurrentUser : ICurrentUser
@@ -9,6 +11,8 @@ public sealed class UnauthenticatedCurrentUser : ICurrentUser
     public string? Email => null;
 
     public bool IsAdministrator => false;
+
+    public ClaimsPrincipal Principal { get; } = new();
 
     public bool IsInRole(string role)
     {

@@ -1,8 +1,11 @@
 using BillFoundry.Application.Configuration;
 using BillFoundry.Application.Notifications;
+using BillFoundry.Application.Organizations;
 using BillFoundry.Infrastructure.Identity;
 using BillFoundry.Infrastructure.Notifications;
+using BillFoundry.Infrastructure.Organizations;
 using BillFoundry.Infrastructure.Persistence;
+using BillFoundry.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -65,8 +68,15 @@ public static class DependencyInjection
 
         services.Configure<IdentityOptions>(configuration.GetSection("Identity"));
 
+        services.AddOptions<OrganizationLogoStorageOptions>()
+            .Bind(configuration.GetSection(OrganizationLogoStorageOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddScoped<IAccountNotificationService, LoggingAccountNotificationService>();
         services.AddScoped<IEmailSender<ApplicationUser>, IdentityAccountEmailSender>();
+        services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
+        services.AddSingleton<IOrganizationLogoStore, FileSystemOrganizationLogoStore>();
         services.AddHostedService<IdentitySeedHostedService>();
 
         services.AddHealthChecks()

@@ -5,6 +5,7 @@ namespace BillFoundry.Application.Security;
 public static class AuthorizationPolicies
 {
     public const string Administrator = "Administrator";
+    public const string ManageOrganizationSettings = "ManageOrganizationSettings";
     public const string NotDemoMode = "NotDemoMode";
 
     public static void Configure(AuthorizationOptions options)
@@ -13,6 +14,10 @@ public static class AuthorizationPolicies
 
         options.AddPolicy(
             Administrator,
+            policy => policy.RequireAuthenticatedUser().RequireRole(Domain.Identity.AppRoles.Administrator));
+
+        options.AddPolicy(
+            ManageOrganizationSettings,
             policy => policy.RequireAuthenticatedUser().RequireRole(Domain.Identity.AppRoles.Administrator));
 
         options.AddPolicy(
