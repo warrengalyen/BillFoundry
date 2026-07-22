@@ -1,0 +1,202 @@
+@page "/Settings/Organization"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageOrganizationSettings)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Organizations
+@inject IOrganizationSettingsService Settings
+@inject NavigationManager Navigation
+
+<PageTitle>Organization - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>Organization</h1>
+    <p class="lede">Business details used on invoices and estimates for this installation.</p>
+</section>
+
+@if (!string.IsNullOrEmpty(StatusMessage))
+{
+    <div class="form-status" role="status">@StatusMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+@if (Errors.Count > 0)
+{
+    <div class="form-errors" role="alert">
+        <p>Please correct the following:</p>
+        <ul>
+            @foreach (string error in Errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+<section class="panel panel-wide" aria-labelledby="profile-heading">
+    <h2 id="profile-heading" class="visually-hidden">Organization profile</h2>
+
+    <EditForm Model="Input" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="form-errors" />
+
+        <fieldset class="form-fieldset">
+            <legend>Business identity</legend>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="legal-name">Legal name</label>
+                    <InputText id="legal-name" class="form-input" @bind-Value="Input.LegalName" autocomplete="organization" aria-required="true" />
+                    <ValidationMessage For="() => Input.LegalName" />
+                </div>
+                <div class="form-field">
+                    <label for="display-name">Display name</label>
+                    <InputText id="display-name" class="form-input" @bind-Value="Input.DisplayName" aria-required="true" />
+                    <ValidationMessage For="() => Input.DisplayName" />
+                    <p class="form-hint">Shown to clients when it differs from the legal name.</p>
+                </div>
+                <div class="form-field">
+                    <label for="tax-identifier">Tax identifier</label>
+                    <InputText id="tax-identifier" class="form-input" @bind-Value="Input.TaxIdentifier" />
+                    <ValidationMessage For="() => Input.TaxIdentifier" />
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-fieldset">
+            <legend>Mailing address</legend>
+            <div class="form-field">
+                <label for="address-line1">Address line 1</label>
+                <InputText id="address-line1" class="form-input" @bind-Value="Input.AddressLine1" autocomplete="address-line1" aria-required="true" />
+                <ValidationMessage For="() => Input.AddressLine1" />
+            </div>
+            <div class="form-field">
+                <label for="address-line2">Address line 2</label>
+                <InputText id="address-line2" class="form-input" @bind-Value="Input.AddressLine2" autocomplete="address-line2" />
+                <ValidationMessage For="() => Input.AddressLine2" />
+            </div>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="city">City</label>
+                    <InputText id="city" class="form-input" @bind-Value="Input.City" autocomplete="address-level2" aria-required="true" />
+                    <ValidationMessage For="() => Input.City" />
+                </div>
+                <div class="form-field">
+                    <label for="region">State or province</label>
+                    <InputText id="region" class="form-input" @bind-Value="Input.Region" autocomplete="address-level1" />
+                    <ValidationMessage For="() => Input.Region" />
+                </div>
+                <div class="form-field">
+                    <label for="postal-code">Postal code</label>
+                    <InputText id="postal-code" class="form-input" @bind-Value="Input.PostalCode" autocomplete="postal-code" />
+                    <ValidationMessage For="() => Input.PostalCode" />
+                </div>
+                <div class="form-field">
+                    <label for="country">Country</label>
+                    <InputText id="country" class="form-input" @bind-Value="Input.Country" autocomplete="country-name" aria-required="true" />
+                    <ValidationMessage For="() => Input.Country" />
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-fieldset">
+            <legend>Contact</legend>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="org-email">Email</label>
+                    <InputText id="org-email" class="form-input" type="email" @bind-Value="Input.Email" autocomplete="email" />
+                    <ValidationMessage For="() => Input.Email" />
+                </div>
+                <div class="form-field">
+                    <label for="org-phone">Phone</label>
+                    <InputText id="org-phone" class="form-input" type="tel" @bind-Value="Input.Phone" autocomplete="tel" />
+                    <ValidationMessage For="() => Input.Phone" />
+                </div>
+                <div class="form-field">
+                    <label for="org-website">Website</label>
+                    <InputText id="org-website" class="form-input" type="url" @bind-Value="Input.Website" autocomplete="url" />
+                    <ValidationMessage For="() => Input.Website" />
+                    <p class="form-hint">Must be an http or https URL.</p>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-fieldset">
+            <legend>Invoice defaults</legend>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="currency">Default currency</label>
+                    <InputSelect id="currency" class="form-input" @bind-Value="Input.DefaultCurrency" aria-required="true">
+                        @foreach (string currency in SupportedCurrencies)
+                        {
+                            <option value="@currency">@currency</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Input.DefaultCurrency" />
+                </div>
+                <div class="form-field">
+                    <label for="payment-terms">Default payment terms (days)</label>
+                    <InputNumber id="payment-terms" class="form-input" @bind-Value="Input.DefaultPaymentTermsDays" aria-required="true" />
+                    <ValidationMessage For="() => Input.DefaultPaymentTermsDays" />
+                    <p class="form-hint">Use 0 for due on receipt. Maximum 365 days.</p>
+                </div>
+                <div class="form-field">
+                    <label for="invoice-prefix">Invoice prefix</label>
+                    <InputText id="invoice-prefix" class="form-input" @bind-Value="Input.DefaultInvoicePrefix" aria-required="true" />
+                    <ValidationMessage For="() => Input.DefaultInvoicePrefix" />
+                </div>
+                <div class="form-field">
+                    <label for="estimate-prefix">Estimate prefix</label>
+                    <InputText id="estimate-prefix" class="form-input" @bind-Value="Input.DefaultEstimatePrefix" aria-required="true" />
+                    <ValidationMessage For="() => Input.DefaultEstimatePrefix" />
+                </div>
+            </div>
+            <div class="form-field">
+                <label for="invoice-notes">Default invoice notes</label>
+                <InputTextArea id="invoice-notes" class="form-input" @bind-Value="Input.DefaultInvoiceNotes" />
+                <ValidationMessage For="() => Input.DefaultInvoiceNotes" />
+            </div>
+            <div class="form-field">
+                <label for="payment-instructions">Default payment instructions</label>
+                <InputTextArea id="payment-instructions" class="form-input" @bind-Value="Input.DefaultPaymentInstructions" />
+                <ValidationMessage For="() => Input.DefaultPaymentInstructions" />
+            </div>
+        </fieldset>
+
+        <button type="submit" class="button-primary">Save organization</button>
+    </EditForm>
+</section>
+
+<section class="panel panel-wide" aria-labelledby="logo-heading">
+    <h2 id="logo-heading">Logo</h2>
+    <p class="lede">PNG, JPEG, or WebP. Maximum @OrganizationLogoRules.SizeLimitDescription. The uploaded file name is not stored.</p>
+
+    @if (HasLogo)
+    {
+        <img class="logo-preview"
+             src="@LogoUrl"
+             alt="Current organization logo"
+             width="192"
+             height="128" />
+    }
+
+    <div class="form-field">
+        <label for="logo-file">Upload a new logo</label>
+        <InputFile id="logo-file"
+                   accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
+                   OnChange="OnLogoSelected" />
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="button-primary" @onclick="UploadLogoAsync" disabled="@(_pendingLogo is null)">
+            Upload logo
+        </button>
+        @if (HasLogo)
+        {
+            <button type="button" class="button-secondary" @onclick="RemoveLogoAsync">
+                Remove logo
+            </button>
+        }
+    </div>
+</section>

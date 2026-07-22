@@ -328,7 +328,12 @@ code {
 .form-input,
 .form-field input[type="text"],
 .form-field input[type="password"],
-.form-field input[type="email"] {
+.form-field input[type="email"],
+.form-field input[type="tel"],
+.form-field input[type="url"],
+.form-field input[type="number"],
+.form-field select,
+.form-field textarea {
     width: 100%;
     padding: 0.55rem 0.7rem;
     border: 1px solid var(--color-border);
@@ -337,6 +342,93 @@ code {
     background: var(--color-surface);
     color: var(--color-text);
 }
+
+.form-field textarea {
+    min-height: 6rem;
+    resize: vertical;
+}
+
+.form-hint {
+    margin: 0.35rem 0 0;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+}
+
+.form-grid {
+    display: grid;
+    gap: 0 1rem;
+}
+
+.form-fieldset {
+    margin: 0 0 1.5rem;
+    padding: 0;
+    border: 0;
+}
+
+.form-fieldset legend {
+    font-size: 1.125rem;
+    font-weight: 650;
+    margin-bottom: 0.85rem;
+    padding: 0;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.45rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.button-secondary:hover {
+    background: var(--color-bg);
+}
+
+.panel-wide {
+    max-width: 56rem;
+}
+
+.logo-preview {
+    display: block;
+    max-width: 12rem;
+    max-height: 8rem;
+    width: auto;
+    height: auto;
+    margin: 0 0 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+}
+
+.form-status {
+    color: var(--color-text);
+    background: #e7f6ec;
+    border: 1px solid #b7e0c2;
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 40rem) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 
 .form-field-checkbox {
     display: flex;

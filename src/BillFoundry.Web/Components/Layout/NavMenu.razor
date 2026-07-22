@@ -30,6 +30,15 @@
                         Dashboard
                     </NavLink>
                 </li>
+                <AuthorizeView Policy="@AuthorizationPolicies.ManageOrganizationSettings">
+                    <Authorized Context="organizationAccess">
+                        <li>
+                            <NavLink class="nav-link" href="Settings/Organization" @onclick="CloseNav">
+                                Organization
+                            </NavLink>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
                 <li>
                     <NavLink class="nav-link" href="Account/Manage" @onclick="CloseNav">
                         Account
