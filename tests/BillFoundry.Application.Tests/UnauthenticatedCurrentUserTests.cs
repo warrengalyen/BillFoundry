@@ -15,5 +15,6 @@ public sealed class UnauthenticatedCurrentUserTests
         Assert.Null(currentUser.Email);
         Assert.False(currentUser.IsAdministrator);
         Assert.False(currentUser.IsInRole(AppRoles.User));
+        Assert.False(currentUser.Principal.Identity?.IsAuthenticated == true);
     }
 }

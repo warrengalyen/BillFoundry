@@ -71,6 +71,30 @@ public sealed class AuthorizationPolicyTests
         Assert.False(result.Succeeded);
     }
 
+    [Fact]
+    public async Task ManageOrganizationSettings_policy_allows_administrator_role()
+    {
+        await using ServiceProvider provider = CreateProvider(demoEnabled: false);
+        IAuthorizationService authorization = provider.GetRequiredService<IAuthorizationService>();
+        ClaimsPrincipal user = CreateUser(AppRoles.Administrator);
+
+        AuthorizationResult result = await authorization.AuthorizeAsync(user, AuthorizationPolicies.ManageOrganizationSettings);
+
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact]
+    public async Task ManageOrganizationSettings_policy_denies_user_role()
+    {
+        await using ServiceProvider provider = CreateProvider(demoEnabled: false);
+        IAuthorizationService authorization = provider.GetRequiredService<IAuthorizationService>();
+        ClaimsPrincipal user = CreateUser(AppRoles.User);
+
+        AuthorizationResult result = await authorization.AuthorizeAsync(user, AuthorizationPolicies.ManageOrganizationSettings);
+
+        Assert.False(result.Succeeded);
+    }
+
     private static ServiceProvider CreateProvider(bool demoEnabled)
     {
         var configuration = new ConfigurationBuilder()

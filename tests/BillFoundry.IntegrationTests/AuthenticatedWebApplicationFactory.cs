@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BillFoundry.IntegrationTests;
 
-public sealed class AuthenticatedWebApplicationFactory : BillFoundryWebApplicationFactory
+public class AuthenticatedWebApplicationFactory : BillFoundryWebApplicationFactory
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

@@ -26,6 +26,7 @@ public sealed class ClaimsPrincipalCurrentUserTests
         Assert.True(currentUser.IsAdministrator);
         Assert.True(currentUser.IsInRole(AppRoles.Administrator));
         Assert.False(currentUser.IsInRole(AppRoles.User));
+        Assert.Same(principal, currentUser.Principal);
     }
 
     [Fact]
@@ -38,5 +39,6 @@ public sealed class ClaimsPrincipalCurrentUserTests
         Assert.Null(currentUser.Email);
         Assert.False(currentUser.IsAdministrator);
         Assert.False(currentUser.IsInRole(AppRoles.Administrator));
+        Assert.False(currentUser.Principal.Identity?.IsAuthenticated == true);
     }
 }
