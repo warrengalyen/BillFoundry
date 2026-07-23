@@ -48,8 +48,22 @@ EF Core is used directly. Repository abstractions over `DbContext` are not
 introduced unless a concrete requirement appears.
 
 `BillFoundryDbContext` is an Identity `DbContext` (`ApplicationUser` and
-`IdentityRole<Guid>`). Configurations are applied from the Infrastructure
-assembly. The initial Identity schema is the `AddIdentity` EF Core migration.
+`IdentityRole<Guid>`). It also stores the Community Edition organization
+profile. Configurations are applied from the Infrastructure assembly.
+The Identity schema is the `AddIdentity` migration. Organization columns are
+the `AddOrganization` migration.
+
+Community Edition has one organization per installation. The `Organization`
+entity uses a well-known singleton identifier. There is no tenant identifier
+and no multi-organization support.
+
+Postal address, currency, document prefixes, and logo metadata are modeled as
+value objects. Logo bytes are not stored in SQL Server; metadata points at an
+`IOrganizationLogoStore` implementation. The default store writes generated
+file names under `OrganizationLogoStorage:RootPath` (relative paths are
+resolved from the web content root). Submitted upload names are never used.
+
+Organization updates use SQL Server rowversion optimistic concurrency.
 
 Migrations live in Infrastructure. Generate and apply them with Web as the
 startup project.
@@ -87,7 +101,9 @@ Application pages require authentication unless marked `[AllowAnonymous]`.
 
 ## Testing
 
-- Domain and Application tests cover rules, identity abstractions, and authorization policies.
+- Domain and Application tests cover rules, identity abstractions, authorization policies,
+  organization validation, and logo content inspection.
 - Integration tests use `WebApplicationFactory` against the Web host.
 - Authentication tests disable development identity seeding and do not require SQL Server
   except when a test explicitly exercises the database.
+- Organization persistence, concurrency, and logo storage tests require SQL Server LocalDB.

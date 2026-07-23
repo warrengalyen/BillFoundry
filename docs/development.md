@@ -77,7 +77,8 @@ Production (non-Development) startup fails if
 ## Database
 
 EF Core is registered against SQL Server through `BillFoundryDbContext`, which
-includes ASP.NET Core Identity. Apply migrations before first sign-in:
+includes ASP.NET Core Identity and the installation organization profile. Apply
+migrations before first sign-in:
 
 ```bash
 dotnet ef migrations add MigrationName --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
@@ -86,6 +87,10 @@ dotnet ef database update --project src/BillFoundry.Infrastructure --startup-pro
 
 The Web project references `Microsoft.EntityFrameworkCore.Design` so the EF tools
 can use it as the startup project.
+
+Relative `OrganizationLogoStorage:RootPath` values are resolved from the Web
+content root. The default is `App_Data/organization-logos`. That directory is
+gitignored. Do not place uploaded logos in `wwwroot`.
 
 ## Identity seed (Development)
 
@@ -137,4 +142,6 @@ keyboard access, and visible focus. The shell includes a skip-to-content link.
 
 Test projects live under `tests/`. Integration tests reference the Web project
 and use `Microsoft.AspNetCore.Mvc.Testing`. They should not require SQL Server
-unless they specifically exercise database behavior.
+unless they specifically exercise database behavior. Organization persistence,
+concurrency, and logo-upload tests create a LocalDB database named
+`BillFoundry_IT_{guid}` and drop it when the fixture completes.

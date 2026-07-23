@@ -56,11 +56,31 @@ Policies in `AuthorizationPolicies` should be used when a capability is more
 than a raw role check:
 
 - `Administrator` — authenticated user in the Administrator role
+- `ManageOrganizationSettings` — administrators may read and change the
+  installation organization profile, including logo upload and removal
 - `NotDemoMode` — succeeds only when Demo Mode is disabled; reserved for later
   mutation restrictions
 
 Do not authorize privileged work only in Razor. Application services and
 endpoints must demand the same policies or equivalent server-side checks.
+
+`IOrganizationSettingsService` authorizes `ManageOrganizationSettings` before
+loading or mutating the organization. The Organization settings page and
+`/media/organization-logo` endpoint require the same policy.
+
+## Organization logo uploads
+
+Logo uploads are accepted only after administrator authorization. The
+application:
+
+- Allows PNG, JPEG, and WebP, verified by file signatures rather than the
+  submitted name or content type
+- Rejects payloads larger than 1 MB
+- Stores a generated file name and never trusts the uploaded file name
+- Rejects stored names that contain path segments or `..`
+- Serves the current logo from `/media/organization-logo` only to administrators
+
+Logo files live outside `wwwroot` under the configured storage root.
 
 ## Current user
 
@@ -87,7 +107,7 @@ Entities that implement `IAuditable` receive:
 - `CreatedByUserId` / `UpdatedByUserId` from `ICurrentUser`
 
 `AuditableInterceptor` applies those values in `SaveChanges`. `ApplicationUser`
-implements the pattern.
+and `Organization` implement the pattern.
 
 ## Development seeding
 
