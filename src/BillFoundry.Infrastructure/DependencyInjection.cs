@@ -1,6 +1,8 @@
+using BillFoundry.Application.Clients;
 using BillFoundry.Application.Configuration;
 using BillFoundry.Application.Notifications;
 using BillFoundry.Application.Organizations;
+using BillFoundry.Infrastructure.Clients;
 using BillFoundry.Infrastructure.Identity;
 using BillFoundry.Infrastructure.Notifications;
 using BillFoundry.Infrastructure.Organizations;
@@ -76,6 +78,7 @@ public static class DependencyInjection
         services.AddScoped<IAccountNotificationService, LoggingAccountNotificationService>();
         services.AddScoped<IEmailSender<ApplicationUser>, IdentityAccountEmailSender>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
+        services.AddScoped<IClientService, ClientService>();
         services.AddSingleton<IOrganizationLogoStore, FileSystemOrganizationLogoStore>();
         services.AddHostedService<IdentitySeedHostedService>();
 

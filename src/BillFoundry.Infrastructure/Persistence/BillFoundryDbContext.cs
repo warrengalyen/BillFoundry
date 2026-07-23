@@ -1,3 +1,4 @@
+using BillFoundry.Domain.Clients;
 using BillFoundry.Domain.Organizations;
 using BillFoundry.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +11,10 @@ public sealed class BillFoundryDbContext(DbContextOptions<BillFoundryDbContext> 
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<Organization> Organizations => Set<Organization>();
+
+    public DbSet<Client> Clients => Set<Client>();
+
+    public DbSet<ClientContact> ClientContacts => Set<ClientContact>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
