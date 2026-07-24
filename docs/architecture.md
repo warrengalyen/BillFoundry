@@ -51,11 +51,17 @@ introduced unless a concrete requirement appears.
 `IdentityRole<Guid>`). It also stores the Community Edition organization
 profile. Configurations are applied from the Infrastructure assembly.
 The Identity schema is the `AddIdentity` migration. Organization columns are
-the `AddOrganization` migration.
+the `AddOrganization` migration. Clients and contacts are the `AddClients`
+migration.
 
 Community Edition has one organization per installation. The `Organization`
 entity uses a well-known singleton identifier. There is no tenant identifier
 and no multi-organization support.
+
+Clients belong to that single installation. They are deactivated rather than
+permanently deleted so later invoices and other financial records can keep a
+stable reference. Contacts belong to a client. A filtered unique index allows
+at most one primary contact per client.
 
 Postal address, currency, document prefixes, and logo metadata are modeled as
 value objects. Logo bytes are not stored in SQL Server; metadata points at an
@@ -64,6 +70,7 @@ file names under `OrganizationLogoStorage:RootPath` (relative paths are
 resolved from the web content root). Submitted upload names are never used.
 
 Organization updates use SQL Server rowversion optimistic concurrency.
+Client profile and contact changes use the same rowversion token on `Client`.
 
 Migrations live in Infrastructure. Generate and apply them with Web as the
 startup project.
@@ -102,8 +109,8 @@ Application pages require authentication unless marked `[AllowAnonymous]`.
 ## Testing
 
 - Domain and Application tests cover rules, identity abstractions, authorization policies,
-  organization validation, and logo content inspection.
+  organization validation, logo content inspection, and client/contact invariants.
 - Integration tests use `WebApplicationFactory` against the Web host.
 - Authentication tests disable development identity seeding and do not require SQL Server
   except when a test explicitly exercises the database.
-- Organization persistence, concurrency, and logo storage tests require SQL Server LocalDB.
+- Organization and client persistence, concurrency, and constraint tests require SQL Server LocalDB.

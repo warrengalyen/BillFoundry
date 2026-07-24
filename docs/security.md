@@ -58,6 +58,8 @@ than a raw role check:
 - `Administrator` — authenticated user in the Administrator role
 - `ManageOrganizationSettings` — administrators may read and change the
   installation organization profile, including logo upload and removal
+- `ManageClients` — authenticated Administrator or User role may list, create,
+  edit, activate, and deactivate clients and their contacts
 - `NotDemoMode` — succeeds only when Demo Mode is disabled; reserved for later
   mutation restrictions
 
@@ -67,6 +69,9 @@ endpoints must demand the same policies or equivalent server-side checks.
 `IOrganizationSettingsService` authorizes `ManageOrganizationSettings` before
 loading or mutating the organization. The Organization settings page and
 `/media/organization-logo` endpoint require the same policy.
+
+`IClientService` authorizes `ManageClients` before listing or mutating clients.
+Client pages require the same policy. Clients are not permanently deleted.
 
 ## Organization logo uploads
 
@@ -106,8 +111,8 @@ Entities that implement `IAuditable` receive:
 - `CreatedAtUtc` / `UpdatedAtUtc` from `TimeProvider`
 - `CreatedByUserId` / `UpdatedByUserId` from `ICurrentUser`
 
-`AuditableInterceptor` applies those values in `SaveChanges`. `ApplicationUser`
-and `Organization` implement the pattern.
+`AuditableInterceptor` applies those values in `SaveChanges`. `ApplicationUser`,
+`Organization`, `Client`, and `ClientContact` implement the pattern.
 
 ## Development seeding
 

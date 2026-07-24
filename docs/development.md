@@ -77,8 +77,8 @@ Production (non-Development) startup fails if
 ## Database
 
 EF Core is registered against SQL Server through `BillFoundryDbContext`, which
-includes ASP.NET Core Identity and the installation organization profile. Apply
-migrations before first sign-in:
+includes ASP.NET Core Identity, the installation organization profile, and
+clients. Apply migrations before first sign-in:
 
 ```bash
 dotnet ef migrations add MigrationName --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
@@ -142,6 +142,7 @@ keyboard access, and visible focus. The shell includes a skip-to-content link.
 
 Test projects live under `tests/`. Integration tests reference the Web project
 and use `Microsoft.AspNetCore.Mvc.Testing`. They should not require SQL Server
-unless they specifically exercise database behavior. Organization persistence,
-concurrency, and logo-upload tests create a LocalDB database named
-`BillFoundry_IT_{guid}` and drop it when the fixture completes.
+unless they specifically exercise database behavior. Organization and client
+persistence, concurrency, and constraint tests create a LocalDB database named
+`BillFoundry_IT_{guid}` and drop it when the fixture completes. Client lists are
+queried with server-side search, status filtering, sorting, and paging.
