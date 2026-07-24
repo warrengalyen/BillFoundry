@@ -1,0 +1,197 @@
+@page "/Clients/{Id:guid}"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageClients)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Clients
+@inject IClientService Clients
+@inject NavigationManager Navigation
+
+<PageTitle>@(Client?.Name ?? "Client") - BillFoundry</PageTitle>
+
+@if (_loading)
+{
+    <p role="status">Loading client.</p>
+}
+else if (_notFound)
+{
+    <section class="page-header">
+        <h1>Client not found</h1>
+        <p>The client does not exist. <a href="/Clients">Return to clients</a>.</p>
+    </section>
+}
+else if (Client is not null)
+{
+    <section class="page-header page-header-split">
+        <div>
+            <h1>@Client.Name</h1>
+            <p class="lede">
+                <span class="status-badge @(Client.IsActive ? "is-active" : "is-inactive")">
+                    @(Client.IsActive ? "Active" : "Inactive")
+                </span>
+                <span> @Client.Code</span>
+            </p>
+        </div>
+        <div class="form-actions">
+            <a class="button-primary" href="@($"/Clients/{Id}/Edit")">Edit</a>
+            @if (Client.IsActive)
+            {
+                <button type="button" class="button-secondary" @onclick="DeactivateAsync">Deactivate</button>
+            }
+            else
+            {
+                <button type="button" class="button-secondary" @onclick="ActivateAsync">Activate</button>
+            }
+            <a class="button-secondary" href="/Clients">All clients</a>
+        </div>
+    </section>
+
+    @if (!string.IsNullOrEmpty(StatusMessage))
+    {
+        <div class="form-status" role="status">@StatusMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="form-alert" role="alert">@ErrorMessage</div>
+    }
+
+    @if (Errors.Count > 0)
+    {
+        <div class="form-errors" role="alert">
+            <p>Please correct the following:</p>
+            <ul>
+                @foreach (string error in Errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <section class="panel panel-wide" aria-labelledby="profile-heading">
+        <h2 id="profile-heading">Profile</h2>
+        <dl class="definition-list">
+            <div>
+                <dt>Code</dt>
+                <dd>@Client.Code</dd>
+            </div>
+            <div>
+                <dt>Billing email</dt>
+                <dd>@(Client.Email ?? "—")</dd>
+            </div>
+            <div>
+                <dt>Phone</dt>
+                <dd>@(Client.Phone ?? "—")</dd>
+            </div>
+            <div>
+                <dt>Website</dt>
+                <dd>
+                    @if (Client.Website is null)
+                    {
+                        <text>—</text>
+                    }
+                    else
+                    {
+                        <a href="@Client.Website" rel="noopener noreferrer">@Client.Website</a>
+                    }
+                </dd>
+            </div>
+            <div>
+                <dt>Address</dt>
+                <dd>@FormatAddress(Client)</dd>
+            </div>
+            <div>
+                <dt>Notes</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Client.Notes) ? "—" : Client.Notes)</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="panel panel-wide" aria-labelledby="contacts-heading">
+        <h2 id="contacts-heading">Contacts</h2>
+        @if (Client.Contacts.Count == 0)
+        {
+            <p>No contacts have been added for this client.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Client contacts</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Title</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Phone</th>
+                            <th scope="col">Primary</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (ClientContactDto contact in Client.Contacts)
+                        {
+                            <tr>
+                                <td>@contact.Name</td>
+                                <td>@(contact.JobTitle ?? "—")</td>
+                                <td>@(contact.Email ?? "—")</td>
+                                <td>@(contact.Phone ?? "—")</td>
+                                <td>@(contact.IsPrimary ? "Primary" : "—")</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button type="button" class="button-secondary" @onclick="() => BeginEditContact(contact)">Edit</button>
+                                        @if (!contact.IsPrimary)
+                                        {
+                                            <button type="button" class="button-secondary" @onclick="() => SetPrimaryAsync(contact.Id)">Set primary</button>
+                                        }
+                                        <button type="button" class="button-secondary" @onclick="() => RemoveContactAsync(contact.Id)">Remove</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <h3 id="contact-form-heading">@(_editingContactId is null ? "Add contact" : "Edit contact")</h3>
+        <EditForm Model="ContactInput" OnValidSubmit="SaveContactAsync" aria-labelledby="contact-form-heading">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="form-errors" />
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="contact-name">Name</label>
+                    <InputText id="contact-name" class="form-input" @bind-Value="ContactInput.Name" aria-required="true" />
+                    <ValidationMessage For="() => ContactInput.Name" />
+                </div>
+                <div class="form-field">
+                    <label for="contact-title">Job title</label>
+                    <InputText id="contact-title" class="form-input" @bind-Value="ContactInput.JobTitle" />
+                    <ValidationMessage For="() => ContactInput.JobTitle" />
+                </div>
+                <div class="form-field">
+                    <label for="contact-email">Email</label>
+                    <InputText id="contact-email" class="form-input" type="email" @bind-Value="ContactInput.Email" />
+                    <ValidationMessage For="() => ContactInput.Email" />
+                </div>
+                <div class="form-field">
+                    <label for="contact-phone">Phone</label>
+                    <InputText id="contact-phone" class="form-input" type="tel" @bind-Value="ContactInput.Phone" />
+                    <ValidationMessage For="() => ContactInput.Phone" />
+                </div>
+            </div>
+            <div class="form-field form-field-checkbox">
+                <InputCheckbox id="contact-primary" @bind-Value="ContactInput.IsPrimary" />
+                <label for="contact-primary">Primary contact</label>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="button-primary">
+                    @(_editingContactId is null ? "Add contact" : "Save contact")
+                </button>
+                @if (_editingContactId is not null)
+                {
+                    <button type="button" class="button-secondary" @onclick="CancelContactEdit">Cancel</button>
+                }
+            </div>
+        </EditForm>
+    </section>
+}

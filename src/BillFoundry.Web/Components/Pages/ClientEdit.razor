@@ -1,0 +1,64 @@
+@page "/Clients/{Id:guid}/Edit"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageClients)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Clients
+@using BillFoundry.Web.Clients
+@inject IClientService Clients
+@inject NavigationManager Navigation
+
+<PageTitle>Edit client - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>Edit client</h1>
+    <p class="lede">@(ClientName ?? "Update the client profile.")</p>
+</section>
+
+@if (!string.IsNullOrEmpty(StatusMessage))
+{
+    <div class="form-status" role="status">@StatusMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+@if (Errors.Count > 0)
+{
+    <div class="form-errors" role="alert">
+        <p>Please correct the following:</p>
+        <ul>
+            @foreach (string error in Errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (_loading)
+{
+    <p role="status">Loading client.</p>
+}
+else if (_notFound)
+{
+    <section class="panel">
+        <h2>Client not found</h2>
+        <p>The client does not exist. <a href="/Clients">Return to clients</a>.</p>
+    </section>
+}
+else
+{
+    <section class="panel panel-wide" aria-labelledby="client-form-heading">
+        <h2 id="client-form-heading" class="visually-hidden">Client form</h2>
+        <EditForm Model="Input" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="form-errors" />
+            <ClientEditorFields Input="Input" />
+            <div class="form-actions">
+                <button type="submit" class="button-primary">Save client</button>
+                <a class="button-secondary" href="@($"/Clients/{Id}")">Cancel</a>
+            </div>
+        </EditForm>
+    </section>
+}

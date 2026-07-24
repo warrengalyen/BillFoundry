@@ -1,0 +1,45 @@
+@page "/Clients/New"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageClients)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Clients
+@using BillFoundry.Web.Clients
+@inject IClientService Clients
+@inject NavigationManager Navigation
+
+<PageTitle>New client - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>New client</h1>
+    <p class="lede">Add a client to this BillFoundry installation. A client code is assigned if you leave it blank.</p>
+</section>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+@if (Errors.Count > 0)
+{
+    <div class="form-errors" role="alert">
+        <p>Please correct the following:</p>
+        <ul>
+            @foreach (string error in Errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+<section class="panel panel-wide" aria-labelledby="client-form-heading">
+    <h2 id="client-form-heading" class="visually-hidden">Client form</h2>
+    <EditForm Model="Input" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="form-errors" />
+        <ClientEditorFields Input="Input" />
+        <div class="form-actions">
+            <button type="submit" class="button-primary">Create client</button>
+            <a class="button-secondary" href="/Clients">Cancel</a>
+        </div>
+    </EditForm>
+</section>

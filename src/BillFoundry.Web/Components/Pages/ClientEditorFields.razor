@@ -1,0 +1,82 @@
+@using BillFoundry.Web.Clients
+
+<fieldset class="form-fieldset">
+    <legend>Client</legend>
+    <div class="form-grid">
+        <div class="form-field">
+            <label for="client-code">Client code</label>
+            <InputText id="client-code" class="form-input" @bind-Value="Input.Code" />
+            <ValidationMessage For="() => Input.Code" />
+            <p class="form-hint">Leave blank to assign the next code, for example C0001.</p>
+        </div>
+        <div class="form-field">
+            <label for="client-name">Name</label>
+            <InputText id="client-name" class="form-input" @bind-Value="Input.Name" autocomplete="organization" aria-required="true" />
+            <ValidationMessage For="() => Input.Name" />
+        </div>
+        <div class="form-field">
+            <label for="client-email">Billing email</label>
+            <InputText id="client-email" class="form-input" type="email" @bind-Value="Input.Email" autocomplete="email" />
+            <ValidationMessage For="() => Input.Email" />
+        </div>
+        <div class="form-field">
+            <label for="client-phone">Phone</label>
+            <InputText id="client-phone" class="form-input" type="tel" @bind-Value="Input.Phone" autocomplete="tel" />
+            <ValidationMessage For="() => Input.Phone" />
+        </div>
+        <div class="form-field">
+            <label for="client-website">Website</label>
+            <InputText id="client-website" class="form-input" type="url" @bind-Value="Input.Website" autocomplete="url" />
+            <ValidationMessage For="() => Input.Website" />
+        </div>
+    </div>
+</fieldset>
+
+<fieldset class="form-fieldset">
+    <legend>Billing address</legend>
+    <p class="form-hint">Optional. If you enter any address field, include line 1, city, and country.</p>
+    <div class="form-field">
+        <label for="address-line1">Address line 1</label>
+        <InputText id="address-line1" class="form-input" @bind-Value="Input.AddressLine1" autocomplete="address-line1" />
+        <ValidationMessage For="() => Input.AddressLine1" />
+    </div>
+    <div class="form-field">
+        <label for="address-line2">Address line 2</label>
+        <InputText id="address-line2" class="form-input" @bind-Value="Input.AddressLine2" autocomplete="address-line2" />
+        <ValidationMessage For="() => Input.AddressLine2" />
+    </div>
+    <div class="form-grid">
+        <div class="form-field">
+            <label for="city">City</label>
+            <InputText id="city" class="form-input" @bind-Value="Input.City" autocomplete="address-level2" />
+            <ValidationMessage For="() => Input.City" />
+        </div>
+        <div class="form-field">
+            <label for="region">State or province</label>
+            <InputText id="region" class="form-input" @bind-Value="Input.Region" autocomplete="address-level1" />
+            <ValidationMessage For="() => Input.Region" />
+        </div>
+        <div class="form-field">
+            <label for="postal-code">Postal code</label>
+            <InputText id="postal-code" class="form-input" @bind-Value="Input.PostalCode" autocomplete="postal-code" />
+            <ValidationMessage For="() => Input.PostalCode" />
+        </div>
+        <div class="form-field">
+            <label for="country">Country</label>
+            <InputText id="country" class="form-input" @bind-Value="Input.Country" autocomplete="country-name" />
+            <ValidationMessage For="() => Input.Country" />
+        </div>
+    </div>
+</fieldset>
+
+<div class="form-field">
+    <label for="client-notes">Notes</label>
+    <InputTextArea id="client-notes" class="form-input" @bind-Value="Input.Notes" />
+    <ValidationMessage For="() => Input.Notes" />
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public ClientInput Input { get; set; } = default!;
+}

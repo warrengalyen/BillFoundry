@@ -1,0 +1,152 @@
+@page "/Clients"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageClients)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Clients
+@inject IClientService Clients
+@inject NavigationManager Navigation
+
+<PageTitle>Clients - BillFoundry</PageTitle>
+
+<section class="page-header page-header-split">
+    <div>
+        <h1>Clients</h1>
+        <p class="lede">Search, filter, and manage the clients for this installation.</p>
+    </div>
+    <p>
+        <a class="button-primary" href="/Clients/New">New client</a>
+    </p>
+</section>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+<section class="panel panel-wide" aria-labelledby="filter-heading">
+    <h2 id="filter-heading" class="visually-hidden">Client filters</h2>
+    <EditForm Model="Filters" OnValidSubmit="ApplyFiltersAsync" class="filter-bar">
+        <div class="form-field">
+            <label for="client-search">Search</label>
+            <InputText id="client-search"
+                       class="form-input"
+                       @bind-Value="Filters.Search"
+                       placeholder="Name, code, email, phone, or contact" />
+        </div>
+        <div class="form-field">
+            <label for="client-status">Status</label>
+            <InputSelect id="client-status" class="form-input" @bind-Value="Filters.Status">
+                <option value="@ClientStatusFilter.Active">Active</option>
+                <option value="@ClientStatusFilter.Inactive">Inactive</option>
+                <option value="@ClientStatusFilter.All">All</option>
+            </InputSelect>
+        </div>
+        <div class="form-field">
+            <label for="client-page-size">Page size</label>
+            <InputSelect id="client-page-size" class="form-input" @bind-Value="Filters.PageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </InputSelect>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="button-primary">Apply</button>
+        </div>
+    </EditForm>
+</section>
+
+<section class="panel panel-wide"
+         aria-labelledby="results-heading"
+         aria-busy="@(_loading ? "true" : "false")">
+    <div class="results-header">
+        <h2 id="results-heading">Client list</h2>
+        <p class="results-count" aria-live="polite">@ResultsSummary</p>
+    </div>
+
+    @if (_loading)
+    {
+        <p role="status">Loading clients.</p>
+    }
+    else if (Page?.Items.Count == 0)
+    {
+        <p>
+            @if (HasFilters)
+            {
+                <text>No clients match the current search or filters.</text>
+            }
+            else
+            {
+                <text>No clients have been added yet. <a href="/Clients/New">Create a client</a>.</text>
+            }
+        </p>
+    }
+    else if (Page is not null)
+    {
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Clients</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" aria-sort="@AriaSort(ClientSortField.Code)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(ClientSortField.Code)'>
+                                Code @SortIndicator(ClientSortField.Code)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(ClientSortField.Name)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(ClientSortField.Name)'>
+                                Name @SortIndicator(ClientSortField.Name)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(ClientSortField.Email)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(ClientSortField.Email)'>
+                                Email @SortIndicator(ClientSortField.Email)
+                            </button>
+                        </th>
+                        <th scope="col">Primary contact</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" aria-sort="@AriaSort(ClientSortField.CreatedAt)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(ClientSortField.CreatedAt)'>
+                                Created @SortIndicator(ClientSortField.CreatedAt)
+                            </button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (ClientListItemDto client in Page.Items)
+                    {
+                        <tr>
+                            <td><a href="@($"/Clients/{client.Id}")">@client.Code</a></td>
+                            <td><a href="@($"/Clients/{client.Id}")">@client.Name</a></td>
+                            <td>@(client.Email ?? "—")</td>
+                            <td>@(client.PrimaryContactName ?? "—")</td>
+                            <td>
+                                <span class="status-badge @(client.IsActive ? "is-active" : "is-inactive")">
+                                    @(client.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td>@client.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Page.TotalPages > 1)
+        {
+            <nav class="pagination" aria-label="Client pages">
+                <button type="button"
+                        class="button-secondary"
+                        disabled="@(Page.Page <= 1)"
+                        @onclick="PreviousPageAsync">
+                    Previous
+                </button>
+                <p>Page @Page.Page of @Page.TotalPages</p>
+                <button type="button"
+                        class="button-secondary"
+                        disabled="@(Page.Page >= Page.TotalPages)"
+                        @onclick="NextPageAsync">
+                    Next
+                </button>
+            </nav>
+        }
+    }
+</section>
