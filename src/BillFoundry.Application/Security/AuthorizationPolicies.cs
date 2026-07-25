@@ -7,6 +7,7 @@ public static class AuthorizationPolicies
     public const string Administrator = "Administrator";
     public const string ManageOrganizationSettings = "ManageOrganizationSettings";
     public const string ManageClients = "ManageClients";
+    public const string ManageCatalog = "ManageCatalog";
     public const string NotDemoMode = "NotDemoMode";
 
     public static void Configure(AuthorizationOptions options)
@@ -23,6 +24,12 @@ public static class AuthorizationPolicies
 
         options.AddPolicy(
             ManageClients,
+            policy => policy.RequireAuthenticatedUser().RequireRole(
+                Domain.Identity.AppRoles.Administrator,
+                Domain.Identity.AppRoles.User));
+
+        options.AddPolicy(
+            ManageCatalog,
             policy => policy.RequireAuthenticatedUser().RequireRole(
                 Domain.Identity.AppRoles.Administrator,
                 Domain.Identity.AppRoles.User));
