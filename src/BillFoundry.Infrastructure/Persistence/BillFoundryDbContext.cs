@@ -1,3 +1,4 @@
+using BillFoundry.Domain.Catalog;
 using BillFoundry.Domain.Clients;
 using BillFoundry.Domain.Organizations;
 using BillFoundry.Infrastructure.Identity;
@@ -15,6 +16,8 @@ public sealed class BillFoundryDbContext(DbContextOptions<BillFoundryDbContext> 
     public DbSet<Client> Clients => Set<Client>();
 
     public DbSet<ClientContact> ClientContacts => Set<ClientContact>();
+
+    public DbSet<CatalogItem> CatalogItems => Set<CatalogItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
