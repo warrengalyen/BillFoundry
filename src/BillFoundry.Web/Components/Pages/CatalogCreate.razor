@@ -1,0 +1,45 @@
+@page "/Catalog/New"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageCatalog)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Catalog
+@using BillFoundry.Web.Catalog
+@inject ICatalogService Catalog
+@inject NavigationManager Navigation
+
+<PageTitle>New catalog item - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>New catalog item</h1>
+    <p class="lede">Add a reusable service or item. The price is stored in the organization default currency@(string.IsNullOrEmpty(CurrencyCode) ? "." : $" ({CurrencyCode}).")</p>
+</section>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+@if (Errors.Count > 0)
+{
+    <div class="form-errors" role="alert">
+        <p>Please correct the following:</p>
+        <ul>
+            @foreach (string error in Errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+<section class="panel panel-wide" aria-labelledby="catalog-form-heading">
+    <h2 id="catalog-form-heading" class="visually-hidden">Catalog item form</h2>
+    <EditForm Model="Input" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="form-errors" />
+        <CatalogEditorFields Input="Input" CurrencyCode="CurrencyCode" />
+        <div class="form-actions">
+            <button type="submit" class="button-primary">Create item</button>
+            <a class="button-secondary" href="/Catalog">Cancel</a>
+        </div>
+    </EditForm>
+</section>

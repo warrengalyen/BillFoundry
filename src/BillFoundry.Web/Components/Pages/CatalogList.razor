@@ -1,0 +1,163 @@
+@page "/Catalog"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageCatalog)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Catalog
+@using BillFoundry.Web.Catalog
+@inject ICatalogService Catalog
+@inject NavigationManager Navigation
+
+<PageTitle>Catalog - BillFoundry</PageTitle>
+
+<section class="page-header page-header-split">
+    <div>
+        <h1>Catalog</h1>
+        <p class="lede">Search and manage billable services and items. Prices use the organization default currency@(string.IsNullOrEmpty(CurrencyCode) ? "." : $" ({CurrencyCode}).")</p>
+    </div>
+    <p>
+        <a class="button-primary" href="/Catalog/New">New item</a>
+    </p>
+</section>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+<section class="panel panel-wide" aria-labelledby="filter-heading">
+    <h2 id="filter-heading" class="visually-hidden">Catalog filters</h2>
+    <EditForm Model="Filters" OnValidSubmit="ApplyFiltersAsync" class="filter-bar filter-bar-catalog">
+        <div class="form-field">
+            <label for="catalog-search">Search</label>
+            <InputText id="catalog-search"
+                       class="form-input"
+                       @bind-Value="Filters.Search"
+                       placeholder="Name, SKU, or description" />
+        </div>
+        <div class="form-field">
+            <label for="catalog-status">Status</label>
+            <InputSelect id="catalog-status" class="form-input" @bind-Value="Filters.Status">
+                <option value="@CatalogStatusFilter.Active">Active</option>
+                <option value="@CatalogStatusFilter.Inactive">Inactive</option>
+                <option value="@CatalogStatusFilter.All">All</option>
+            </InputSelect>
+        </div>
+        <div class="form-field">
+            <label for="catalog-unit">Unit</label>
+            <InputSelect id="catalog-unit" class="form-input" @bind-Value="Filters.UnitType">
+                <option value="@CatalogUnitTypeFilter.All">All units</option>
+                <option value="@CatalogUnitTypeFilter.Hour">Hour</option>
+                <option value="@CatalogUnitTypeFilter.Day">Day</option>
+                <option value="@CatalogUnitTypeFilter.Item">Item</option>
+                <option value="@CatalogUnitTypeFilter.FlatFee">Flat fee</option>
+            </InputSelect>
+        </div>
+        <div class="form-field">
+            <label for="catalog-page-size">Page size</label>
+            <InputSelect id="catalog-page-size" class="form-input" @bind-Value="Filters.PageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </InputSelect>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="button-primary">Apply</button>
+        </div>
+    </EditForm>
+</section>
+
+<section class="panel panel-wide"
+         aria-labelledby="results-heading"
+         aria-busy="@(_loading ? "true" : "false")">
+    <div class="results-header">
+        <h2 id="results-heading">Catalog items</h2>
+        <p class="results-count" aria-live="polite">@ResultsSummary</p>
+    </div>
+
+    @if (_loading)
+    {
+        <p role="status">Loading catalog items.</p>
+    }
+    else if (Page?.Items.Count == 0)
+    {
+        <p>
+            @if (HasFilters)
+            {
+                <text>No catalog items match the current search or filters.</text>
+            }
+            else
+            {
+                <text>No catalog items have been added yet. <a href="/Catalog/New">Create an item</a>.</text>
+            }
+        </p>
+    }
+    else if (Page is not null)
+    {
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Catalog items</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" aria-sort="@AriaSort(CatalogSortField.Name)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(CatalogSortField.Name)'>
+                                Name @SortIndicator(CatalogSortField.Name)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(CatalogSortField.Sku)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(CatalogSortField.Sku)'>
+                                SKU @SortIndicator(CatalogSortField.Sku)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(CatalogSortField.UnitType)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(CatalogSortField.UnitType)'>
+                                Unit @SortIndicator(CatalogSortField.UnitType)
+                            </button>
+                        </th>
+                        <th scope="col" class="numeric" aria-sort="@AriaSort(CatalogSortField.UnitPrice)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(CatalogSortField.UnitPrice)'>
+                                Price @SortIndicator(CatalogSortField.UnitPrice)
+                            </button>
+                        </th>
+                        <th scope="col">Tax</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (CatalogListItemDto item in Page.Items)
+                    {
+                        <tr>
+                            <td><a href="@($"/Catalog/{item.Id}")">@item.Name</a></td>
+                            <td>@(item.Sku ?? "—")</td>
+                            <td>@item.UnitTypeLabel</td>
+                            <td class="numeric">@CatalogFormatting.FormatPrice(item.DefaultUnitPrice, CurrencyCode)</td>
+                            <td>@(item.IsTaxable ? "Taxable" : "No")</td>
+                            <td>
+                                <span class="status-badge @(item.IsActive ? "is-active" : "is-inactive")">
+                                    @(item.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Page.TotalPages > 1)
+        {
+            <nav class="pagination" aria-label="Catalog pages">
+                <button type="button"
+                        class="button-secondary"
+                        disabled="@(Page.Page <= 1)"
+                        @onclick="PreviousPageAsync">
+                    Previous
+                </button>
+                <p>Page @Page.Page of @Page.TotalPages</p>
+                <button type="button"
+                        class="button-secondary"
+                        disabled="@(Page.Page >= Page.TotalPages)"
+                        @onclick="NextPageAsync">
+                    Next
+                </button>
+            </nav>
+        }
+    }
+</section>

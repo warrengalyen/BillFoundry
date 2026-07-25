@@ -35,6 +35,11 @@
                         Clients
                     </NavLink>
                 </li>
+                <li>
+                    <NavLink class="nav-link" href="Catalog" @onclick="CloseNav">
+                        Catalog
+                    </NavLink>
+                </li>
                 <AuthorizeView Policy="@AuthorizationPolicies.ManageOrganizationSettings">
                     <Authorized Context="organizationAccess">
                         <li>

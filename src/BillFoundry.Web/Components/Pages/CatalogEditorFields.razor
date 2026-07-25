@@ -1,0 +1,53 @@
+@using BillFoundry.Domain.Catalog
+@using BillFoundry.Web.Catalog
+
+<fieldset class="form-fieldset">
+    <legend>Item</legend>
+    <div class="form-grid">
+        <div class="form-field">
+            <label for="item-name">Name</label>
+            <InputText id="item-name" class="form-input" @bind-Value="Input.Name" aria-required="true" />
+            <ValidationMessage For="() => Input.Name" />
+        </div>
+        <div class="form-field">
+            <label for="item-sku">SKU</label>
+            <InputText id="item-sku" class="form-input" @bind-Value="Input.Sku" />
+            <ValidationMessage For="() => Input.Sku" />
+            <p class="form-hint">Optional unique code, for example WEB-001.</p>
+        </div>
+        <div class="form-field">
+            <label for="item-unit">Unit</label>
+            <InputSelect id="item-unit" class="form-input" @bind-Value="Input.UnitType" aria-required="true">
+                @foreach (CatalogUnitType unit in CatalogFormatting.UnitTypes)
+                {
+                    <option value="@unit">@CatalogUnitTypeDisplay.Label(unit)</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Input.UnitType" />
+        </div>
+        <div class="form-field">
+            <label for="item-price">Default unit price@(string.IsNullOrWhiteSpace(CurrencyCode) ? "" : $" ({CurrencyCode})")</label>
+            <InputNumber id="item-price" class="form-input" @bind-Value="Input.DefaultUnitPrice" step="0.01" aria-required="true" />
+            <ValidationMessage For="() => Input.DefaultUnitPrice" />
+            <p class="form-hint">Uses the organization default currency. Up to four decimal places. Zero is allowed.</p>
+        </div>
+    </div>
+    <div class="form-field">
+        <label for="item-description">Description</label>
+        <InputTextArea id="item-description" class="form-input" @bind-Value="Input.Description" />
+        <ValidationMessage For="() => Input.Description" />
+    </div>
+    <div class="form-field form-field-checkbox">
+        <InputCheckbox id="item-taxable" @bind-Value="Input.IsTaxable" />
+        <label for="item-taxable">Taxable</label>
+    </div>
+</fieldset>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public CatalogItemInput Input { get; set; } = default!;
+
+    [Parameter]
+    public string? CurrencyCode { get; set; }
+}

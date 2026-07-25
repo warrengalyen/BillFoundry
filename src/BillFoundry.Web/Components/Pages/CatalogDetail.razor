@@ -1,0 +1,87 @@
+@page "/Catalog/{Id:guid}"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageCatalog)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Catalog
+@using BillFoundry.Web.Catalog
+@inject ICatalogService Catalog
+@inject NavigationManager Navigation
+
+<PageTitle>@(Item?.Name ?? "Catalog item") - BillFoundry</PageTitle>
+
+@if (_loading)
+{
+    <p role="status">Loading catalog item.</p>
+}
+else if (_notFound)
+{
+    <section class="page-header">
+        <h1>Catalog item not found</h1>
+        <p>The item does not exist. <a href="/Catalog">Return to the catalog</a>.</p>
+    </section>
+}
+else if (Item is not null)
+{
+    <section class="page-header page-header-split">
+        <div>
+            <h1>@Item.Name</h1>
+            <p class="lede">
+                <span class="status-badge @(Item.IsActive ? "is-active" : "is-inactive")">
+                    @(Item.IsActive ? "Active" : "Inactive")
+                </span>
+                @if (Item.Sku is not null)
+                {
+                    <span> @Item.Sku</span>
+                }
+            </p>
+        </div>
+        <div class="form-actions">
+            <a class="button-primary" href="@($"/Catalog/{Id}/Edit")">Edit</a>
+            @if (Item.IsActive)
+            {
+                <button type="button" class="button-secondary" @onclick="DeactivateAsync">Deactivate</button>
+            }
+            else
+            {
+                <button type="button" class="button-secondary" @onclick="ActivateAsync">Activate</button>
+            }
+            <a class="button-secondary" href="/Catalog">All items</a>
+        </div>
+    </section>
+
+    @if (!string.IsNullOrEmpty(StatusMessage))
+    {
+        <div class="form-status" role="status">@StatusMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="form-alert" role="alert">@ErrorMessage</div>
+    }
+
+    <section class="panel panel-wide" aria-labelledby="profile-heading">
+        <h2 id="profile-heading">Details</h2>
+        <dl class="definition-list">
+            <div>
+                <dt>SKU</dt>
+                <dd>@(Item.Sku ?? "—")</dd>
+            </div>
+            <div>
+                <dt>Unit</dt>
+                <dd>@Item.UnitTypeLabel</dd>
+            </div>
+            <div>
+                <dt>Default unit price</dt>
+                <dd>@CatalogFormatting.FormatPrice(Item.DefaultUnitPrice, Item.CurrencyCode)</dd>
+            </div>
+            <div>
+                <dt>Tax</dt>
+                <dd>@(Item.IsTaxable ? "Taxable" : "Not taxable")</dd>
+            </div>
+            <div>
+                <dt>Description</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Item.Description) ? "—" : Item.Description)</dd>
+            </div>
+        </dl>
+        <p class="form-hint">Prices are in the organization default currency. This item is deactivated rather than deleted so later invoices can still refer to it.</p>
+    </section>
+}

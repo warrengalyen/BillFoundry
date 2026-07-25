@@ -650,10 +650,19 @@ code {
     max-width: 72rem;
 }
 
+.data-table th.numeric,
+.data-table td.numeric {
+    text-align: right;
+}
+
 @media (min-width: 48rem) {
     .filter-bar {
         grid-template-columns: 2fr 1fr 8rem auto;
         align-items: end;
+    }
+
+    .filter-bar-catalog {
+        grid-template-columns: 2fr 1fr 1fr 8rem auto;
     }
 }
 

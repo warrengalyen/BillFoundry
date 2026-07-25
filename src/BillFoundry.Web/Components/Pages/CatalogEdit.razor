@@ -1,0 +1,64 @@
+@page "/Catalog/{Id:guid}/Edit"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageCatalog)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Catalog
+@using BillFoundry.Web.Catalog
+@inject ICatalogService Catalog
+@inject NavigationManager Navigation
+
+<PageTitle>Edit catalog item - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>Edit catalog item</h1>
+    <p class="lede">@(ItemName ?? "Update the catalog item.")</p>
+</section>
+
+@if (!string.IsNullOrEmpty(StatusMessage))
+{
+    <div class="form-status" role="status">@StatusMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+@if (Errors.Count > 0)
+{
+    <div class="form-errors" role="alert">
+        <p>Please correct the following:</p>
+        <ul>
+            @foreach (string error in Errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (_loading)
+{
+    <p role="status">Loading catalog item.</p>
+}
+else if (_notFound)
+{
+    <section class="panel">
+        <h2>Catalog item not found</h2>
+        <p>The item does not exist. <a href="/Catalog">Return to the catalog</a>.</p>
+    </section>
+}
+else
+{
+    <section class="panel panel-wide" aria-labelledby="catalog-form-heading">
+        <h2 id="catalog-form-heading" class="visually-hidden">Catalog item form</h2>
+        <EditForm Model="Input" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="form-errors" />
+            <CatalogEditorFields Input="Input" CurrencyCode="CurrencyCode" />
+            <div class="form-actions">
+                <button type="submit" class="button-primary">Save item</button>
+                <a class="button-secondary" href="@($"/Catalog/{Id}")">Cancel</a>
+            </div>
+        </EditForm>
+    </section>
+}
