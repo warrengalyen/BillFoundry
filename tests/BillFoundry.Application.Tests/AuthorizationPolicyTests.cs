@@ -125,6 +125,36 @@ public sealed class AuthorizationPolicyTests
         Assert.False(result.Succeeded);
     }
 
+    [Fact]
+    public async Task ManageCatalog_policy_allows_user_and_administrator()
+    {
+        await using ServiceProvider provider = CreateProvider(demoEnabled: false);
+        IAuthorizationService authorization = provider.GetRequiredService<IAuthorizationService>();
+
+        AuthorizationResult administrator = await authorization.AuthorizeAsync(
+            CreateUser(AppRoles.Administrator),
+            AuthorizationPolicies.ManageCatalog);
+        AuthorizationResult user = await authorization.AuthorizeAsync(
+            CreateUser(AppRoles.User),
+            AuthorizationPolicies.ManageCatalog);
+
+        Assert.True(administrator.Succeeded);
+        Assert.True(user.Succeeded);
+    }
+
+    [Fact]
+    public async Task ManageCatalog_policy_denies_anonymous_user()
+    {
+        await using ServiceProvider provider = CreateProvider(demoEnabled: false);
+        IAuthorizationService authorization = provider.GetRequiredService<IAuthorizationService>();
+
+        AuthorizationResult result = await authorization.AuthorizeAsync(
+            new ClaimsPrincipal(),
+            AuthorizationPolicies.ManageCatalog);
+
+        Assert.False(result.Succeeded);
+    }
+
     private static ServiceProvider CreateProvider(bool demoEnabled)
     {
         var configuration = new ConfigurationBuilder()
