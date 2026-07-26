@@ -60,6 +60,8 @@ than a raw role check:
   installation organization profile, including logo upload and removal
 - `ManageClients` — authenticated Administrator or User role may list, create,
   edit, activate, and deactivate clients and their contacts
+- `ManageCatalog` — authenticated Administrator or User role may list, create,
+  edit, activate, and deactivate service catalog items
 - `NotDemoMode` — succeeds only when Demo Mode is disabled; reserved for later
   mutation restrictions
 
@@ -72,6 +74,10 @@ loading or mutating the organization. The Organization settings page and
 
 `IClientService` authorizes `ManageClients` before listing or mutating clients.
 Client pages require the same policy. Clients are not permanently deleted.
+
+`ICatalogService` authorizes `ManageCatalog` before listing or mutating catalog
+items. Catalog pages require the same policy. Catalog items are not permanently
+deleted.
 
 ## Organization logo uploads
 
@@ -112,7 +118,7 @@ Entities that implement `IAuditable` receive:
 - `CreatedByUserId` / `UpdatedByUserId` from `ICurrentUser`
 
 `AuditableInterceptor` applies those values in `SaveChanges`. `ApplicationUser`,
-`Organization`, `Client`, and `ClientContact` implement the pattern.
+`Organization`, `Client`, `ClientContact`, and `CatalogItem` implement the pattern.
 
 ## Development seeding
 

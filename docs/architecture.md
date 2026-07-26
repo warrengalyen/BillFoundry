@@ -52,7 +52,7 @@ introduced unless a concrete requirement appears.
 profile. Configurations are applied from the Infrastructure assembly.
 The Identity schema is the `AddIdentity` migration. Organization columns are
 the `AddOrganization` migration. Clients and contacts are the `AddClients`
-migration.
+migration. The service catalog is the `AddCatalogItems` migration.
 
 Community Edition has one organization per installation. The `Organization`
 entity uses a well-known singleton identifier. There is no tenant identifier
@@ -63,6 +63,13 @@ permanently deleted so later invoices and other financial records can keep a
 stable reference. Contacts belong to a client. A filtered unique index allows
 at most one primary contact per client.
 
+The service catalog stores reusable billable items with a strongly typed unit
+(`Hour`, `Day`, `Item`, or `FlatFee`), a `decimal(19,4)` default unit price, and
+a taxable flag. Community Edition prices use the organization's default currency;
+catalog items do not store a per-item currency. Items are deactivated rather than
+permanently deleted so later financial documents can keep a stable reference.
+An optional SKU is unique when present.
+
 Postal address, currency, document prefixes, and logo metadata are modeled as
 value objects. Logo bytes are not stored in SQL Server; metadata points at an
 `IOrganizationLogoStore` implementation. The default store writes generated
@@ -71,6 +78,7 @@ resolved from the web content root). Submitted upload names are never used.
 
 Organization updates use SQL Server rowversion optimistic concurrency.
 Client profile and contact changes use the same rowversion token on `Client`.
+Catalog item edits use a rowversion token on `CatalogItem`.
 
 Migrations live in Infrastructure. Generate and apply them with Web as the
 startup project.
@@ -109,8 +117,9 @@ Application pages require authentication unless marked `[AllowAnonymous]`.
 ## Testing
 
 - Domain and Application tests cover rules, identity abstractions, authorization policies,
-  organization validation, logo content inspection, and client/contact invariants.
+  organization validation, logo content inspection, client/contact invariants,
+  and catalog pricing rules.
 - Integration tests use `WebApplicationFactory` against the Web host.
 - Authentication tests disable development identity seeding and do not require SQL Server
   except when a test explicitly exercises the database.
-- Organization and client persistence, concurrency, and constraint tests require SQL Server LocalDB.
+- Organization, client, and catalog persistence, concurrency, and constraint tests require SQL Server LocalDB.
