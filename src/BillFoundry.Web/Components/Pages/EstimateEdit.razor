@@ -1,0 +1,71 @@
+@page "/Estimates/{Id:guid}/Edit"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageEstimates)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Estimates
+@using BillFoundry.Web.Estimates
+@inject IEstimateService Estimates
+@inject NavigationManager Navigation
+
+<PageTitle>Edit estimate - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>Edit estimate</h1>
+    <p class="lede">@(EstimateNumber ?? "Update the draft estimate header. Line items are managed on the estimate page.")</p>
+</section>
+
+@if (!string.IsNullOrEmpty(StatusMessage))
+{
+    <div class="form-status" role="status">@StatusMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+@if (Errors.Count > 0)
+{
+    <div class="form-errors" role="alert">
+        <p>Please correct the following:</p>
+        <ul>
+            @foreach (string error in Errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (_loading)
+{
+    <p role="status">Loading estimate.</p>
+}
+else if (_notFound)
+{
+    <section class="panel">
+        <h2>Estimate not found</h2>
+        <p>The estimate does not exist. <a href="/Estimates">Return to estimates</a>.</p>
+    </section>
+}
+else if (!_canEdit)
+{
+    <section class="panel">
+        <h2>This estimate cannot be edited</h2>
+        <p>Only draft estimates can be changed. <a href="@($"/Estimates/{Id}")">Return to the estimate</a>.</p>
+    </section>
+}
+else
+{
+    <section class="panel panel-wide" aria-labelledby="estimate-form-heading">
+        <h2 id="estimate-form-heading" class="visually-hidden">Estimate form</h2>
+        <EditForm Model="Input" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="form-errors" />
+            <EstimateEditorFields Input="Input" Clients="Clients" CurrencyCode="CurrencyCode" />
+            <div class="form-actions">
+                <button type="submit" class="button-primary">Save estimate</button>
+                <a class="button-secondary" href="@($"/Estimates/{Id}")">Cancel</a>
+            </div>
+        </EditForm>
+    </section>
+}

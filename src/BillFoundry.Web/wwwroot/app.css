@@ -636,6 +636,26 @@ code {
     color: var(--color-danger);
 }
 
+.status-badge.is-draft {
+    background: #eef2f6;
+    color: #334155;
+}
+
+.status-badge.is-sent {
+    background: #e7eefc;
+    color: #1d4f91;
+}
+
+.status-badge.is-expired {
+    background: #f4efe6;
+    color: #6b4f16;
+}
+
+.status-badge.is-converted {
+    background: #f1e8fb;
+    color: #5b2d91;
+}
+
 .table-actions {
     display: flex;
     flex-wrap: wrap;
@@ -663,6 +683,10 @@ code {
 
     .filter-bar-catalog {
         grid-template-columns: 2fr 1fr 1fr 8rem auto;
+    }
+
+    .filter-bar-estimates {
+        grid-template-columns: 2fr 1fr 8rem auto;
     }
 }
 

@@ -1,0 +1,278 @@
+@page "/Estimates/{Id:guid}"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageEstimates)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Estimates
+@using BillFoundry.Domain.Catalog
+@using BillFoundry.Domain.Estimates
+@using BillFoundry.Web.Estimates
+@inject IEstimateService Estimates
+@inject NavigationManager Navigation
+
+<PageTitle>@(Estimate?.Number ?? "Estimate") - BillFoundry</PageTitle>
+
+@if (_loading)
+{
+    <p role="status">Loading estimate.</p>
+}
+else if (_notFound)
+{
+    <section class="page-header">
+        <h1>Estimate not found</h1>
+        <p>The estimate does not exist. <a href="/Estimates">Return to estimates</a>.</p>
+    </section>
+}
+else if (Estimate is not null)
+{
+    <section class="page-header page-header-split">
+        <div>
+            <h1>@Estimate.Number</h1>
+            <p class="lede">
+                <span class="status-badge @EstimateFormatting.StatusClass(Estimate.Status)">
+                    @Estimate.StatusLabel
+                </span>
+                <span> @Estimate.ClientName</span>
+            </p>
+        </div>
+        <div class="form-actions">
+            @if (Estimate.CanEdit)
+            {
+                <a class="button-primary" href="@($"/Estimates/{Id}/Edit")">Edit</a>
+            }
+            <button type="button" class="button-secondary" @onclick="DuplicateAsync">Duplicate</button>
+            <a class="button-secondary" href="/Estimates">All estimates</a>
+        </div>
+    </section>
+
+    @if (!string.IsNullOrEmpty(StatusMessage))
+    {
+        <div class="form-status" role="status">@StatusMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="form-alert" role="alert">@ErrorMessage</div>
+    }
+
+    @if (Errors.Count > 0)
+    {
+        <div class="form-errors" role="alert">
+            <p>Please correct the following:</p>
+            <ul>
+                @foreach (string error in Errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <section class="panel panel-wide" aria-labelledby="summary-heading">
+        <h2 id="summary-heading">Summary</h2>
+        <dl class="definition-list">
+            <div>
+                <dt>Client</dt>
+                <dd>
+                    <a href="@($"/Clients/{Estimate.ClientId}")">@Estimate.ClientName</a>
+                    @if (!Estimate.ClientIsActive)
+                    {
+                        <span> (inactive)</span>
+                    }
+                </dd>
+            </div>
+            <div>
+                <dt>Issue date</dt>
+                <dd>@Estimate.IssueDate.ToString("d")</dd>
+            </div>
+            <div>
+                <dt>Expiration date</dt>
+                <dd>@(Estimate.ExpirationDate?.ToString("d") ?? "—")</dd>
+            </div>
+            <div>
+                <dt>Currency</dt>
+                <dd>@Estimate.CurrencyCode</dd>
+            </div>
+            <div>
+                <dt>Notes</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Estimate.Notes) ? "—" : Estimate.Notes)</dd>
+            </div>
+            <div>
+                <dt>Terms</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Estimate.Terms) ? "—" : Estimate.Terms)</dd>
+            </div>
+        </dl>
+        @if (Estimate.AllowedTransitions.Count > 0)
+        {
+            <div class="form-actions">
+                @foreach (EstimateStatus target in Estimate.AllowedTransitions)
+                {
+                    <button type="button"
+                            class="button-secondary"
+                            @onclick="() => TransitionAsync(target)">
+                        @EstimateStatusRules.ActionLabel(target)
+                    </button>
+                }
+            </div>
+        }
+        else if (Estimate.Status is EstimateStatus.Accepted)
+        {
+            <p class="form-hint">Accepted estimates cannot be edited. Conversion to an invoice is not available yet.</p>
+        }
+        else if (Estimate.Status is EstimateStatus.Converted)
+        {
+            <p class="form-hint">Converted estimates are historical and cannot be edited.</p>
+        }
+    </section>
+
+    <section class="panel panel-wide" aria-labelledby="lines-heading">
+        <h2 id="lines-heading">Line items</h2>
+        <p class="form-hint">Each line stores the description, quantity, unit, price, and taxable flag from when it was saved. Later catalog price changes do not update this estimate.</p>
+        @if (Estimate.Lines.Count == 0)
+        {
+            <p>No line items have been added@(Estimate.CanEdit ? "." : " to this estimate.")</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Estimate lines</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Description</th>
+                            <th scope="col" class="numeric">Qty</th>
+                            <th scope="col">Unit</th>
+                            <th scope="col" class="numeric">Unit price</th>
+                            <th scope="col">Tax</th>
+                            <th scope="col" class="numeric">Amount</th>
+                            @if (Estimate.CanEdit)
+                            {
+                                <th scope="col">Actions</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (EstimateLineDto line in Estimate.Lines)
+                        {
+                            <tr>
+                                <td>@line.Description</td>
+                                <td class="numeric">@EstimateFormatting.FormatQuantity(line.Quantity)</td>
+                                <td>@line.UnitLabel</td>
+                                <td class="numeric">@EstimateFormatting.FormatPrice(line.UnitPrice, Estimate.CurrencyCode)</td>
+                                <td>@(line.IsTaxable ? "Taxable" : "No")</td>
+                                <td class="numeric">@EstimateFormatting.FormatAmount(line.LineAmount, Estimate.CurrencyCode)</td>
+                                @if (Estimate.CanEdit)
+                                {
+                                    <td>
+                                        <div class="table-actions">
+                                            <button type="button" class="button-secondary" @onclick="() => BeginEditLine(line)">Edit</button>
+                                            <button type="button"
+                                                    class="button-secondary"
+                                                    disabled="@(line.SortOrder == 0)"
+                                                    @onclick="() => MoveLineAsync(line.Id, -1)">
+                                                Move up
+                                            </button>
+                                            <button type="button"
+                                                    class="button-secondary"
+                                                    disabled="@(line.SortOrder == Estimate.Lines.Count - 1)"
+                                                    @onclick="() => MoveLineAsync(line.Id, 1)">
+                                                Move down
+                                            </button>
+                                            <button type="button" class="button-secondary" @onclick="() => RemoveLineAsync(line.Id)">Remove</button>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <h3 id="totals-heading">Totals</h3>
+        <dl class="definition-list totals-list">
+            <div>
+                <dt>Subtotal</dt>
+                <dd>@EstimateFormatting.FormatAmount(Estimate.Subtotal, Estimate.CurrencyCode)</dd>
+            </div>
+            <div>
+                <dt>Discount</dt>
+                <dd>@EstimateFormatting.FormatAmount(Estimate.Discount, Estimate.CurrencyCode)</dd>
+            </div>
+            <div>
+                <dt>Taxable amount</dt>
+                <dd>@EstimateFormatting.FormatAmount(Estimate.TaxableSubtotal, Estimate.CurrencyCode)</dd>
+            </div>
+            <div>
+                <dt>Tax (@EstimateFormatting.FormatRate(Estimate.TaxRatePercent))</dt>
+                <dd>@EstimateFormatting.FormatAmount(Estimate.Tax, Estimate.CurrencyCode)</dd>
+            </div>
+            <div>
+                <dt>Total</dt>
+                <dd>@EstimateFormatting.FormatAmount(Estimate.Total, Estimate.CurrencyCode)</dd>
+            </div>
+        </dl>
+
+        @if (Estimate.CanEdit)
+        {
+            <h3 id="line-form-heading">@(_editingLineId is null ? "Add line" : "Edit line")</h3>
+            <EditForm Model="LineInput" OnValidSubmit="SaveLineAsync" aria-labelledby="line-form-heading">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="form-errors" />
+                @if (CatalogItems.Count > 0 && _editingLineId is null)
+                {
+                    <div class="form-field">
+                        <label for="line-catalog">Catalog item</label>
+                        <InputSelect id="line-catalog" class="form-input" @bind-Value="SelectedCatalogItemId" @bind-Value:after="ApplyCatalogSelection">
+                            <option value="@Guid.Empty">Ad-hoc line (no catalog item)</option>
+                            @foreach (EstimateCatalogOption item in CatalogItems)
+                            {
+                                <option value="@item.Id">@item.Name — @EstimateFormatting.FormatPrice(item.UnitPrice, Estimate.CurrencyCode)</option>
+                            }
+                        </InputSelect>
+                        <p class="form-hint">Choosing a catalog item copies the current description, unit, price, and taxable flag. You can edit the snapshot before adding the line.</p>
+                    </div>
+                }
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="line-description">Description</label>
+                        <InputText id="line-description" class="form-input" @bind-Value="LineInput.Description" aria-required="true" />
+                        <ValidationMessage For="() => LineInput.Description" />
+                    </div>
+                    <div class="form-field">
+                        <label for="line-quantity">Quantity</label>
+                        <InputNumber id="line-quantity" class="form-input" @bind-Value="LineInput.Quantity" step="0.0001" aria-required="true" />
+                        <ValidationMessage For="() => LineInput.Quantity" />
+                    </div>
+                    <div class="form-field">
+                        <label for="line-unit">Unit</label>
+                        <InputSelect id="line-unit" class="form-input" @bind-Value="LineInput.Unit" aria-required="true">
+                            @foreach (CatalogUnitType unit in EstimateFormatting.UnitTypes)
+                            {
+                                <option value="@unit">@CatalogUnitTypeDisplay.Label(unit)</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => LineInput.Unit" />
+                    </div>
+                    <div class="form-field">
+                        <label for="line-price">Unit price (@Estimate.CurrencyCode)</label>
+                        <InputNumber id="line-price" class="form-input" @bind-Value="LineInput.UnitPrice" step="0.0001" aria-required="true" />
+                        <ValidationMessage For="() => LineInput.UnitPrice" />
+                    </div>
+                </div>
+                <div class="form-field form-field-checkbox">
+                    <InputCheckbox id="line-taxable" @bind-Value="LineInput.IsTaxable" />
+                    <label for="line-taxable">Taxable</label>
+                </div>
+                <p class="form-hint">Line amount: @EstimateFormatting.FormatAmount(PreviewLineAmount, Estimate.CurrencyCode)</p>
+                <div class="form-actions">
+                    <button type="submit" class="button-primary">
+                        @(_editingLineId is null ? "Add line" : "Save line")
+                    </button>
+                    @if (_editingLineId is not null)
+                    {
+                        <button type="button" class="button-secondary" @onclick="CancelLineEdit">Cancel</button>
+                    }
+                </div>
+            </EditForm>
+        }
+    </section>
+}

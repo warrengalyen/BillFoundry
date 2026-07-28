@@ -1,0 +1,160 @@
+@page "/Estimates"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageEstimates)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Estimates
+@using BillFoundry.Domain.Estimates
+@using BillFoundry.Web.Estimates
+@inject IEstimateService Estimates
+@inject NavigationManager Navigation
+
+<PageTitle>Estimates - BillFoundry</PageTitle>
+
+<section class="page-header page-header-split">
+    <div>
+        <h1>Estimates</h1>
+        <p class="lede">Search and manage priced offers. Totals are stored on each estimate from its line snapshots.</p>
+    </div>
+    <p>
+        <a class="button-primary" href="/Estimates/New">New estimate</a>
+    </p>
+</section>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+<section class="panel panel-wide" aria-labelledby="filter-heading">
+    <h2 id="filter-heading" class="visually-hidden">Estimate filters</h2>
+    <EditForm Model="Filters" OnValidSubmit="ApplyFiltersAsync" class="filter-bar filter-bar-estimates">
+        <div class="form-field">
+            <label for="estimate-search">Search</label>
+            <InputText id="estimate-search"
+                       class="form-input"
+                       @bind-Value="Filters.Search"
+                       placeholder="Number, client, or notes" />
+        </div>
+        <div class="form-field">
+            <label for="estimate-status">Status</label>
+            <InputSelect id="estimate-status" class="form-input" @bind-Value="Filters.Status">
+                <option value="@EstimateStatusFilter.All">All</option>
+                <option value="@EstimateStatusFilter.Draft">Draft</option>
+                <option value="@EstimateStatusFilter.Sent">Sent</option>
+                <option value="@EstimateStatusFilter.Accepted">Accepted</option>
+                <option value="@EstimateStatusFilter.Declined">Declined</option>
+                <option value="@EstimateStatusFilter.Expired">Expired</option>
+                <option value="@EstimateStatusFilter.Converted">Converted</option>
+            </InputSelect>
+        </div>
+        <div class="form-field">
+            <label for="estimate-page-size">Page size</label>
+            <InputSelect id="estimate-page-size" class="form-input" @bind-Value="Filters.PageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </InputSelect>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="button-primary">Apply</button>
+        </div>
+    </EditForm>
+</section>
+
+<section class="panel panel-wide"
+         aria-labelledby="results-heading"
+         aria-busy="@(_loading ? "true" : "false")">
+    <div class="results-header">
+        <h2 id="results-heading">Estimates</h2>
+        <p class="results-count" aria-live="polite">@ResultsSummary</p>
+    </div>
+
+    @if (_loading)
+    {
+        <p role="status">Loading estimates.</p>
+    }
+    else if (Page?.Items.Count == 0)
+    {
+        <p>
+            @if (HasFilters)
+            {
+                <text>No estimates match the current search or filters.</text>
+            }
+            else
+            {
+                <text>No estimates have been created yet. <a href="/Estimates/New">Create an estimate</a>.</text>
+            }
+        </p>
+    }
+    else if (Page is not null)
+    {
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Estimates</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" aria-sort="@AriaSort(EstimateSortField.Number)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(EstimateSortField.Number)'>
+                                Number @SortIndicator(EstimateSortField.Number)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(EstimateSortField.Client)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(EstimateSortField.Client)'>
+                                Client @SortIndicator(EstimateSortField.Client)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(EstimateSortField.IssueDate)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(EstimateSortField.IssueDate)'>
+                                Issued @SortIndicator(EstimateSortField.IssueDate)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(EstimateSortField.Status)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(EstimateSortField.Status)'>
+                                Status @SortIndicator(EstimateSortField.Status)
+                            </button>
+                        </th>
+                        <th scope="col" class="numeric" aria-sort="@AriaSort(EstimateSortField.Total)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(EstimateSortField.Total)'>
+                                Total @SortIndicator(EstimateSortField.Total)
+                            </button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (EstimateListItemDto estimate in Page.Items)
+                    {
+                        <tr>
+                            <td><a href="@($"/Estimates/{estimate.Id}")">@estimate.Number</a></td>
+                            <td>@estimate.ClientName</td>
+                            <td>@estimate.IssueDate.ToString("d")</td>
+                            <td>
+                                <span class="status-badge @EstimateFormatting.StatusClass(estimate.Status)">
+                                    @estimate.StatusLabel
+                                </span>
+                            </td>
+                            <td class="numeric">@EstimateFormatting.FormatAmount(estimate.Total, estimate.CurrencyCode)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Page.TotalPages > 1)
+        {
+            <nav class="pagination" aria-label="Estimate pages">
+                <button type="button"
+                        class="button-secondary"
+                        disabled="@(Page.Page <= 1)"
+                        @onclick="PreviousPageAsync">
+                    Previous
+                </button>
+                <p>Page @Page.Page of @Page.TotalPages</p>
+                <button type="button"
+                        class="button-secondary"
+                        disabled="@(Page.Page >= Page.TotalPages)"
+                        @onclick="NextPageAsync">
+                    Next
+                </button>
+            </nav>
+        }
+    }
+</section>

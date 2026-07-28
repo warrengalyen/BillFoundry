@@ -1,0 +1,64 @@
+@using BillFoundry.Application.Estimates
+@using BillFoundry.Web.Estimates
+
+<fieldset class="form-fieldset">
+    <legend>Estimate</legend>
+    <div class="form-grid">
+        <div class="form-field">
+            <label for="estimate-client">Client</label>
+            <InputSelect id="estimate-client" class="form-input" @bind-Value="Input.ClientId" aria-required="true">
+                <option value="@Guid.Empty">Select a client</option>
+                @foreach (EstimateClientOption client in Clients)
+                {
+                    <option value="@client.Id">@client.Name (@client.Code)</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Input.ClientId" />
+        </div>
+        <div class="form-field">
+            <label for="estimate-issue">Issue date</label>
+            <InputDate id="estimate-issue" class="form-input" @bind-Value="Input.IssueDate" aria-required="true" />
+            <ValidationMessage For="() => Input.IssueDate" />
+        </div>
+        <div class="form-field">
+            <label for="estimate-expiration">Expiration date</label>
+            <InputDate id="estimate-expiration" class="form-input" @bind-Value="Input.ExpirationDate" />
+            <ValidationMessage For="() => Input.ExpirationDate" />
+            <p class="form-hint">Optional. Cannot be earlier than the issue date.</p>
+        </div>
+        <div class="form-field">
+            <label for="estimate-discount">Discount@(string.IsNullOrWhiteSpace(CurrencyCode) ? "" : $" ({CurrencyCode})")</label>
+            <InputNumber id="estimate-discount" class="form-input" @bind-Value="Input.Discount" step="0.01" />
+            <ValidationMessage For="() => Input.Discount" />
+            <p class="form-hint">Document-level amount, up to two decimal places. Cannot exceed the subtotal.</p>
+        </div>
+        <div class="form-field">
+            <label for="estimate-tax-rate">Tax rate (%)</label>
+            <InputNumber id="estimate-tax-rate" class="form-input" @bind-Value="Input.TaxRatePercent" step="0.0001" />
+            <ValidationMessage For="() => Input.TaxRatePercent" />
+            <p class="form-hint">Applied to the taxable amount after a proportional share of the discount. Up to four decimal places.</p>
+        </div>
+    </div>
+    <div class="form-field">
+        <label for="estimate-notes">Notes</label>
+        <InputTextArea id="estimate-notes" class="form-input" @bind-Value="Input.Notes" />
+        <ValidationMessage For="() => Input.Notes" />
+    </div>
+    <div class="form-field">
+        <label for="estimate-terms">Terms</label>
+        <InputTextArea id="estimate-terms" class="form-input" @bind-Value="Input.Terms" />
+        <ValidationMessage For="() => Input.Terms" />
+    </div>
+</fieldset>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public EstimateInput Input { get; set; } = default!;
+
+    [Parameter]
+    public IReadOnlyList<EstimateClientOption> Clients { get; set; } = [];
+
+    [Parameter]
+    public string? CurrencyCode { get; set; }
+}

@@ -1,0 +1,59 @@
+@page "/Estimates/New"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageEstimates)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Estimates
+@using BillFoundry.Web.Estimates
+@inject IEstimateService Estimates
+@inject NavigationManager Navigation
+
+<PageTitle>New estimate - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>New estimate</h1>
+    <p class="lede">Create a draft offer. Line items are added next. The estimate number is assigned when you save@(string.IsNullOrEmpty(CurrencyCode) ? "." : $". Amounts use {CurrencyCode}.")</p>
+</section>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+@if (Errors.Count > 0)
+{
+    <div class="form-errors" role="alert">
+        <p>Please correct the following:</p>
+        <ul>
+            @foreach (string error in Errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (_loading)
+{
+    <p role="status">Loading estimate options.</p>
+}
+else if (Clients.Count == 0)
+{
+    <section class="panel">
+        <h2>An active client is required</h2>
+        <p>Create an active client before you can write an estimate. <a href="/Clients/New">Add a client</a>.</p>
+    </section>
+}
+else
+{
+    <section class="panel panel-wide" aria-labelledby="estimate-form-heading">
+        <h2 id="estimate-form-heading" class="visually-hidden">Estimate form</h2>
+        <EditForm Model="Input" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="form-errors" />
+            <EstimateEditorFields Input="Input" Clients="Clients" CurrencyCode="CurrencyCode" />
+            <div class="form-actions">
+                <button type="submit" class="button-primary">Create estimate</button>
+                <a class="button-secondary" href="/Estimates">Cancel</a>
+            </div>
+        </EditForm>
+    </section>
+}
