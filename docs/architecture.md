@@ -52,7 +52,8 @@ introduced unless a concrete requirement appears.
 profile. Configurations are applied from the Infrastructure assembly.
 The Identity schema is the `AddIdentity` migration. Organization columns are
 the `AddOrganization` migration. Clients and contacts are the `AddClients`
-migration. The service catalog is the `AddCatalogItems` migration.
+migration. The service catalog is the `AddCatalogItems` migration. Estimates,
+estimate lines, and document sequences are the `AddEstimates` migration.
 
 Community Edition has one organization per installation. The `Organization`
 entity uses a well-known singleton identifier. There is no tenant identifier
@@ -70,6 +71,16 @@ catalog items do not store a per-item currency. Items are deactivated rather tha
 permanently deleted so later financial documents can keep a stable reference.
 An optional SKU is unique when present.
 
+Estimates are an aggregate of header fields and ordered line snapshots. Each
+estimate has a generated public number, a client, issue and optional expiration
+dates, status, notes, terms, a document-level discount and tax rate, persisted
+totals, and a currency snapshotted from the organization at create time.
+Line items copy description, quantity, unit, unit price, and taxable status;
+later catalog price changes do not rewrite saved estimates. Number allocation
+uses a locked `DocumentSequences` row inside a transaction. See
+[estimates.md](estimates.md). The `AddEstimates` migration adds
+`DocumentSequences`, `Estimates`, and `EstimateLines`.
+
 Postal address, currency, document prefixes, and logo metadata are modeled as
 value objects. Logo bytes are not stored in SQL Server; metadata points at an
 `IOrganizationLogoStore` implementation. The default store writes generated
@@ -79,6 +90,7 @@ resolved from the web content root). Submitted upload names are never used.
 Organization updates use SQL Server rowversion optimistic concurrency.
 Client profile and contact changes use the same rowversion token on `Client`.
 Catalog item edits use a rowversion token on `CatalogItem`.
+Estimate header, line, and status changes use a rowversion token on `Estimate`.
 
 Migrations live in Infrastructure. Generate and apply them with Web as the
 startup project.
@@ -118,8 +130,8 @@ Application pages require authentication unless marked `[AllowAnonymous]`.
 
 - Domain and Application tests cover rules, identity abstractions, authorization policies,
   organization validation, logo content inspection, client/contact invariants,
-  and catalog pricing rules.
+  catalog pricing rules, estimate rounding, and estimate status transitions.
 - Integration tests use `WebApplicationFactory` against the Web host.
 - Authentication tests disable development identity seeding and do not require SQL Server
   except when a test explicitly exercises the database.
-- Organization, client, and catalog persistence, concurrency, and constraint tests require SQL Server LocalDB.
+- Organization, client, catalog, and estimate persistence, concurrency, and constraint tests require SQL Server LocalDB.

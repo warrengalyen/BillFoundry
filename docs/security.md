@@ -62,6 +62,9 @@ than a raw role check:
   edit, activate, and deactivate clients and their contacts
 - `ManageCatalog` — authenticated Administrator or User role may list, create,
   edit, activate, and deactivate service catalog items
+- `ManageEstimates` — authenticated Administrator or User role may list, create,
+  edit drafts, manage line items, duplicate, and apply allowed estimate status
+  transitions
 - `NotDemoMode` — succeeds only when Demo Mode is disabled; reserved for later
   mutation restrictions
 
@@ -78,6 +81,11 @@ Client pages require the same policy. Clients are not permanently deleted.
 `ICatalogService` authorizes `ManageCatalog` before listing or mutating catalog
 items. Catalog pages require the same policy. Catalog items are not permanently
 deleted.
+
+`IEstimateService` authorizes `ManageEstimates` before listing or mutating
+estimates. Estimate pages require the same policy. Accepted and converted
+estimates cannot be edited. Estimates are not permanently deleted. Conversion
+to an invoice is not exposed yet. See [estimates.md](estimates.md).
 
 ## Organization logo uploads
 
@@ -118,7 +126,8 @@ Entities that implement `IAuditable` receive:
 - `CreatedByUserId` / `UpdatedByUserId` from `ICurrentUser`
 
 `AuditableInterceptor` applies those values in `SaveChanges`. `ApplicationUser`,
-`Organization`, `Client`, `ClientContact`, and `CatalogItem` implement the pattern.
+`Organization`, `Client`, `ClientContact`, `CatalogItem`, `Estimate`, and
+`EstimateLine` implement the pattern.
 
 ## Development seeding
 
