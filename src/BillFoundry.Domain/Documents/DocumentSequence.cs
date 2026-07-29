@@ -7,6 +7,7 @@ namespace BillFoundry.Domain.Documents;
 public sealed class DocumentSequence
 {
     public const string EstimateKind = "Estimate";
+    public const string InvoiceKind = "Invoice";
     public const int KindMaxLength = 32;
 
     private DocumentSequence()
