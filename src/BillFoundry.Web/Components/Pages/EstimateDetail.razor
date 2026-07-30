@@ -4,8 +4,10 @@
 @using BillFoundry.Application.Estimates
 @using BillFoundry.Domain.Catalog
 @using BillFoundry.Domain.Estimates
+@using BillFoundry.Application.Invoices
 @using BillFoundry.Web.Estimates
 @inject IEstimateService Estimates
+@inject IInvoiceService Invoices
 @inject NavigationManager Navigation
 
 <PageTitle>@(Estimate?.Number ?? "Estimate") - BillFoundry</PageTitle>
@@ -113,9 +115,16 @@ else if (Estimate is not null)
                 }
             </div>
         }
-        else if (Estimate.Status is EstimateStatus.Accepted)
+        else if (Estimate.CanConvert)
         {
-            <p class="form-hint">Accepted estimates cannot be edited. Conversion to an invoice is not available yet.</p>
+            <div class="form-actions">
+                <button type="button" class="button-primary" @onclick="ConvertAsync">Convert to invoice</button>
+            </div>
+            <p class="form-hint">Conversion copies line snapshots and totals onto a new draft invoice and marks this estimate converted. It cannot be undone.</p>
+        }
+        else if (Estimate.ConvertedInvoiceId is Guid invoiceId)
+        {
+            <p class="form-hint">This estimate was converted. <a href="@($"/Invoices/{invoiceId}")">Open the invoice</a>.</p>
         }
         else if (Estimate.Status is EstimateStatus.Converted)
         {

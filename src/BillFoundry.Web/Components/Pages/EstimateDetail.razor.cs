@@ -1,4 +1,5 @@
 using BillFoundry.Application.Estimates;
+using BillFoundry.Application.Invoices;
 using BillFoundry.Domain.Estimates;
 using BillFoundry.Web.Estimates;
 using Microsoft.AspNetCore.Components;
@@ -168,6 +169,36 @@ public partial class EstimateDetail
             Target = target
         });
         ApplyResult(result, $"The estimate is {EstimateStatusRules.Label(target).ToLowerInvariant()}.");
+    }
+
+    private async Task ConvertAsync()
+    {
+        if (Estimate is null)
+        {
+            return;
+        }
+
+        ClearMessages();
+        InvoiceResult result = await Invoices.ConvertFromEstimateAsync(new ConvertEstimateCommand
+        {
+            EstimateId = Id,
+            EstimateRowVersion = Estimate.RowVersion
+        });
+        if (result.IsForbidden)
+        {
+            Navigation.NavigateTo("/Account/AccessDenied", forceLoad: true);
+            return;
+        }
+
+        if (result.Succeeded && result.Invoice is not null)
+        {
+            Navigation.NavigateTo($"/Invoices/{result.Invoice.Id}");
+            return;
+        }
+
+        Errors = [.. result.Errors];
+        ErrorMessage = Errors.Count == 0 ? "The estimate could not be converted." : null;
+        await LoadAsync();
     }
 
     private async Task DuplicateAsync()

@@ -93,6 +93,10 @@ public sealed class EstimateDetailsDto
 
     public required bool CanEdit { get; init; }
 
+    public required bool CanConvert { get; init; }
+
+    public Guid? ConvertedInvoiceId { get; init; }
+
     public required IReadOnlyList<EstimateStatus> AllowedTransitions { get; init; }
 
     public required byte[] RowVersion { get; init; }
@@ -103,6 +107,7 @@ public sealed class EstimateDetailsDto
         Estimate estimate,
         string clientName,
         bool clientIsActive,
+        Guid? convertedInvoiceId = null,
         byte[]? rowVersion = null)
     {
         ArgumentNullException.ThrowIfNull(estimate);
@@ -131,6 +136,8 @@ public sealed class EstimateDetailsDto
             Total = estimate.Total,
             CurrencyCode = estimate.Currency.Value,
             CanEdit = estimate.CanEdit,
+            CanConvert = estimate.Status is EstimateStatus.Accepted && convertedInvoiceId is null,
+            ConvertedInvoiceId = convertedInvoiceId,
             AllowedTransitions = EstimateStatusRules.UserFacingTargets(estimate.Status),
             RowVersion = [.. token],
             Lines = [.. estimate.Lines

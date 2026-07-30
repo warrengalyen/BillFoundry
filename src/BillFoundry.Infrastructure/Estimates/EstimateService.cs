@@ -5,6 +5,7 @@ using BillFoundry.Domain.Clients;
 using BillFoundry.Domain.Documents;
 using BillFoundry.Domain.Estimates;
 using BillFoundry.Domain.Organizations;
+using BillFoundry.Infrastructure.Documents;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Data.SqlClient;
@@ -206,7 +207,9 @@ internal sealed class EstimateService(
         try
         {
             OrganizationSettings settings = await LoadSettingsAsync(cancellationToken).ConfigureAwait(false);
-            int sequence = await AllocateEstimateSequenceAsync(cancellationToken).ConfigureAwait(false);
+            int sequence = await DocumentSequenceAllocator
+                .AllocateAsync(dbContext, DocumentSequence.EstimateKind, cancellationToken)
+                .ConfigureAwait(false);
             EstimateNumber number = EstimateNumber.Format(settings.EstimatePrefix, sequence);
             Estimate estimate = Estimate.Create(
                 sequence,
@@ -438,7 +441,9 @@ internal sealed class EstimateService(
         try
         {
             OrganizationSettings settings = await LoadSettingsAsync(cancellationToken).ConfigureAwait(false);
-            int sequence = await AllocateEstimateSequenceAsync(cancellationToken).ConfigureAwait(false);
+            int sequence = await DocumentSequenceAllocator
+                .AllocateAsync(dbContext, DocumentSequence.EstimateKind, cancellationToken)
+                .ConfigureAwait(false);
             EstimateNumber number = EstimateNumber.Format(settings.EstimatePrefix, sequence);
             DateOnly issueDate = Today();
             DateOnly? expiration = settings.PaymentTermsDays > 0
@@ -478,7 +483,7 @@ internal sealed class EstimateService(
         {
             return MutateAsync(
                 command,
-                ["Estimate-to-invoice conversion is not available yet."],
+                ["Use invoice conversion instead of changing this estimate's status directly."],
                 _ => { },
                 cancellationToken);
         }
@@ -547,14 +552,7 @@ internal sealed class EstimateService(
             .Include(estimate => estimate.Lines)
             .FirstOrDefaultAsync(estimate => estimate.Id == id, cancellationToken);
 
-    private async Task<int> AllocateEstimateSequenceAsync(CancellationToken cancellationToken)
-    {
-        DocumentSequence sequence = await dbContext.DocumentSequences
-            .FromSql($"SELECT [Kind], [NextValue] FROM [DocumentSequences] WITH (UPDLOCK, HOLDLOCK) WHERE [Kind] = {DocumentSequence.EstimateKind}")
-            .SingleAsync(cancellationToken)
-            .ConfigureAwait(false);
-        return sequence.Allocate();
-    }
+    private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
     private async Task<OrganizationSettings> LoadSettingsAsync(CancellationToken cancellationToken)
     {
@@ -571,8 +569,6 @@ internal sealed class EstimateService(
                 organization.DefaultPaymentTermsDays,
                 organization.DefaultInvoiceNotes);
     }
-
-    private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
     private void ApplyRowVersion(Estimate estimate, byte[] rowVersion)
     {
@@ -595,7 +591,12 @@ internal sealed class EstimateService(
             .Select(entity => new { entity.Name, entity.IsActive })
             .FirstAsync(cancellationToken)
             .ConfigureAwait(false);
-        return EstimateDetailsDto.From(estimate, client.Name, client.IsActive, rowVersion);
+        Guid? convertedInvoiceId = await dbContext.Invoices.AsNoTracking()
+            .Where(invoice => invoice.SourceEstimateId == estimate.Id)
+            .Select(invoice => (Guid?)invoice.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return EstimateDetailsDto.From(estimate, client.Name, client.IsActive, convertedInvoiceId, rowVersion);
     }
 
     private async Task<EstimateDetailsDto> ReloadDetailsAsync(Estimate estimate, CancellationToken cancellationToken)
