@@ -25,6 +25,8 @@ internal sealed class DocumentSequenceConfiguration : IEntityTypeConfiguration<D
         builder.Property(sequence => sequence.NextValue)
             .IsRequired();
 
-        builder.HasData(DocumentSequence.Create(DocumentSequence.EstimateKind));
+        builder.HasData(
+            DocumentSequence.Create(DocumentSequence.EstimateKind),
+            DocumentSequence.Create(DocumentSequence.InvoiceKind));
     }
 }

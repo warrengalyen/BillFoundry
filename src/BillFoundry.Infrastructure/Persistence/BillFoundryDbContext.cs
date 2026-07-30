@@ -2,6 +2,7 @@ using BillFoundry.Domain.Catalog;
 using BillFoundry.Domain.Clients;
 using BillFoundry.Domain.Documents;
 using BillFoundry.Domain.Estimates;
+using BillFoundry.Domain.Invoices;
 using BillFoundry.Domain.Organizations;
 using BillFoundry.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +27,10 @@ public sealed class BillFoundryDbContext(DbContextOptions<BillFoundryDbContext> 
     public DbSet<EstimateLine> EstimateLines => Set<EstimateLine>();
 
     public DbSet<DocumentSequence> DocumentSequences => Set<DocumentSequence>();
+
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+
+    public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

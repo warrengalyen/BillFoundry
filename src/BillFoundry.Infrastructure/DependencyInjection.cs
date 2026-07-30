@@ -2,12 +2,14 @@ using BillFoundry.Application.Catalog;
 using BillFoundry.Application.Clients;
 using BillFoundry.Application.Configuration;
 using BillFoundry.Application.Estimates;
+using BillFoundry.Application.Invoices;
 using BillFoundry.Application.Notifications;
 using BillFoundry.Application.Organizations;
 using BillFoundry.Infrastructure.Catalog;
 using BillFoundry.Infrastructure.Clients;
 using BillFoundry.Infrastructure.Estimates;
 using BillFoundry.Infrastructure.Identity;
+using BillFoundry.Infrastructure.Invoices;
 using BillFoundry.Infrastructure.Notifications;
 using BillFoundry.Infrastructure.Organizations;
 using BillFoundry.Infrastructure.Persistence;
@@ -85,6 +87,7 @@ public static class DependencyInjection
         services.AddScoped<IClientService, ClientService>();
         services.AddScoped<ICatalogService, CatalogService>();
         services.AddScoped<IEstimateService, EstimateService>();
+        services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddSingleton<IOrganizationLogoStore, FileSystemOrganizationLogoStore>();
         services.AddHostedService<IdentitySeedHostedService>();
 
