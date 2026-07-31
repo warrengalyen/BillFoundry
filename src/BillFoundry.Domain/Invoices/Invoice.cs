@@ -24,6 +24,7 @@ public sealed class Invoice : IAuditable
     public const decimal MaxTaxRatePercent = 100m;
 
     private readonly List<InvoiceLine> _lines = [];
+    private readonly List<InvoicePayment> _payments = [];
 
     private Invoice()
     {
@@ -89,7 +90,13 @@ public sealed class Invoice : IAuditable
 
     public IReadOnlyList<InvoiceLine> Lines => _lines;
 
+    public IReadOnlyList<InvoicePayment> Payments => _payments;
+
     public bool CanEdit => InvoiceStatusRules.CanEdit(Status);
+
+    public bool CanVoid => InvoiceStatusRules.CanVoid(Status) && AmountPaid == 0m;
+
+    public bool CanRecordPayment => InvoiceStatusRules.CanRecordPayment(Status) && BalanceDue > 0m;
 
     public static Invoice Create(
         int sequence,
@@ -279,6 +286,71 @@ public sealed class Invoice : IAuditable
         Status = InvoiceStatus.Sent;
     }
 
+    public InvoicePayment RecordPayment(
+        DateOnly today,
+        DateOnly paymentDate,
+        decimal amount,
+        PaymentMethod method,
+        string? reference,
+        string? notes)
+    {
+        EnsurePayable();
+        if (paymentDate > today)
+        {
+            throw new ArgumentException("Payment date cannot be in the future.", nameof(paymentDate));
+        }
+
+        if (paymentDate < IssueDate)
+        {
+            throw new ArgumentException("Payment date cannot be earlier than the invoice issue date.", nameof(paymentDate));
+        }
+
+        if (amount > BalanceDue)
+        {
+            throw new InvalidOperationException(
+                "Community Edition does not allow overpayments. The payment cannot exceed the balance due.");
+        }
+
+        InvoicePayment payment = InvoicePayment.Record(Id, paymentDate, amount, method, reference, notes);
+        _payments.Add(payment);
+        Recalculate();
+        ApplySettlementStatus();
+        return payment;
+    }
+
+    public InvoicePayment ReversePayment(Guid paymentId, DateOnly today, string reason)
+    {
+        if (Status is InvoiceStatus.Draft)
+        {
+            throw new InvalidOperationException("A draft invoice cannot receive payments.");
+        }
+
+        if (Status is InvoiceStatus.Void)
+        {
+            throw new InvalidOperationException("A void invoice cannot receive payment changes.");
+        }
+
+        InvoicePayment original = GetPayment(paymentId);
+        if (original.IsReversal)
+        {
+            throw new InvalidOperationException("A reversal cannot be reversed. Record a new payment instead.");
+        }
+
+        if (HasReversal(original.Id))
+        {
+            throw new InvalidOperationException("This payment has already been reversed.");
+        }
+
+        InvoicePayment reversal = InvoicePayment.Reverse(Id, original, today, reason);
+        _payments.Add(reversal);
+        Recalculate();
+        ApplySettlementStatus();
+        return reversal;
+    }
+
+    public bool HasReversal(Guid paymentId) =>
+        _payments.Any(payment => payment.ReversesPaymentId == paymentId);
+
     public void Void(string reason)
     {
         if (!InvoiceStatusRules.CanVoid(Status))
@@ -359,6 +431,46 @@ public sealed class Invoice : IAuditable
         }
     }
 
+    private void EnsurePayable()
+    {
+        if (Status is InvoiceStatus.Draft)
+        {
+            throw new InvalidOperationException("A draft invoice cannot receive payments.");
+        }
+
+        if (Status is InvoiceStatus.Void)
+        {
+            throw new InvalidOperationException("A void invoice cannot receive payments.");
+        }
+
+        if (BalanceDue <= 0m)
+        {
+            throw new InvalidOperationException("There is no outstanding balance on this invoice.");
+        }
+
+        if (!InvoiceStatusRules.CanRecordPayment(Status))
+        {
+            throw new InvalidOperationException(
+                $"A {InvoiceStatusRules.Label(Status).ToLowerInvariant()} invoice cannot receive payments.");
+        }
+    }
+
+    private void ApplySettlementStatus()
+    {
+        if (Status is InvoiceStatus.Draft or InvoiceStatus.Void)
+        {
+            return;
+        }
+
+        if (AmountPaid == 0m)
+        {
+            Status = InvoiceStatus.Sent;
+            return;
+        }
+
+        Status = AmountPaid == Total ? InvoiceStatus.Paid : InvoiceStatus.PartiallyPaid;
+    }
+
     private void ApplyHeader(
         DateOnly issueDate,
         DateOnly dueDate,
@@ -414,7 +526,7 @@ public sealed class Invoice : IAuditable
             _lines.Select(line => line.ToAmount()),
             Discount,
             TaxRatePercent,
-            AmountPaid,
+            NetAmountPaid(),
             isVoid: Status is InvoiceStatus.Void);
         Subtotal = totals.Subtotal;
         TaxableSubtotal = totals.TaxableSubtotal;
@@ -427,6 +539,30 @@ public sealed class Invoice : IAuditable
     private InvoiceLine GetLine(Guid lineId) =>
         _lines.SingleOrDefault(line => line.Id == lineId)
         ?? throw new InvalidOperationException("The line was not found on this invoice.");
+
+    private InvoicePayment GetPayment(Guid paymentId) =>
+        _payments.SingleOrDefault(payment => payment.Id == paymentId)
+        ?? throw new InvalidOperationException("The payment was not found on this invoice.");
+
+    private decimal NetAmountPaid()
+    {
+        decimal recorded = 0m;
+        decimal reversed = 0m;
+        foreach (InvoicePayment payment in _payments)
+        {
+            if (payment.IsReversal)
+            {
+                reversed += payment.Amount;
+            }
+            else
+            {
+                recorded += payment.Amount;
+            }
+        }
+
+        decimal net = recorded - reversed;
+        return net < 0m ? 0m : net;
+    }
 
     private void ApplyLineOrder(IReadOnlyList<Guid> lineIds, int offset)
     {

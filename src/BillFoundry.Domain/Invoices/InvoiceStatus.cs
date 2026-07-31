@@ -29,6 +29,9 @@ public static class InvoiceStatusRules
 
     public static bool CanVoid(InvoiceStatus status) => status is InvoiceStatus.Draft or InvoiceStatus.Sent;
 
+    public static bool CanRecordPayment(InvoiceStatus status) =>
+        status is InvoiceStatus.Sent or InvoiceStatus.PartiallyPaid;
+
     public static bool CanTransition(InvoiceStatus from, InvoiceStatus to)
     {
         if (from == to)
