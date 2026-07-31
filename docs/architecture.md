@@ -79,7 +79,16 @@ Line items copy description, quantity, unit, unit price, and taxable status;
 later catalog price changes do not rewrite saved estimates. Number allocation
 uses a locked `DocumentSequences` row inside a transaction. See
 [estimates.md](estimates.md). The `AddEstimates` migration adds
-`DocumentSequences`, `Estimates`, and `EstimateLines`.
+`DocumentSequences`, `Estimates`, and `EstimateLines`. Invoices, invoice lines,
+and the invoice sequence seed are the `AddInvoices` migration. See
+[invoice-lifecycle.md](invoice-lifecycle.md).
+
+Invoices store billed-to identity as a client snapshot, required issue and due
+dates, status, optional purchase order, notes, payment instructions, persisted
+totals including amount paid and balance due, and optional `SourceEstimateId`.
+Line snapshots follow the same historical-value rules as estimates. Overdue is
+derived from due date, outstanding balance, and `TimeProvider`; it is not stored
+as a replacement for Sent. Invoices are voided rather than deleted.
 
 Postal address, currency, document prefixes, and logo metadata are modeled as
 value objects. Logo bytes are not stored in SQL Server; metadata points at an
@@ -91,6 +100,8 @@ Organization updates use SQL Server rowversion optimistic concurrency.
 Client profile and contact changes use the same rowversion token on `Client`.
 Catalog item edits use a rowversion token on `CatalogItem`.
 Estimate header, line, and status changes use a rowversion token on `Estimate`.
+Invoice header, line, send, void, and conversion changes use a rowversion token
+on `Invoice` (conversion also uses the estimate token).
 
 Migrations live in Infrastructure. Generate and apply them with Web as the
 startup project.
@@ -130,8 +141,9 @@ Application pages require authentication unless marked `[AllowAnonymous]`.
 
 - Domain and Application tests cover rules, identity abstractions, authorization policies,
   organization validation, logo content inspection, client/contact invariants,
-  catalog pricing rules, estimate rounding, and estimate status transitions.
+  catalog pricing rules, estimate rounding, estimate status transitions,
+  invoice rounding, overdue derivation, and invoice lifecycle.
 - Integration tests use `WebApplicationFactory` against the Web host.
 - Authentication tests disable development identity seeding and do not require SQL Server
   except when a test explicitly exercises the database.
-- Organization, client, catalog, and estimate persistence, concurrency, and constraint tests require SQL Server LocalDB.
+- Organization, client, catalog, estimate, and invoice persistence, concurrency, and constraint tests require SQL Server LocalDB.

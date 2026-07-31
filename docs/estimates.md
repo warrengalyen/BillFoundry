@@ -3,8 +3,8 @@
 Estimates are priced offers to a client. Each estimate is an aggregate with
 header fields, status, persisted totals, and ordered line snapshots. This
 document is the durable description of Community Edition estimate behavior.
-Estimate-to-invoice conversion is modeled in status only; it is not implemented
-in this phase.
+Accepted estimates can be converted to invoices; see
+[invoice-lifecycle.md](invoice-lifecycle.md).
 
 ## Aggregate
 
@@ -49,13 +49,13 @@ Initial statuses:
 | Accepted | Client accepted the offer |
 | Declined | Client declined; may be reopened |
 | Expired | Explicitly marked expired; may be reopened |
-| Converted | Reserved for later invoice conversion |
+| Converted | Converted to an invoice; historical |
 
 Valid transitions:
 
 - Draft → Sent, Declined
 - Sent → Draft (recall), Accepted, Declined, Expired
-- Accepted → Converted (domain only; the application does not expose conversion yet)
+- Accepted → Converted (only through invoice conversion; `IEstimateService` rejects a direct Converted transition)
 - Declined → Draft
 - Expired → Draft
 - Converted → none
@@ -85,8 +85,10 @@ the prefix later does not rewrite existing numbers.
 
 ## Rounding and totals
 
-All financial math lives in `EstimateCalculator` / `MoneyRounding`. Razor
-components display results; they do not implement the formulas.
+All financial math lives in `DocumentCalculator` / `MoneyRounding`.
+`EstimateCalculator` delegates to the shared document calculator so invoices
+use the same rounding. Razor components display results; they do not implement
+the formulas.
 
 | Value | Scale | Midpoint |
 | --- | --- | --- |
@@ -123,6 +125,8 @@ unique `(EstimateId, SortOrder)` index can accept swaps.
 - View detail for any status
 - Duplicate any estimate into a new Draft with copied snapshots and a new number
 - Apply the user-facing status transitions above
+- Convert an Accepted estimate to a draft invoice (see
+  [invoice-lifecycle.md](invoice-lifecycle.md))
 - Search, filter, sort, and page the estimate list on the server (number, client
   name, notes, status)
 

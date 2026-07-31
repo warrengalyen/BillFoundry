@@ -65,6 +65,9 @@ than a raw role check:
 - `ManageEstimates` — authenticated Administrator or User role may list, create,
   edit drafts, manage line items, duplicate, and apply allowed estimate status
   transitions
+- `ManageInvoices` — authenticated Administrator or User role may list, create,
+  edit drafts, manage line items, duplicate, mark sent, void, and convert
+  accepted estimates
 - `NotDemoMode` — succeeds only when Demo Mode is disabled; reserved for later
   mutation restrictions
 
@@ -85,7 +88,15 @@ deleted.
 `IEstimateService` authorizes `ManageEstimates` before listing or mutating
 estimates. Estimate pages require the same policy. Accepted and converted
 estimates cannot be edited. Estimates are not permanently deleted. Conversion
-to an invoice is not exposed yet. See [estimates.md](estimates.md).
+to an invoice is performed by `IInvoiceService.ConvertFromEstimateAsync`, not
+by a direct estimate status change. See [estimates.md](estimates.md) and
+[invoice-lifecycle.md](invoice-lifecycle.md).
+
+`IInvoiceService` authorizes `ManageInvoices` before listing or mutating
+invoices. Invoice pages require the same policy. Sent and void invoices cannot
+be edited. Invoices are not permanently deleted; voiding keeps the number and
+history. Overdue is computed from due date, balance due, and `TimeProvider`.
+See [invoice-lifecycle.md](invoice-lifecycle.md).
 
 ## Organization logo uploads
 
@@ -126,8 +137,8 @@ Entities that implement `IAuditable` receive:
 - `CreatedByUserId` / `UpdatedByUserId` from `ICurrentUser`
 
 `AuditableInterceptor` applies those values in `SaveChanges`. `ApplicationUser`,
-`Organization`, `Client`, `ClientContact`, `CatalogItem`, `Estimate`, and
-`EstimateLine` implement the pattern.
+`Organization`, `Client`, `ClientContact`, `CatalogItem`, `Estimate`,
+`EstimateLine`, `Invoice`, and `InvoiceLine` implement the pattern.
 
 ## Development seeding
 
