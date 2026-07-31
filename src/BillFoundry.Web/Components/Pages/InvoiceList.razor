@@ -1,0 +1,206 @@
+@page "/Invoices"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Invoices
+@using BillFoundry.Domain.Invoices
+@using BillFoundry.Web.Invoices
+@inject IInvoiceService Invoices
+@inject NavigationManager Navigation
+
+<PageTitle>Invoices - BillFoundry</PageTitle>
+
+<section class="page-header page-header-split">
+    <div>
+        <h1>Invoices</h1>
+        <p class="lede">Search and manage bills. Totals and billed-to identity are stored on each invoice from snapshots taken when it was saved.</p>
+    </div>
+    <p>
+        <a class="button-primary" href="/Invoices/New">New invoice</a>
+    </p>
+</section>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+<section class="panel panel-wide" aria-labelledby="filter-heading">
+    <h2 id="filter-heading" class="visually-hidden">Invoice filters</h2>
+    <EditForm Model="Filters" OnValidSubmit="ApplyFiltersAsync" class="filter-bar filter-bar-invoices">
+        <div class="form-field">
+            <label for="invoice-search">Search</label>
+            <InputText id="invoice-search"
+                       class="form-input"
+                       @bind-Value="Filters.Search"
+                       placeholder="Number, client, PO, or notes" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-client-filter">Client</label>
+            <InputSelect id="invoice-client-filter" class="form-input" @bind-Value="SelectedClientId">
+                <option value="@Guid.Empty">All clients</option>
+                @foreach (InvoiceClientOption client in Clients)
+                {
+                    <option value="@client.Id">@client.Name (@client.Code)</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="form-field">
+            <label for="invoice-status">Status</label>
+            <InputSelect id="invoice-status" class="form-input" @bind-Value="Filters.Status">
+                <option value="@InvoiceStatusFilter.All">All</option>
+                <option value="@InvoiceStatusFilter.Draft">Draft</option>
+                <option value="@InvoiceStatusFilter.Sent">Sent</option>
+                <option value="@InvoiceStatusFilter.PartiallyPaid">Partially paid</option>
+                <option value="@InvoiceStatusFilter.Paid">Paid</option>
+                <option value="@InvoiceStatusFilter.Overdue">Overdue</option>
+                <option value="@InvoiceStatusFilter.Void">Void</option>
+            </InputSelect>
+        </div>
+        <div class="form-field">
+            <label for="invoice-issue-from">Issued from</label>
+            <InputDate id="invoice-issue-from" class="form-input" @bind-Value="Filters.IssueFrom" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-issue-to">Issued to</label>
+            <InputDate id="invoice-issue-to" class="form-input" @bind-Value="Filters.IssueTo" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-due-from">Due from</label>
+            <InputDate id="invoice-due-from" class="form-input" @bind-Value="Filters.DueFrom" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-due-to">Due to</label>
+            <InputDate id="invoice-due-to" class="form-input" @bind-Value="Filters.DueTo" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-min-total">Min total</label>
+            <InputNumber id="invoice-min-total" class="form-input" @bind-Value="Filters.MinTotal" step="0.01" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-max-total">Max total</label>
+            <InputNumber id="invoice-max-total" class="form-input" @bind-Value="Filters.MaxTotal" step="0.01" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-page-size">Page size</label>
+            <InputSelect id="invoice-page-size" class="form-input" @bind-Value="Filters.PageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </InputSelect>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="button-primary">Apply</button>
+        </div>
+    </EditForm>
+</section>
+
+<section class="panel panel-wide"
+         aria-labelledby="results-heading"
+         aria-busy="@(_loading ? "true" : "false")">
+    <div class="results-header">
+        <h2 id="results-heading">Invoices</h2>
+        <p class="results-count" aria-live="polite">@ResultsSummary</p>
+    </div>
+
+    @if (_loading)
+    {
+        <p role="status">Loading invoices.</p>
+    }
+    else if (Page?.Items.Count == 0)
+    {
+        <p>
+            @if (HasFilters)
+            {
+                <text>No invoices match the current search or filters.</text>
+            }
+            else
+            {
+                <text>No invoices have been created yet. <a href="/Invoices/New">Create an invoice</a>.</text>
+            }
+        </p>
+    }
+    else if (Page is not null)
+    {
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Invoices</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" aria-sort="@AriaSort(InvoiceSortField.Number)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(InvoiceSortField.Number)'>
+                                Number @SortIndicator(InvoiceSortField.Number)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(InvoiceSortField.Client)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(InvoiceSortField.Client)'>
+                                Client @SortIndicator(InvoiceSortField.Client)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(InvoiceSortField.IssueDate)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(InvoiceSortField.IssueDate)'>
+                                Issued @SortIndicator(InvoiceSortField.IssueDate)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(InvoiceSortField.DueDate)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(InvoiceSortField.DueDate)'>
+                                Due @SortIndicator(InvoiceSortField.DueDate)
+                            </button>
+                        </th>
+                        <th scope="col" aria-sort="@AriaSort(InvoiceSortField.Status)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(InvoiceSortField.Status)'>
+                                Status @SortIndicator(InvoiceSortField.Status)
+                            </button>
+                        </th>
+                        <th scope="col" class="numeric" aria-sort="@AriaSort(InvoiceSortField.Total)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(InvoiceSortField.Total)'>
+                                Total @SortIndicator(InvoiceSortField.Total)
+                            </button>
+                        </th>
+                        <th scope="col" class="numeric" aria-sort="@AriaSort(InvoiceSortField.BalanceDue)">
+                            <button type="button" class="sort-button" @onclick='() => SortAsync(InvoiceSortField.BalanceDue)'>
+                                Balance @SortIndicator(InvoiceSortField.BalanceDue)
+                            </button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (InvoiceListItemDto invoice in Page.Items)
+                    {
+                        <tr>
+                            <td><a href="@($"/Invoices/{invoice.Id}")">@invoice.Number</a></td>
+                            <td>@invoice.ClientName</td>
+                            <td>@invoice.IssueDate.ToString("d")</td>
+                            <td>@invoice.DueDate.ToString("d")</td>
+                            <td>
+                                <span class="status-badge @InvoiceFormatting.StatusClass(invoice.EffectiveStatus)">
+                                    @invoice.StatusLabel
+                                </span>
+                            </td>
+                            <td class="numeric">@InvoiceFormatting.FormatAmount(invoice.Total, invoice.CurrencyCode)</td>
+                            <td class="numeric">@InvoiceFormatting.FormatAmount(invoice.BalanceDue, invoice.CurrencyCode)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Page.TotalPages > 1)
+        {
+            <nav class="pagination" aria-label="Invoice pages">
+                <button type="button"
+                        class="button-secondary"
+                        disabled="@(Page.Page <= 1)"
+                        @onclick="PreviousPageAsync">
+                    Previous
+                </button>
+                <p>Page @Page.Page of @Page.TotalPages</p>
+                <button type="button"
+                        class="button-secondary"
+                        disabled="@(Page.Page >= Page.TotalPages)"
+                        @onclick="NextPageAsync">
+                    Next
+                </button>
+            </nav>
+        }
+    }
+</section>

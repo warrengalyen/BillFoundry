@@ -1,0 +1,69 @@
+@using BillFoundry.Application.Invoices
+@using BillFoundry.Web.Invoices
+
+<fieldset class="form-fieldset">
+    <legend>Invoice</legend>
+    <div class="form-grid">
+        <div class="form-field">
+            <label for="invoice-client">Client</label>
+            <InputSelect id="invoice-client" class="form-input" @bind-Value="Input.ClientId" aria-required="true">
+                <option value="@Guid.Empty">Select a client</option>
+                @foreach (InvoiceClientOption client in Clients)
+                {
+                    <option value="@client.Id">@client.Name (@client.Code)</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Input.ClientId" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-issue">Issue date</label>
+            <InputDate id="invoice-issue" class="form-input" @bind-Value="Input.IssueDate" aria-required="true" />
+            <ValidationMessage For="() => Input.IssueDate" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-due">Due date</label>
+            <InputDate id="invoice-due" class="form-input" @bind-Value="Input.DueDate" aria-required="true" />
+            <ValidationMessage For="() => Input.DueDate" />
+            <p class="form-hint">Required. Cannot be earlier than the issue date. Overdue is calculated from this date and the unpaid balance.</p>
+        </div>
+        <div class="form-field">
+            <label for="invoice-po">Purchase order</label>
+            <InputText id="invoice-po" class="form-input" @bind-Value="Input.PurchaseOrder" />
+            <ValidationMessage For="() => Input.PurchaseOrder" />
+        </div>
+        <div class="form-field">
+            <label for="invoice-discount">Discount@(string.IsNullOrWhiteSpace(CurrencyCode) ? "" : $" ({CurrencyCode})")</label>
+            <InputNumber id="invoice-discount" class="form-input" @bind-Value="Input.Discount" step="0.01" />
+            <ValidationMessage For="() => Input.Discount" />
+            <p class="form-hint">Document-level amount, up to two decimal places. Cannot exceed the subtotal.</p>
+        </div>
+        <div class="form-field">
+            <label for="invoice-tax-rate">Tax rate (%)</label>
+            <InputNumber id="invoice-tax-rate" class="form-input" @bind-Value="Input.TaxRatePercent" step="0.0001" />
+            <ValidationMessage For="() => Input.TaxRatePercent" />
+            <p class="form-hint">Applied to the taxable amount after a proportional share of the discount. Up to four decimal places.</p>
+        </div>
+    </div>
+    <div class="form-field">
+        <label for="invoice-notes">Notes</label>
+        <InputTextArea id="invoice-notes" class="form-input" @bind-Value="Input.Notes" />
+        <ValidationMessage For="() => Input.Notes" />
+    </div>
+    <div class="form-field">
+        <label for="invoice-payment">Payment instructions</label>
+        <InputTextArea id="invoice-payment" class="form-input" @bind-Value="Input.PaymentInstructions" />
+        <ValidationMessage For="() => Input.PaymentInstructions" />
+    </div>
+</fieldset>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public InvoiceInput Input { get; set; } = default!;
+
+    [Parameter]
+    public IReadOnlyList<InvoiceClientOption> Clients { get; set; } = [];
+
+    [Parameter]
+    public string? CurrencyCode { get; set; }
+}

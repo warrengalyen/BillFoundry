@@ -688,5 +688,9 @@ code {
     .filter-bar-estimates {
         grid-template-columns: 2fr 1fr 8rem auto;
     }
+
+    .filter-bar-invoices {
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr 8rem auto;
+    }
 }
 

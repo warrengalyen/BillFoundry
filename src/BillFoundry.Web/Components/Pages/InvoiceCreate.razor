@@ -1,0 +1,59 @@
+@page "/Invoices/New"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
+@rendermode InteractiveServer
+@using BillFoundry.Application.Invoices
+@using BillFoundry.Web.Invoices
+@inject IInvoiceService Invoices
+@inject NavigationManager Navigation
+
+<PageTitle>New invoice - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>New invoice</h1>
+    <p class="lede">Create a draft invoice. Line items are added next. The invoice number is assigned when you save@(string.IsNullOrEmpty(CurrencyCode) ? "." : $". Amounts use {CurrencyCode}.")</p>
+</section>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="form-alert" role="alert">@ErrorMessage</div>
+}
+
+@if (Errors.Count > 0)
+{
+    <div class="form-errors" role="alert">
+        <p>Please correct the following:</p>
+        <ul>
+            @foreach (string error in Errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (_loading)
+{
+    <p role="status">Loading invoice options.</p>
+}
+else if (Clients.Count == 0)
+{
+    <section class="panel">
+        <h2>An active client is required</h2>
+        <p>Create an active client before you can write an invoice. <a href="/Clients/New">Add a client</a>.</p>
+    </section>
+}
+else
+{
+    <section class="panel panel-wide" aria-labelledby="invoice-form-heading">
+        <h2 id="invoice-form-heading" class="visually-hidden">Invoice form</h2>
+        <EditForm Model="Input" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="form-errors" />
+            <InvoiceEditorFields Input="Input" Clients="Clients" CurrencyCode="CurrencyCode" />
+            <div class="form-actions">
+                <button type="submit" class="button-primary">Create invoice</button>
+                <a class="button-secondary" href="/Invoices">Cancel</a>
+            </div>
+        </EditForm>
+    </section>
+}
