@@ -13,7 +13,10 @@ namespace BillFoundry.IntegrationTests;
 
 internal static class OrganizationTestHost
 {
-    public static ServiceProvider Create(SqlServerFixture sql, ICurrentUser currentUser)
+    public static ServiceProvider Create(
+        SqlServerFixture sql,
+        ICurrentUser currentUser,
+        TimeProvider? timeProvider = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -33,6 +36,11 @@ internal static class OrganizationTestHost
         services.AddApplication(configuration);
         services.AddInfrastructure(configuration, environment);
         services.AddScoped<ICurrentUser>(_ => currentUser);
+        if (timeProvider is not null)
+        {
+            services.AddSingleton(timeProvider);
+        }
+
         return services.BuildServiceProvider();
     }
 

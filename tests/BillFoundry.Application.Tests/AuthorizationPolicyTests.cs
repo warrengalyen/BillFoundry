@@ -185,6 +185,36 @@ public sealed class AuthorizationPolicyTests
         Assert.False(result.Succeeded);
     }
 
+    [Fact]
+    public async Task ManageInvoices_policy_allows_user_and_administrator()
+    {
+        await using ServiceProvider provider = CreateProvider(demoEnabled: false);
+        IAuthorizationService authorization = provider.GetRequiredService<IAuthorizationService>();
+
+        AuthorizationResult administrator = await authorization.AuthorizeAsync(
+            CreateUser(AppRoles.Administrator),
+            AuthorizationPolicies.ManageInvoices);
+        AuthorizationResult user = await authorization.AuthorizeAsync(
+            CreateUser(AppRoles.User),
+            AuthorizationPolicies.ManageInvoices);
+
+        Assert.True(administrator.Succeeded);
+        Assert.True(user.Succeeded);
+    }
+
+    [Fact]
+    public async Task ManageInvoices_policy_denies_anonymous_user()
+    {
+        await using ServiceProvider provider = CreateProvider(demoEnabled: false);
+        IAuthorizationService authorization = provider.GetRequiredService<IAuthorizationService>();
+
+        AuthorizationResult result = await authorization.AuthorizeAsync(
+            new ClaimsPrincipal(),
+            AuthorizationPolicies.ManageInvoices);
+
+        Assert.False(result.Succeeded);
+    }
+
     private static ServiceProvider CreateProvider(bool demoEnabled)
     {
         var configuration = new ConfigurationBuilder()
