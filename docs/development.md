@@ -78,7 +78,7 @@ Production (non-Development) startup fails if
 
 EF Core is registered against SQL Server through `BillFoundryDbContext`, which
 includes ASP.NET Core Identity, the installation organization profile,
-clients, the service catalog, estimates, invoices, and document number sequences. Apply
+clients, the service catalog, estimates, invoices, invoice payments, and document number sequences. Apply
 migrations before first sign-in:
 
 ```bash
@@ -144,7 +144,7 @@ keyboard access, and visible focus. The shell includes a skip-to-content link.
 Test projects live under `tests/`. Integration tests reference the Web project
 and use `Microsoft.AspNetCore.Mvc.Testing`. They should not require SQL Server
 unless they specifically exercise database behavior. Organization, client,
-catalog, estimate, and invoice persistence, concurrency, and constraint tests create a
+catalog, estimate, invoice, and payment persistence, concurrency, and constraint tests create a
 LocalDB database named `BillFoundry_IT_{guid}` and drop it when the fixture
 completes. Client, catalog, estimate, and invoice lists are queried with server-side
 search, status filtering, sorting, and paging.
@@ -152,3 +152,5 @@ search, status filtering, sorting, and paging.
 Estimate rounding, status transitions, and number allocation are documented in
 [estimates.md](estimates.md). Invoice lifecycle, overdue derivation, conversion,
 and numbering are documented in [invoice-lifecycle.md](invoice-lifecycle.md).
+Payment recording, settlement, and reversals are documented in
+[payments.md](payments.md).

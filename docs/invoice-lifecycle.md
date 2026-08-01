@@ -3,7 +3,8 @@
 Invoices are bills to a client. Each invoice is an aggregate with header
 fields, status, persisted totals, billed-to identity, and ordered line
 snapshots. This document is the durable description of Community Edition
-invoice behavior. Payments and PDF generation are not implemented yet.
+invoice behavior. Payment recording is described in [payments.md](payments.md).
+PDF generation is not implemented yet.
 
 ## Aggregate
 
@@ -20,6 +21,7 @@ An invoice stores:
 - Currency snapshotted from the organization when the invoice is created
 - Optional `SourceEstimateId` when the invoice was converted from an estimate
 - Optional void reason
+- Ordered **payments** (receipts and reversals); see [payments.md](payments.md)
 - Audit metadata and a SQL Server `rowversion` concurrency token
 
 Lines store a historical snapshot:
@@ -53,16 +55,22 @@ Initial statuses:
 | --- | --- |
 | Draft | Editable working copy |
 | Sent | Issued to the client |
-| PartiallyPaid | Reserved for later payment recording |
-| Paid | Reserved for later payment recording |
+| PartiallyPaid | Issued bill with a partial net amount paid |
+| Paid | Issued bill with net amount paid equal to total |
 | Overdue | Derived display status; not stored as a replacement for Sent |
 | Void | Cancelled with a required reason |
 
-Valid stored transitions in this phase:
+Valid stored transitions:
 
 - Draft → Sent, Void
-- Sent → Void
-- PartiallyPaid, Paid, Void → none
+- Sent → Void (only when net amount paid is zero)
+- Sent → PartiallyPaid or Paid when a payment is recorded
+- PartiallyPaid → Paid when remaining balance is received
+- PartiallyPaid or Paid → Sent when reversals bring net amount paid to zero
+- Paid, Void → none through user-facing actions
+
+User-facing `CanTransition` does not include paid statuses. Those changes are
+payment-driven. See [payments.md](payments.md).
 
 A draft may be sent only when it has at least one line. There is no Sent →
 Draft recall. Sent invoices are financial documents; they are not edited.
@@ -73,8 +81,9 @@ Draft recall. Sent invoices are financial documents; they are not edited.
 Void requires a non-empty reason. An invoice with recorded payments cannot be
 voided. Voiding keeps totals and sets balance due to zero.
 
-`PartiallyPaid` and `Paid` exist on the enum and check constraint so later
-payment recording can use them. This phase always stores `AmountPaid = 0`.
+`PartiallyPaid` and `Paid` are stored when payments are recorded. Amount paid
+is the net of receipts minus reversals. Community Edition does not allow
+overpayments.
 
 ## Overdue
 
@@ -87,7 +96,7 @@ An invoice is overdue when:
 - Balance due is greater than zero
 
 `EffectiveStatus` returns `Overdue` for display and list filters. The stored
-status remains `Sent` (or `PartiallyPaid`) so later payment recording does not
+status remains `Sent` (or `PartiallyPaid`) so payment recording does not
 lose history. The Sent list filter excludes invoices that are currently
 overdue so the two views are disjoint.
 
@@ -131,7 +140,8 @@ Calculation order:
 4. Taxable subtotal = if subtotal is 0 then 0, else round(taxable line sum × (subtotal − discount) / subtotal, 2)
 5. Tax = round(taxable subtotal × tax rate percent / 100, 2)
 6. Total = subtotal − discount + tax
-7. Amount paid starts at zero in this phase
+7. Amount paid is the net of recorded payments minus reversals (see
+   [payments.md](payments.md))
 8. Balance due = 0 when void; otherwise total − amount paid
 
 Discount is allocated proportionally across taxable lines. Non-taxable lines
@@ -170,7 +180,7 @@ Conversion is allowed even if the client is later inactive; billed-to identity
 is copied from the current client row at conversion time.
 
 Duplicating an invoice allocates a new number and does **not** copy
-`SourceEstimateId`.
+`SourceEstimateId` or payments.
 
 ## Workflows
 
@@ -185,15 +195,20 @@ Authorized Administrator or User roles (`ManageInvoices`) can:
 - Duplicate any invoice into a new Draft with copied snapshots and a new number
   when the original client is still active
 - Mark Draft as Sent
-- Void Draft or Sent with a required reason
+- Record and reverse received payments on Sent or PartiallyPaid invoices (see
+  [payments.md](payments.md))
+- Void Draft or Sent with a required reason when net amount paid is zero
 - Convert an accepted estimate (from the estimate page)
 - Search, filter, sort, and page the invoice list on the server (number, client
   snapshot name/code, purchase order, notes, client, status including overdue,
   issue-date range, due-date range, and total range)
 
-Optimistic concurrency uses the invoice `rowversion`. Estimate conversion also
-uses the estimate `rowversion`. Conflicting saves return the current document
-and ask the operator to review it.
+Optimistic concurrency uses the invoice `rowversion` for header, line, send,
+void, payment, and reversal saves. Estimate conversion also uses the estimate
+`rowversion`. Conflicting saves return the current document and ask the
+operator to review it.
 
 Create, duplicate, conversion, and number allocation use transactions so a
-failed save does not consume a sequence value.
+failed save does not consume a sequence value. Recording or reversing a
+payment updates invoice totals and status in the same save as the payment
+row.

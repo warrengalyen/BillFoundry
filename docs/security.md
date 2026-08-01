@@ -93,10 +93,12 @@ by a direct estimate status change. See [estimates.md](estimates.md) and
 [invoice-lifecycle.md](invoice-lifecycle.md).
 
 `IInvoiceService` authorizes `ManageInvoices` before listing or mutating
-invoices. Invoice pages require the same policy. Sent and void invoices cannot
-be edited. Invoices are not permanently deleted; voiding keeps the number and
-history. Overdue is computed from due date, balance due, and `TimeProvider`.
-See [invoice-lifecycle.md](invoice-lifecycle.md).
+invoices, including recording and reversing payments. Invoice pages require the
+same policy. Sent, paid, and void invoices cannot be edited. Invoices and
+payments are not permanently deleted; voiding keeps the invoice number and
+history, and reversing a payment keeps the original receipt. Overdue is
+computed from due date, balance due, and `TimeProvider`. See
+[invoice-lifecycle.md](invoice-lifecycle.md) and [payments.md](payments.md).
 
 ## Organization logo uploads
 
