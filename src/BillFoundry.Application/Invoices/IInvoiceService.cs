@@ -1,9 +1,9 @@
 namespace BillFoundry.Application.Invoices;
 
 /// <summary>
-/// Creates, updates, lists, and converts invoices. Mutations require the
-/// <c>ManageInvoices</c> policy. Sent, paid, and void invoices cannot be
-/// edited. Invoices are not deleted. Payments are not recorded in this phase.
+/// Creates, updates, lists, converts invoices, and records payments.
+/// Mutations require the <c>ManageInvoices</c> policy. Sent, paid, and void
+/// invoices cannot be edited. Invoices and payments are not deleted.
 /// </summary>
 public interface IInvoiceService
 {
@@ -32,4 +32,8 @@ public interface IInvoiceService
     Task<InvoiceResult> VoidAsync(VoidInvoiceCommand command, CancellationToken cancellationToken = default);
 
     Task<InvoiceResult> ConvertFromEstimateAsync(ConvertEstimateCommand command, CancellationToken cancellationToken = default);
+
+    Task<InvoiceResult> RecordPaymentAsync(RecordPaymentCommand command, CancellationToken cancellationToken = default);
+
+    Task<InvoiceResult> ReversePaymentAsync(ReversePaymentCommand command, CancellationToken cancellationToken = default);
 }

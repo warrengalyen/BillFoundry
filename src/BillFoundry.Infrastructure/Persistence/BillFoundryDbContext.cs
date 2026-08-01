@@ -32,6 +32,8 @@ public sealed class BillFoundryDbContext(DbContextOptions<BillFoundryDbContext> 
 
     public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
 
+    public DbSet<InvoicePayment> InvoicePayments => Set<InvoicePayment>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);

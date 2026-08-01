@@ -173,5 +173,14 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Navigation(invoice => invoice.Lines)
             .HasField("_lines")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(invoice => invoice.Payments)
+            .WithOne()
+            .HasForeignKey(payment => payment.InvoiceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Navigation(invoice => invoice.Payments)
+            .HasField("_payments")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

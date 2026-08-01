@@ -128,11 +128,15 @@ public sealed class InvoiceDetailsDto
 
     public required bool CanVoid { get; init; }
 
+    public required bool CanRecordPayment { get; init; }
+
     public required IReadOnlyList<InvoiceStatus> AllowedTransitions { get; init; }
 
     public required byte[] RowVersion { get; init; }
 
     public required IReadOnlyList<InvoiceLineDto> Lines { get; init; }
+
+    public required IReadOnlyList<InvoicePaymentDto> Payments { get; init; }
 
     public static InvoiceDetailsDto From(
         Invoice invoice,
@@ -174,7 +178,8 @@ public sealed class InvoiceDetailsDto
             CurrencyCode = invoice.Currency.Value,
             SourceEstimateId = invoice.SourceEstimateId,
             CanEdit = invoice.CanEdit,
-            CanVoid = InvoiceStatusRules.CanVoid(invoice.Status),
+            CanVoid = invoice.CanVoid,
+            CanRecordPayment = invoice.CanRecordPayment,
             AllowedTransitions = InvoiceStatusRules.UserFacingTargets(invoice.Status),
             RowVersion = [.. token],
             Lines = [.. invoice.Lines
@@ -191,9 +196,55 @@ public sealed class InvoiceDetailsDto
                     IsTaxable = line.IsTaxable,
                     SortOrder = line.SortOrder,
                     LineAmount = line.LineAmount
+                })],
+            Payments = [.. invoice.Payments
+                .OrderBy(payment => payment.PaymentDate)
+                .ThenBy(payment => payment.CreatedAtUtc)
+                .Select(payment => new InvoicePaymentDto
+                {
+                    Id = payment.Id,
+                    PaymentDate = payment.PaymentDate,
+                    Amount = payment.Amount,
+                    Method = payment.Method,
+                    MethodLabel = PaymentMethodDisplay.Label(payment.Method),
+                    Reference = payment.Reference,
+                    Notes = payment.Notes,
+                    ReversesPaymentId = payment.ReversesPaymentId,
+                    ReversalReason = payment.ReversalReason,
+                    IsReversal = payment.IsReversal,
+                    CanReverse = !payment.IsReversal
+                        && invoice.Payments.All(other => other.ReversesPaymentId != payment.Id),
+                    CreatedAtUtc = payment.CreatedAtUtc
                 })]
         };
     }
+}
+
+public sealed class InvoicePaymentDto
+{
+    public required Guid Id { get; init; }
+
+    public required DateOnly PaymentDate { get; init; }
+
+    public required decimal Amount { get; init; }
+
+    public required PaymentMethod Method { get; init; }
+
+    public required string MethodLabel { get; init; }
+
+    public string? Reference { get; init; }
+
+    public string? Notes { get; init; }
+
+    public Guid? ReversesPaymentId { get; init; }
+
+    public string? ReversalReason { get; init; }
+
+    public required bool IsReversal { get; init; }
+
+    public required bool CanReverse { get; init; }
+
+    public required DateTimeOffset CreatedAtUtc { get; init; }
 }
 
 public sealed class InvoiceClientOption

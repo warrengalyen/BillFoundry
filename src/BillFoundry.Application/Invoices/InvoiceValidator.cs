@@ -112,6 +112,49 @@ public static class InvoiceValidator
         return errors;
     }
 
+    public static IReadOnlyList<string> ValidatePayment(RecordPaymentCommand command)
+    {
+        var errors = ValidateConcurrency(command).ToList();
+        if (command.PaymentDate == default)
+        {
+            errors.Add("Payment date is required.");
+        }
+
+        if (command.Amount <= 0m)
+        {
+            errors.Add("Payment amount must be greater than zero.");
+        }
+        else if (command.Amount > InvoicePayment.MaxAmount)
+        {
+            errors.Add("Payment amount cannot exceed the maximum.");
+        }
+        else if (!MoneyRounding.HasAmountScale(command.Amount))
+        {
+            errors.Add("Payment amount cannot have more than two decimal places.");
+        }
+
+        if (!PaymentMethodDisplay.IsDefined(command.Method))
+        {
+            errors.Add("Payment method is not valid.");
+        }
+
+        Optional(command.Reference, "Reference", InvoicePayment.ReferenceMaxLength, errors);
+        Optional(command.Notes, "Notes", InvoicePayment.NotesMaxLength, errors);
+        return errors;
+    }
+
+    public static IReadOnlyList<string> ValidateReverse(ReversePaymentCommand command)
+    {
+        var errors = ValidateConcurrency(command).ToList();
+        if (command.PaymentId == Guid.Empty)
+        {
+            errors.Add("The payment was not found.");
+        }
+
+        Require(command.Reason, "Reversal reason", InvoicePayment.ReversalReasonMaxLength, errors);
+        return errors;
+    }
+
     public static IReadOnlyList<string> ValidateConvert(ConvertEstimateCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);

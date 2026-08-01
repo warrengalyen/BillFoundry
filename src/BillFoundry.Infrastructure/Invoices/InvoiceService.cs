@@ -501,6 +501,88 @@ internal sealed class InvoiceService(
     public Task<InvoiceResult> VoidAsync(VoidInvoiceCommand command, CancellationToken cancellationToken = default) =>
         MutateAsync(command, InvoiceValidator.ValidateVoid(command), invoice => invoice.Void(command.Reason), cancellationToken);
 
+    public async Task<InvoiceResult> RecordPaymentAsync(
+        RecordPaymentCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (await IsForbiddenAsync().ConfigureAwait(false))
+        {
+            return InvoiceResult.Forbidden();
+        }
+
+        Invoice? invoice = await LoadAsync(command.Id, cancellationToken).ConfigureAwait(false);
+        if (invoice is null)
+        {
+            return InvoiceResult.NotFound();
+        }
+
+        IReadOnlyList<string> errors = InvoiceValidator.ValidatePayment(command);
+        if (errors.Count > 0)
+        {
+            return InvoiceResult.Invalid(errors, await ToDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
+        }
+
+        ApplyRowVersion(invoice, command.RowVersion);
+        try
+        {
+            invoice.RecordPayment(
+                Today(),
+                command.PaymentDate,
+                command.Amount,
+                command.Method,
+                command.Reference,
+                command.Notes);
+            Touch(invoice);
+            return await SaveAsync(invoice, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            return InvoiceResult.Invalid(
+                [UserFacingMessage(exception)],
+                await ReloadDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
+        }
+    }
+
+    public async Task<InvoiceResult> ReversePaymentAsync(
+        ReversePaymentCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (await IsForbiddenAsync().ConfigureAwait(false))
+        {
+            return InvoiceResult.Forbidden();
+        }
+
+        Invoice? invoice = await LoadAsync(command.Id, cancellationToken).ConfigureAwait(false);
+        if (invoice is null)
+        {
+            return InvoiceResult.NotFound();
+        }
+
+        IReadOnlyList<string> errors = InvoiceValidator.ValidateReverse(command);
+        if (errors.Count > 0)
+        {
+            return InvoiceResult.Invalid(errors, await ToDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
+        }
+
+        ApplyRowVersion(invoice, command.RowVersion);
+        try
+        {
+            invoice.ReversePayment(command.PaymentId, Today(), command.Reason);
+            Touch(invoice);
+            return await SaveAsync(invoice, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            return InvoiceResult.Invalid(
+                [UserFacingMessage(exception)],
+                await ReloadDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
+        }
+    }
+
     public async Task<InvoiceResult> ConvertFromEstimateAsync(
         ConvertEstimateCommand command,
         CancellationToken cancellationToken = default)
@@ -648,6 +730,7 @@ internal sealed class InvoiceService(
     private Task<Invoice?> LoadAsync(Guid id, CancellationToken cancellationToken) =>
         dbContext.Invoices
             .Include(invoice => invoice.Lines)
+            .Include(invoice => invoice.Payments)
             .FirstOrDefaultAsync(invoice => invoice.Id == id, cancellationToken);
 
     private async Task<OrganizationSettings> LoadSettingsAsync(CancellationToken cancellationToken)
@@ -734,7 +817,7 @@ internal sealed class InvoiceService(
         {
             return InvoiceResult.Invalid(
                 ["The invoice could not be saved because a uniqueness constraint was violated."],
-                await ToDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
+                await ReloadDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
         }
     }
 

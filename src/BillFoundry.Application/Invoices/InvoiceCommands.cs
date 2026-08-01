@@ -1,4 +1,5 @@
 using BillFoundry.Domain.Catalog;
+using BillFoundry.Domain.Invoices;
 
 namespace BillFoundry.Application.Invoices;
 
@@ -73,6 +74,26 @@ public sealed class VoidInvoiceCommand : InvoiceConcurrencyCommand
 public sealed class DuplicateInvoiceCommand
 {
     public Guid Id { get; set; }
+}
+
+public sealed class ReversePaymentCommand : InvoiceConcurrencyCommand
+{
+    public Guid PaymentId { get; set; }
+
+    public string Reason { get; set; } = string.Empty;
+}
+
+public sealed class RecordPaymentCommand : InvoiceConcurrencyCommand
+{
+    public DateOnly PaymentDate { get; set; }
+
+    public decimal Amount { get; set; }
+
+    public PaymentMethod Method { get; set; }
+
+    public string? Reference { get; set; }
+
+    public string? Notes { get; set; }
 }
 
 public sealed class ConvertEstimateCommand
