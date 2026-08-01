@@ -107,6 +107,53 @@ public sealed class InvoiceValidatorTests
         Assert.Contains(errors, error => error.Contains("estimate", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(errors, error => error.Contains("version", StringComparison.OrdinalIgnoreCase));
     }
+
+    [Fact]
+    public void ValidatePayment_rejects_zero_negative_and_invalid_values()
+    {
+        IReadOnlyList<string> empty = InvoiceValidator.ValidatePayment(new RecordPaymentCommand());
+        Assert.Contains(empty, error => error.Contains("invoice", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(empty, error => error.Contains("version", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(empty, error => error.Contains("Payment date", StringComparison.Ordinal));
+        Assert.Contains(empty, error => error.Contains("greater than zero", StringComparison.OrdinalIgnoreCase));
+
+        IReadOnlyList<string> invalid = InvoiceValidator.ValidatePayment(new RecordPaymentCommand
+        {
+            Id = Guid.NewGuid(),
+            RowVersion = [1],
+            PaymentDate = new DateOnly(2026, 8, 22),
+            Amount = -5m,
+            Method = (PaymentMethod)99,
+            Reference = new string('x', InvoicePayment.ReferenceMaxLength + 1)
+        });
+        Assert.Contains(invalid, error => error.Contains("greater than zero", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(invalid, error => error.Contains("method", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(invalid, error => error.Contains("Reference", StringComparison.Ordinal));
+
+        IReadOnlyList<string> scale = InvoiceValidator.ValidatePayment(new RecordPaymentCommand
+        {
+            Id = Guid.NewGuid(),
+            RowVersion = [1],
+            PaymentDate = new DateOnly(2026, 8, 22),
+            Amount = 1.001m,
+            Method = PaymentMethod.Cash
+        });
+        Assert.Contains(scale, error => error.Contains("two decimal places", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ValidateReverse_requires_payment_identity_and_reason()
+    {
+        IReadOnlyList<string> errors = InvoiceValidator.ValidateReverse(new ReversePaymentCommand
+        {
+            Id = Guid.NewGuid(),
+            RowVersion = [1],
+            Reason = " "
+        });
+
+        Assert.Contains(errors, error => error.Contains("payment", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(errors, error => error.Contains("Reversal reason", StringComparison.Ordinal));
+    }
 }
 
 public sealed class InvoiceListQueryTests

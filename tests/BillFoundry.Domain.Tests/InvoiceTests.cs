@@ -126,6 +126,20 @@ public sealed class InvoiceStatusRulesTests
             [InvoiceStatus.Sent, InvoiceStatus.Void],
             InvoiceStatusRules.UserFacingTargets(InvoiceStatus.Draft));
         Assert.DoesNotContain(InvoiceStatus.Overdue, InvoiceStatusRules.UserFacingTargets(InvoiceStatus.Sent));
+        Assert.Empty(InvoiceStatusRules.UserFacingTargets(InvoiceStatus.PartiallyPaid));
+        Assert.Empty(InvoiceStatusRules.UserFacingTargets(InvoiceStatus.Paid));
+    }
+
+    [Fact]
+    public void Payments_are_recorded_on_sent_or_partially_paid_invoices()
+    {
+        Assert.True(InvoiceStatusRules.CanRecordPayment(InvoiceStatus.Sent));
+        Assert.True(InvoiceStatusRules.CanRecordPayment(InvoiceStatus.PartiallyPaid));
+        Assert.False(InvoiceStatusRules.CanRecordPayment(InvoiceStatus.Draft));
+        Assert.False(InvoiceStatusRules.CanRecordPayment(InvoiceStatus.Paid));
+        Assert.False(InvoiceStatusRules.CanRecordPayment(InvoiceStatus.Void));
+        Assert.False(InvoiceStatusRules.CanTransition(InvoiceStatus.Sent, InvoiceStatus.PartiallyPaid));
+        Assert.False(InvoiceStatusRules.CanTransition(InvoiceStatus.Sent, InvoiceStatus.Paid));
     }
 }
 
@@ -277,6 +291,8 @@ public sealed class InvoiceTests
         Assert.NotEqual(invoice.Lines[0].Id, copy.Lines[0].Id);
         Assert.Equal(invoice.Total, copy.Total);
         Assert.Null(copy.SourceEstimateId);
+        Assert.Empty(copy.Payments);
+        Assert.Equal(0m, copy.AmountPaid);
     }
 
     [Fact]
@@ -370,6 +386,205 @@ public sealed class InvoiceTests
                 0m,
                 0m,
                 CurrencyCode.Usd));
+    }
+
+    [Fact]
+    public void Partial_payment_moves_sent_to_partially_paid()
+    {
+        Invoice invoice = Sent(100m);
+        DateOnly today = invoice.IssueDate;
+        InvoicePayment payment = invoice.RecordPayment(
+            today,
+            today,
+            40m,
+            PaymentMethod.Check,
+            "CHK-1",
+            "First installment");
+
+        Assert.Equal(InvoiceStatus.PartiallyPaid, invoice.Status);
+        Assert.Equal(40.00m, invoice.AmountPaid);
+        Assert.Equal(60.00m, invoice.BalanceDue);
+        Assert.True(invoice.CanRecordPayment);
+        Assert.False(invoice.CanVoid);
+        Assert.False(invoice.CanEdit);
+        Assert.Equal(PaymentMethod.Check, payment.Method);
+        Assert.Equal("CHK-1", payment.Reference);
+        Assert.False(payment.IsReversal);
+        Assert.True(InvoiceStatusRules.IsOverdue(invoice.Status, invoice.DueDate, invoice.BalanceDue, today.AddDays(40)));
+    }
+
+    [Fact]
+    public void Full_payment_marks_the_invoice_paid()
+    {
+        Invoice invoice = Sent(100m);
+        invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 40m, PaymentMethod.Cash, null, null);
+        invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 60m, PaymentMethod.BankTransfer, null, null);
+
+        Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+        Assert.Equal(100.00m, invoice.AmountPaid);
+        Assert.Equal(0m, invoice.BalanceDue);
+        Assert.False(invoice.CanRecordPayment);
+        Assert.False(invoice.IsOverdue(invoice.DueDate.AddDays(1)));
+        Assert.Equal(InvoiceStatus.Paid, invoice.EffectiveStatus(invoice.DueDate.AddDays(1)));
+    }
+
+    [Fact]
+    public void Exact_balance_payment_from_sent_marks_paid()
+    {
+        Invoice invoice = Sent(75.50m);
+        invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 75.50m, PaymentMethod.PayPal, "TX-9", null);
+
+        Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+        Assert.Equal(75.50m, invoice.AmountPaid);
+        Assert.Equal(0m, invoice.BalanceDue);
+        Assert.Equal(PaymentMethod.PayPal, invoice.Payments[0].Method);
+    }
+
+    [Fact]
+    public void Draft_and_void_invoices_cannot_receive_payments()
+    {
+        Invoice draft = Draft();
+        draft.AddLine(null, "Work", 1m, CatalogUnitType.Hour, 50m, false);
+        Assert.Throws<InvalidOperationException>(() =>
+            draft.RecordPayment(draft.IssueDate, draft.IssueDate, 10m, PaymentMethod.Cash, null, null));
+
+        Invoice voided = Sent(50m);
+        voided.Void("Cancelled before payment.");
+        Assert.Throws<InvalidOperationException>(() =>
+            voided.RecordPayment(voided.IssueDate, voided.IssueDate, 10m, PaymentMethod.Cash, null, null));
+    }
+
+    [Fact]
+    public void Zero_negative_and_overprecise_amounts_are_rejected()
+    {
+        Invoice invoice = Sent(50m);
+        DateOnly today = invoice.IssueDate;
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            invoice.RecordPayment(today, today, 0m, PaymentMethod.Cash, null, null));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            invoice.RecordPayment(today, today, -1m, PaymentMethod.Cash, null, null));
+        Assert.Throws<ArgumentException>(() =>
+            invoice.RecordPayment(today, today, 1.001m, PaymentMethod.Cash, null, null));
+    }
+
+    [Fact]
+    public void Community_edition_rejects_overpayments()
+    {
+        Invoice invoice = Sent(50m);
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 50.01m, PaymentMethod.Cash, null, null));
+        Assert.Contains("overpayment", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(InvoiceStatus.Sent, invoice.Status);
+        Assert.Equal(0m, invoice.AmountPaid);
+        Assert.Empty(invoice.Payments);
+    }
+
+    [Fact]
+    public void Payment_date_cannot_be_in_the_future_or_before_issue_date()
+    {
+        Invoice invoice = Sent(50m);
+        DateOnly today = invoice.IssueDate;
+        Assert.Throws<ArgumentException>(() =>
+            invoice.RecordPayment(today, today.AddDays(1), 10m, PaymentMethod.Cash, null, null));
+        Assert.Throws<ArgumentException>(() =>
+            invoice.RecordPayment(today, today.AddDays(-1), 10m, PaymentMethod.Cash, null, null));
+    }
+
+    [Fact]
+    public void Paid_invoice_cannot_receive_another_payment()
+    {
+        Invoice invoice = Sent(50m);
+        invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 50m, PaymentMethod.CreditCard, null, null);
+        Assert.Throws<InvalidOperationException>(() =>
+            invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 1m, PaymentMethod.Cash, null, null));
+    }
+
+    [Fact]
+    public void Invoice_with_recorded_payments_cannot_be_voided()
+    {
+        Invoice invoice = Sent(50m);
+        invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 10m, PaymentMethod.Cash, null, null);
+        Assert.False(invoice.CanVoid);
+        Assert.Throws<InvalidOperationException>(() => invoice.Void("Should not void a billed invoice with payments."));
+    }
+
+    [Fact]
+    public void Reversal_restores_sent_status_and_keeps_the_original_row()
+    {
+        Invoice invoice = Sent(100m);
+        InvoicePayment payment = invoice.RecordPayment(
+            invoice.IssueDate,
+            invoice.IssueDate,
+            100m,
+            PaymentMethod.BankTransfer,
+            "WIRE-1",
+            "Paid in full");
+        InvoicePayment reversal = invoice.ReversePayment(payment.Id, invoice.IssueDate, "Client paid the wrong invoice.");
+
+        Assert.True(reversal.IsReversal);
+        Assert.Equal(payment.Id, reversal.ReversesPaymentId);
+        Assert.Equal(100m, reversal.Amount);
+        Assert.Equal(PaymentMethod.BankTransfer, reversal.Method);
+        Assert.Equal("WIRE-1", reversal.Reference);
+        Assert.Equal("Client paid the wrong invoice.", reversal.ReversalReason);
+        Assert.Equal(InvoiceStatus.Sent, invoice.Status);
+        Assert.Equal(0m, invoice.AmountPaid);
+        Assert.Equal(100m, invoice.BalanceDue);
+        Assert.Equal(2, invoice.Payments.Count);
+        Assert.True(invoice.CanRecordPayment);
+        Assert.True(invoice.CanVoid);
+        Assert.True(invoice.HasReversal(payment.Id));
+        Assert.Throws<InvalidOperationException>(() =>
+            invoice.ReversePayment(payment.Id, invoice.IssueDate, "Already reversed."));
+        Assert.Throws<InvalidOperationException>(() =>
+            invoice.ReversePayment(reversal.Id, invoice.IssueDate, "Cannot reverse a reversal."));
+    }
+
+    [Fact]
+    public void Reversal_of_a_partial_payment_leaves_remaining_receipts()
+    {
+        Invoice invoice = Sent(100m);
+        InvoicePayment first = invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 40m, PaymentMethod.Cash, null, null);
+        invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 25m, PaymentMethod.Check, null, null);
+        invoice.ReversePayment(first.Id, invoice.IssueDate, "Cash was recorded twice.");
+
+        Assert.Equal(InvoiceStatus.PartiallyPaid, invoice.Status);
+        Assert.Equal(25m, invoice.AmountPaid);
+        Assert.Equal(75m, invoice.BalanceDue);
+        Assert.Equal(3, invoice.Payments.Count);
+    }
+
+    [Fact]
+    public void Duplicate_does_not_copy_payments()
+    {
+        Invoice invoice = Sent(80m);
+        invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 80m, PaymentMethod.Cash, null, null);
+        Invoice copy = invoice.Duplicate(
+            2,
+            InvoiceNumber.Format(DocumentPrefix.InvoiceDefault, 2),
+            invoice.IssueDate,
+            invoice.DueDate);
+
+        Assert.Equal(InvoiceStatus.Draft, copy.Status);
+        Assert.Empty(copy.Payments);
+        Assert.Equal(0m, copy.AmountPaid);
+        Assert.Equal(invoice.Total, copy.BalanceDue);
+    }
+
+    [Fact]
+    public void Unsupported_payment_method_is_rejected()
+    {
+        Invoice invoice = Sent(50m);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            invoice.RecordPayment(invoice.IssueDate, invoice.IssueDate, 10m, (PaymentMethod)99, null, null));
+    }
+
+    private static Invoice Sent(decimal amount)
+    {
+        Invoice invoice = Draft();
+        invoice.AddLine(null, "Work", 1m, CatalogUnitType.Hour, amount, false);
+        invoice.MarkSent();
+        return invoice;
     }
 
     private static Invoice Draft(DateOnly? issueDate = null, DateOnly? dueDate = null)
