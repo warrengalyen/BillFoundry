@@ -41,4 +41,6 @@ internal static class InvoiceFormatting
 
     public static IReadOnlyList<CatalogUnitType> UnitTypes { get; } =
         [CatalogUnitType.Hour, CatalogUnitType.Day, CatalogUnitType.Item, CatalogUnitType.FlatFee];
+
+    public static IReadOnlyList<PaymentMethod> PaymentMethods => PaymentMethodDisplay.All;
 }

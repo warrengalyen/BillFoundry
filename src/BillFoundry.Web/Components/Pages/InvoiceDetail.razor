@@ -152,7 +152,7 @@ else if (Invoice is not null)
         }
         else if (!Invoice.CanEdit)
         {
-            <p class="form-hint">Sent invoices keep their billed amounts. Payments are not recorded in this release.</p>
+            <p class="form-hint">Sent and paid invoices keep their billed amounts. Record received payments below. Payments are not deleted; reverse a payment to correct it.</p>
         }
     </section>
 
@@ -312,6 +312,139 @@ else if (Invoice is not null)
                     {
                         <button type="button" class="button-secondary" @onclick="CancelLineEdit">Cancel</button>
                     }
+                </div>
+            </EditForm>
+        }
+    </section>
+
+    <section class="panel panel-wide" aria-labelledby="payments-heading">
+        <h2 id="payments-heading">Payments</h2>
+        <p class="form-hint">Payments are externally received amounts. Community Edition does not connect to a payment processor and does not allow overpayments. Reverse a receipt to correct it; the original row stays in the history.</p>
+        @if (Invoice.Payments.Count == 0)
+        {
+            <p>No payments have been recorded@(Invoice.CanRecordPayment ? "." : " on this invoice.")</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Invoice payments</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Reference</th>
+                            <th scope="col">Notes</th>
+                            <th scope="col" class="numeric">Amount</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (InvoicePaymentDto payment in Invoice.Payments)
+                        {
+                            <tr>
+                                <td>@payment.PaymentDate.ToString("d")</td>
+                                <td>@payment.MethodLabel</td>
+                                <td>@(string.IsNullOrWhiteSpace(payment.Reference) ? "—" : payment.Reference)</td>
+                                <td>
+                                    @if (payment.IsReversal)
+                                    {
+                                        <text>Reversal@(string.IsNullOrWhiteSpace(payment.ReversalReason) ? "" : $": {payment.ReversalReason}")</text>
+                                    }
+                                    else
+                                    {
+                                        @(string.IsNullOrWhiteSpace(payment.Notes) ? "—" : payment.Notes)
+                                    }
+                                </td>
+                                <td class="numeric">
+                                    @if (payment.IsReversal)
+                                    {
+                                        <text>−@InvoiceFormatting.FormatAmount(payment.Amount, Invoice.CurrencyCode)</text>
+                                    }
+                                    else
+                                    {
+                                        @InvoiceFormatting.FormatAmount(payment.Amount, Invoice.CurrencyCode)
+                                    }
+                                </td>
+                                <td>
+                                    @if (payment.CanReverse)
+                                    {
+                                        <button type="button" class="button-secondary" @onclick="() => BeginReverse(payment.Id)">Reverse</button>
+                                    }
+                                    else if (payment.IsReversal)
+                                    {
+                                        <span>Correction</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Reversed</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @if (_reversingPaymentId is not null)
+        {
+            <h3 id="reverse-form-heading">Reverse payment</h3>
+            <EditForm Model="ReverseInput" OnValidSubmit="ReversePaymentAsync" aria-labelledby="reverse-form-heading">
+                <DataAnnotationsValidator />
+                <div class="form-field">
+                    <label for="payment-reverse-reason">Reversal reason</label>
+                    <InputTextArea id="payment-reverse-reason" class="form-input" @bind-Value="ReverseInput.Reason" aria-required="true" />
+                    <ValidationMessage For="() => ReverseInput.Reason" />
+                    <p class="form-hint">The original payment remains in the history. A linked reversal reduces amount paid.</p>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="button-primary">Save reversal</button>
+                    <button type="button" class="button-secondary" @onclick="CancelReverse">Cancel</button>
+                </div>
+            </EditForm>
+        }
+        else if (Invoice.CanRecordPayment)
+        {
+            <h3 id="payment-form-heading">Record payment</h3>
+            <EditForm Model="PaymentInput" OnValidSubmit="RecordPaymentAsync" aria-labelledby="payment-form-heading">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="form-errors" />
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="payment-date">Payment date</label>
+                        <InputDate id="payment-date" class="form-input" @bind-Value="PaymentInput.PaymentDate" aria-required="true" />
+                        <ValidationMessage For="() => PaymentInput.PaymentDate" />
+                    </div>
+                    <div class="form-field">
+                        <label for="payment-amount">Amount (@Invoice.CurrencyCode)</label>
+                        <InputNumber id="payment-amount" class="form-input" @bind-Value="PaymentInput.Amount" step="0.01" aria-required="true" />
+                        <ValidationMessage For="() => PaymentInput.Amount" />
+                        <p class="form-hint">Balance due is @InvoiceFormatting.FormatAmount(Invoice.BalanceDue, Invoice.CurrencyCode). Overpayments are not allowed.</p>
+                    </div>
+                    <div class="form-field">
+                        <label for="payment-method">Method</label>
+                        <InputSelect id="payment-method" class="form-input" @bind-Value="PaymentInput.Method" aria-required="true">
+                            @foreach (PaymentMethod method in InvoiceFormatting.PaymentMethods)
+                            {
+                                <option value="@method">@PaymentMethodDisplay.Label(method)</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => PaymentInput.Method" />
+                    </div>
+                    <div class="form-field">
+                        <label for="payment-reference">Reference</label>
+                        <InputText id="payment-reference" class="form-input" @bind-Value="PaymentInput.Reference" />
+                        <ValidationMessage For="() => PaymentInput.Reference" />
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="payment-notes">Notes</label>
+                    <InputTextArea id="payment-notes" class="form-input" @bind-Value="PaymentInput.Notes" />
+                    <ValidationMessage For="() => PaymentInput.Notes" />
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="button-primary">Record payment</button>
                 </div>
             </EditForm>
         }

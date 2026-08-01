@@ -11,6 +11,8 @@ public partial class InvoiceDetail
     private bool _loading = true;
     private bool _notFound;
     private Guid? _editingLineId;
+    private Guid? _reversingPaymentId;
+    private DateOnly _today;
 
     [Parameter]
     public Guid Id { get; set; }
@@ -22,6 +24,10 @@ public partial class InvoiceDetail
     private InvoiceLineInput LineInput { get; set; } = new();
 
     private VoidInvoiceInput VoidInput { get; set; } = new();
+
+    private PaymentInput PaymentInput { get; set; } = new();
+
+    private ReversePaymentInput ReverseInput { get; set; } = new();
 
     private Guid SelectedCatalogItemId { get; set; }
 
@@ -39,6 +45,7 @@ public partial class InvoiceDetail
         if (options.Succeeded && options.Options is not null)
         {
             CatalogItems = options.Options.CatalogItems;
+            _today = options.Options.Today;
         }
 
         await LoadAsync();
@@ -50,6 +57,7 @@ public partial class InvoiceDetail
         InvoiceResult result = await Invoices.GetAsync(Id);
         _loading = false;
         ApplyResult(result, successMessage: null);
+        InitializePaymentForm();
     }
 
     private void BeginEditLine(InvoiceLineDto line)
@@ -170,6 +178,7 @@ public partial class InvoiceDetail
             RowVersion = Invoice.RowVersion
         });
         ApplyResult(result, "The invoice is sent.");
+        InitializePaymentForm();
     }
 
     private async Task VoidAsync()
@@ -192,6 +201,75 @@ public partial class InvoiceDetail
         }
 
         ApplyResult(result, "The invoice is void.");
+    }
+
+    private async Task RecordPaymentAsync()
+    {
+        if (Invoice is null)
+        {
+            return;
+        }
+
+        ClearMessages();
+        InvoiceResult result = await Invoices.RecordPaymentAsync(PaymentInput.ToCommand(Id, Invoice.RowVersion));
+        if (result.Succeeded)
+        {
+            CancelReverse();
+            ApplyResult(result, "The payment was recorded.");
+            InitializePaymentForm();
+            return;
+        }
+
+        ApplyResult(result, successMessage: null);
+    }
+
+    private void BeginReverse(Guid paymentId)
+    {
+        _reversingPaymentId = paymentId;
+        ReverseInput = new();
+        ClearMessages();
+    }
+
+    private void CancelReverse()
+    {
+        _reversingPaymentId = null;
+        ReverseInput = new();
+    }
+
+    private async Task ReversePaymentAsync()
+    {
+        if (Invoice is null || _reversingPaymentId is not Guid paymentId)
+        {
+            return;
+        }
+
+        ClearMessages();
+        InvoiceResult result = await Invoices.ReversePaymentAsync(new ReversePaymentCommand
+        {
+            Id = Id,
+            PaymentId = paymentId,
+            RowVersion = Invoice.RowVersion,
+            Reason = ReverseInput.Reason
+        });
+        if (result.Succeeded)
+        {
+            CancelReverse();
+            ApplyResult(result, "The payment was reversed.");
+            InitializePaymentForm();
+            return;
+        }
+
+        ApplyResult(result, successMessage: null);
+    }
+
+    private void InitializePaymentForm()
+    {
+        if (Invoice is null || !Invoice.CanRecordPayment)
+        {
+            return;
+        }
+
+        PaymentInput.ApplyDefaults(_today, Invoice.BalanceDue);
     }
 
     private async Task DuplicateAsync()
@@ -258,6 +336,13 @@ public partial class InvoiceDetail
     {
         [Required]
         [StringLength(Domain.Invoices.Invoice.VoidReasonMaxLength)]
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    public sealed class ReversePaymentInput
+    {
+        [Required]
+        [StringLength(InvoicePayment.ReversalReasonMaxLength)]
         public string Reason { get; set; } = string.Empty;
     }
 }
