@@ -1,4 +1,5 @@
 using BillFoundry.Application.Catalog;
+using BillFoundry.Application.Documents;
 using BillFoundry.Application.Clients;
 using BillFoundry.Application.Configuration;
 using BillFoundry.Application.Estimates;
@@ -7,11 +8,13 @@ using BillFoundry.Application.Notifications;
 using BillFoundry.Application.Organizations;
 using BillFoundry.Infrastructure.Catalog;
 using BillFoundry.Infrastructure.Clients;
+using BillFoundry.Infrastructure.Documents;
 using BillFoundry.Infrastructure.Estimates;
 using BillFoundry.Infrastructure.Identity;
 using BillFoundry.Infrastructure.Invoices;
 using BillFoundry.Infrastructure.Notifications;
 using BillFoundry.Infrastructure.Organizations;
+using BillFoundry.Infrastructure.Pdf;
 using BillFoundry.Infrastructure.Persistence;
 using BillFoundry.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
@@ -88,6 +91,8 @@ public static class DependencyInjection
         services.AddScoped<ICatalogService, CatalogService>();
         services.AddScoped<IEstimateService, EstimateService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
+        services.AddSingleton<IInvoiceDocumentGenerator, PdfInvoiceDocumentGenerator>();
+        services.AddScoped<IInvoiceDocumentService, InvoiceDocumentService>();
         services.AddSingleton<IOrganizationLogoStore, FileSystemOrganizationLogoStore>();
         services.AddHostedService<IdentitySeedHostedService>();
 
