@@ -92,7 +92,9 @@ public static class DependencyInjection
         services.AddScoped<IEstimateService, EstimateService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddSingleton<IInvoiceDocumentGenerator, PdfInvoiceDocumentGenerator>();
+        services.AddSingleton<IEstimateDocumentGenerator, PdfEstimateDocumentGenerator>();
         services.AddScoped<IInvoiceDocumentService, InvoiceDocumentService>();
+        services.AddScoped<IEstimateDocumentService, EstimateDocumentService>();
         services.AddSingleton<IOrganizationLogoStore, FileSystemOrganizationLogoStore>();
         services.AddHostedService<IdentitySeedHostedService>();
 
