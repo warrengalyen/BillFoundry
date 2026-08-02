@@ -39,6 +39,7 @@ else if (Invoice is not null)
                 <a class="button-primary" href="@($"/Invoices/{Id}/Edit")">Edit</a>
             }
             <button type="button" class="button-secondary" @onclick="DuplicateAsync">Duplicate</button>
+            <a class="button-secondary" href="@($"/Invoices/{Id}/pdf")">Download PDF</a>
             <a class="button-secondary" href="/Invoices">All invoices</a>
         </div>
     </section>

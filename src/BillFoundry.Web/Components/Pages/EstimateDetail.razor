@@ -41,6 +41,7 @@ else if (Estimate is not null)
                 <a class="button-primary" href="@($"/Estimates/{Id}/Edit")">Edit</a>
             }
             <button type="button" class="button-secondary" @onclick="DuplicateAsync">Duplicate</button>
+            <a class="button-secondary" href="@($"/Estimates/{Id}/pdf")">Download PDF</a>
             <a class="button-secondary" href="/Estimates">All estimates</a>
         </div>
     </section>
