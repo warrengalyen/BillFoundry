@@ -153,4 +153,6 @@ Estimate rounding, status transitions, and number allocation are documented in
 [estimates.md](estimates.md). Invoice lifecycle, overdue derivation, conversion,
 and numbering are documented in [invoice-lifecycle.md](invoice-lifecycle.md).
 Payment recording, settlement, and reversals are documented in
-[payments.md](payments.md).
+[payments.md](payments.md). Invoice and estimate PDF generation, the PDFsharp
+library choice, and download endpoints are documented in [pdf.md](pdf.md).
+Generator tests assert `%PDF` headers and extracted field text with PdfPig.

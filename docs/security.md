@@ -100,6 +100,13 @@ history, and reversing a payment keeps the original receipt. Overdue is
 computed from due date, balance due, and `TimeProvider`. See
 [invoice-lifecycle.md](invoice-lifecycle.md) and [payments.md](payments.md).
 
+`IInvoiceDocumentService` and `IEstimateDocumentService` authorize
+`ManageInvoices` / `ManageEstimates` before generating PDFs. Download endpoints
+`GET /Invoices/{id}/pdf` and `GET /Estimates/{id}/pdf` require the same
+policies. Demo Mode does not block downloads because they are not mutations.
+Responses include only a Content-Disposition file name, never a filesystem
+path. See [pdf.md](pdf.md).
+
 ## Organization logo uploads
 
 Logo uploads are accepted only after administrator authorization. The

@@ -91,7 +91,8 @@ payment receipts with linked reversals. Line snapshots follow the same
 historical-value rules as estimates. Overdue is derived from due date,
 outstanding balance, and `TimeProvider`; it is not stored as a replacement for
 Sent. Invoices and payments are not deleted; invoices are voided and payments
-are reversed. See [payments.md](payments.md).
+are reversed. See [payments.md](payments.md). US Letter PDF invoices and
+estimates are generated in memory from persisted values; see [pdf.md](pdf.md).
 
 Postal address, currency, document prefixes, and logo metadata are modeled as
 value objects. Logo bytes are not stored in SQL Server; metadata points at an
@@ -105,6 +106,12 @@ Catalog item edits use a rowversion token on `CatalogItem`.
 Estimate header, line, and status changes use a rowversion token on `Estimate`.
 Invoice header, line, send, void, payment, reversal, and conversion changes use
 a rowversion token on `Invoice` (conversion also uses the estimate token).
+
+PDF generation lives in Infrastructure (`PDFsharp`). Application defines
+`IInvoiceDocumentGenerator`, `IEstimateDocumentGenerator`, and document
+download services. Downloads are authorized with `ManageInvoices` or
+`ManageEstimates`. Physical storage paths are never returned. See
+[pdf.md](pdf.md).
 
 Migrations live in Infrastructure. Generate and apply them with Web as the
 startup project.

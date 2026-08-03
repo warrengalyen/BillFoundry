@@ -4,7 +4,7 @@ Invoices are bills to a client. Each invoice is an aggregate with header
 fields, status, persisted totals, billed-to identity, and ordered line
 snapshots. This document is the durable description of Community Edition
 invoice behavior. Payment recording is described in [payments.md](payments.md).
-PDF generation is not implemented yet.
+PDF invoices are described in [pdf.md](pdf.md).
 
 ## Aggregate
 
@@ -193,6 +193,7 @@ Authorized Administrator or User roles (`ManageInvoices`) can:
   unique `(InvoiceId, SortOrder)` index can accept swaps
 - View detail for any status
 - Duplicate any invoice into a new Draft with copied snapshots and a new number
+- Download a US Letter PDF of the persisted invoice (see [pdf.md](pdf.md))
   when the original client is still active
 - Mark Draft as Sent
 - Record and reverse received payments on Sent or PartiallyPaid invoices (see

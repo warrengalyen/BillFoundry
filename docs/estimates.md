@@ -127,6 +127,7 @@ unique `(EstimateId, SortOrder)` index can accept swaps.
 - Apply the user-facing status transitions above
 - Convert an Accepted estimate to a draft invoice (see
   [invoice-lifecycle.md](invoice-lifecycle.md))
+- Download a US Letter PDF of the persisted estimate (see [pdf.md](pdf.md))
 - Search, filter, sort, and page the estimate list on the server (number, client
   name, notes, status)
 
