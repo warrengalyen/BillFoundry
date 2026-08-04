@@ -1,0 +1,97 @@
+@page "/Reports/Aging"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
+@using BillFoundry.Application.Reporting
+@using BillFoundry.Web.Invoices
+@using BillFoundry.Web.Reporting
+@inject IReportingService Reporting
+
+<PageTitle>Invoice aging - BillFoundry</PageTitle>
+
+<section class="page-header page-header-split">
+    <div>
+        <h1>Invoice aging</h1>
+        <p class="lede">Open invoice balances grouped by days overdue as of the selected date. Current includes invoices due today.</p>
+    </div>
+    <p>
+        <a class="button-secondary" href="@ReportQuery.AgingCsv(AsOf)">Download CSV</a>
+    </p>
+</section>
+
+<ReportsNav />
+
+@if (_error is not null)
+{
+    <div class="form-alert" role="alert">@_error</div>
+}
+
+<section class="panel panel-wide">
+    <form method="get" class="filter-bar filter-bar-reports">
+        <div class="form-field">
+            <label for="as-of">As of</label>
+            <input id="as-of" name="AsOf" class="form-input" type="date" value="@(AsOf?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="button-primary">Apply</button>
+        </div>
+    </form>
+
+    @if (_report is not null)
+    {
+        <ReportBarChart Items="_chart" />
+        <p class="results-count">@_report.TotalCount invoices, @_format(_report.TotalBalance) outstanding.</p>
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Aging buckets as of @_report.AsOf.ToString("MMMM d, yyyy")</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Bucket</th>
+                        <th class="numeric" scope="col">Invoices</th>
+                        <th class="numeric" scope="col">Balance due</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (AgingBucketRow bucket in _report.Buckets)
+                    {
+                        <tr>
+                            <td>@bucket.Label</td>
+                            <td class="numeric">@bucket.InvoiceCount</td>
+                            <td class="numeric">@_format(bucket.BalanceDue)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery]
+    public DateOnly? AsOf { get; set; }
+
+    private AgingReport? _report;
+    private string? _error;
+    private IReadOnlyList<ReportBarItem> _chart = [];
+    private Func<decimal, string> _format = amount => InvoiceFormatting.FormatAmount(amount, "USD");
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ReportingResult<AgingReport> result = await Reporting.GetAgingAsync(ReportQuery.Create(null, null, null, AsOf));
+        if (result.IsForbidden)
+        {
+            _error = "You are not allowed to view this report.";
+            return;
+        }
+
+        if (!result.Succeeded || result.Value is null)
+        {
+            _error = "The aging report could not be loaded.";
+            return;
+        }
+
+        _report = result.Value;
+        AsOf ??= _report.AsOf;
+        _format = amount => InvoiceFormatting.FormatAmount(amount, _report.CurrencyCode);
+        decimal scale = Math.Max(1m, _report.Buckets.Max(bucket => bucket.BalanceDue));
+        _chart = _report.Buckets.Select(bucket => new ReportBarItem(bucket.Label, bucket.BalanceDue, _format(bucket.BalanceDue), scale)).ToList();
+    }
+}

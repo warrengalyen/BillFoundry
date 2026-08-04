@@ -1,0 +1,37 @@
+@page "/Reports"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
+@using BillFoundry.Application.Security
+
+<PageTitle>Reports - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>Reports</h1>
+    <p class="lede">SQL-backed receivables, collections, and aging. Totals come from stored invoice balances and payment rows.</p>
+</section>
+
+<ReportsNav />
+
+<section class="panel panel-wide">
+    <ul class="report-index">
+        <li>
+            <a href="/Reports/Aging">Invoice aging</a>
+            <p>Open balances grouped as Current, 1-30, 31-60, 61-90, and 90+ days overdue.</p>
+        </li>
+        <li>
+            <a href="/Reports/Payments">Payments by month</a>
+            <p>Net receipts by calendar month, including reversals in the month they were recorded.</p>
+        </li>
+        <li>
+            <a href="/Reports/Clients">Revenue by client</a>
+            <p>Net payments grouped by the billed-to snapshot stored on each invoice.</p>
+        </li>
+        <li>
+            <a href="/Reports/Outstanding">Outstanding invoices</a>
+            <p>Open invoices with remaining balances, due dates, and days overdue.</p>
+        </li>
+        <li>
+            <a href="/Reports/PaymentHistory">Payment history</a>
+            <p>Individual receipts and reversals with invoice number, client, method, and amount.</p>
+        </li>
+    </ul>
+</section>

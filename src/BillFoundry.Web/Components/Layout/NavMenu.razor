@@ -50,6 +50,11 @@
                         Invoices
                     </NavLink>
                 </li>
+                <li>
+                    <NavLink class="nav-link" href="Reports" @onclick="CloseNav">
+                        Reports
+                    </NavLink>
+                </li>
                 <AuthorizeView Policy="@AuthorizationPolicies.ManageOrganizationSettings">
                     <Authorized Context="organizationAccess">
                         <li>
