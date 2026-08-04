@@ -1,0 +1,20 @@
+@if (Items.Count > 0)
+{
+    <div class="bar-chart" aria-hidden="true">
+        @foreach (ReportBarItem item in Items)
+        {
+            <div class="bar-chart-row">
+                <span class="bar-chart-label">@item.Label</span>
+                <div class="bar-chart-track">
+                    <div class="bar-chart-fill" style="width: @item.WidthPercent%"></div>
+                </div>
+                <span class="bar-chart-value">@item.FormattedValue</span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<ReportBarItem> Items { get; set; } = [];
+}

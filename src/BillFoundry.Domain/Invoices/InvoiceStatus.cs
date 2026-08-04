@@ -91,4 +91,7 @@ public static class InvoiceStatusRules
         status is InvoiceStatus.Sent or InvoiceStatus.PartiallyPaid
         && dueDate < today
         && balanceDue > 0m;
+
+    public static bool IsOpenReceivable(InvoiceStatus status, decimal balanceDue) =>
+        status is InvoiceStatus.Sent or InvoiceStatus.PartiallyPaid && balanceDue > 0m;
 }

@@ -1,25 +1,160 @@
 @page "/"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
+@using BillFoundry.Application.Reporting
+@using BillFoundry.Web.Invoices
+@inject IReportingService Reporting
 
 <PageTitle>Dashboard - BillFoundry</PageTitle>
 
-<section class="page-header">
-    <h1>Dashboard</h1>
-    <p class="lede">
-        Welcome to BillFoundry. Invoicing features will appear here as they are implemented.
+<section class="page-header page-header-split">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="lede">Receivables and collections as of @_asOfLabel. Amounts use persisted invoice balances and recorded payments.</p>
+    </div>
+    <p>
+        <a class="button-secondary" href="/Reports">All reports</a>
     </p>
 </section>
 
-<section class="panel" aria-labelledby="status-heading">
-    <h2 id="status-heading">Application status</h2>
-    <ul>
-        <li>Authentication and account management are available</li>
-        <li>Administrators can configure the organization profile under Organization</li>
-        <li>Clients can be created, searched, and deactivated</li>
-        <li>The service catalog can be created, searched, and deactivated</li>
-        <li>Estimates can be created, sent, accepted, declined, expired, duplicated, and converted to invoices</li>
-        <li>Invoices can be created, sent, paid, voided, duplicated, and listed with overdue status</li>
-        <li>Received payments can be recorded and reversed against sent invoices</li>
-        <li>Health checks are at <code>/health</code> and <code>/health/ready</code></li>
-        <li>Invoice and estimate PDFs can be downloaded from their detail pages</li>
-    </ul>
-</section>
+@if (_error is not null)
+{
+    <div class="form-alert" role="alert">@_error</div>
+}
+else if (_metrics is null)
+{
+    <p>Loading dashboard.</p>
+}
+else
+{
+    <section class="metric-grid" aria-label="Receivables summary">
+        <article class="metric-card">
+            <h2>Outstanding receivables</h2>
+            <p class="metric-value">@InvoiceFormatting.FormatAmount(_metrics.OutstandingReceivables, _metrics.CurrencyCode)</p>
+            <p class="metric-detail">@_metrics.OpenInvoiceCount open invoice@(_metrics.OpenInvoiceCount == 1 ? "" : "s")</p>
+        </article>
+        <article class="metric-card">
+            <h2>Overdue receivables</h2>
+            <p class="metric-value">@InvoiceFormatting.FormatAmount(_metrics.OverdueReceivables, _metrics.CurrencyCode)</p>
+            <p class="metric-detail">@_metrics.OverdueInvoiceCount overdue invoice@(_metrics.OverdueInvoiceCount == 1 ? "" : "s")</p>
+        </article>
+        <article class="metric-card">
+            <h2>Payments this month</h2>
+            <p class="metric-value">@InvoiceFormatting.FormatAmount(_metrics.PaymentsThisMonth, _metrics.CurrencyCode)</p>
+            <p class="metric-detail">Net receipts in @_metrics.AsOf.ToString("MMMM yyyy")</p>
+        </article>
+        <article class="metric-card">
+            <h2>Payments this year</h2>
+            <p class="metric-value">@InvoiceFormatting.FormatAmount(_metrics.PaymentsThisYear, _metrics.CurrencyCode)</p>
+            <p class="metric-detail">Net receipts in @_metrics.AsOf.Year</p>
+        </article>
+        <article class="metric-card">
+            <h2>Open invoices</h2>
+            <p class="metric-value">@_metrics.OpenInvoiceCount</p>
+            <p class="metric-detail">Sent or partially paid with a remaining balance</p>
+        </article>
+        <article class="metric-card">
+            <h2>Overdue invoices</h2>
+            <p class="metric-value">@_metrics.OverdueInvoiceCount</p>
+            <p class="metric-detail">Due before @_asOfLabel with a remaining balance</p>
+        </article>
+    </section>
+
+    <section class="panel panel-wide" aria-labelledby="aging-heading">
+        <div class="results-header">
+            <h2 id="aging-heading">Invoice aging</h2>
+            <a href="/Reports/Aging">Full aging report</a>
+        </div>
+        <ReportBarChart Items="_agingChart" />
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Invoice aging by bucket</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Bucket</th>
+                        <th class="numeric" scope="col">Invoices</th>
+                        <th class="numeric" scope="col">Balance due</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (AgingBucketRow bucket in _metrics.Aging)
+                    {
+                        <tr>
+                            <td>@bucket.Label</td>
+                            <td class="numeric">@bucket.InvoiceCount</td>
+                            <td class="numeric">@InvoiceFormatting.FormatAmount(bucket.BalanceDue, _metrics.CurrencyCode)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel panel-wide" aria-labelledby="payments-heading">
+        <div class="results-header">
+            <h2 id="payments-heading">Payments by month (@_metrics.AsOf.Year)</h2>
+            <a href="/Reports/Payments">Payment reports</a>
+        </div>
+        <ReportBarChart Items="_monthChart" />
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Net payments received by month this year</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Month</th>
+                        <th class="numeric" scope="col">Receipts</th>
+                        <th class="numeric" scope="col">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (MonthlyPaymentRow row in _metrics.PaymentsByMonth)
+                    {
+                        <tr>
+                            <td>@row.PeriodLabel</td>
+                            <td class="numeric">@row.PaymentCount</td>
+                            <td class="numeric">@InvoiceFormatting.FormatAmount(row.Amount, _metrics.CurrencyCode)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@code {
+    private DashboardMetrics? _metrics;
+    private string? _error;
+    private string _asOfLabel = string.Empty;
+    private IReadOnlyList<ReportBarItem> _agingChart = [];
+    private IReadOnlyList<ReportBarItem> _monthChart = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ReportingResult<DashboardMetrics> result = await Reporting.GetDashboardAsync();
+        if (result.IsForbidden)
+        {
+            _error = "You are not allowed to view receivables.";
+            return;
+        }
+
+        if (!result.Succeeded || result.Value is null)
+        {
+            _error = result.Errors.Count > 0 ? string.Join(" ", result.Errors) : "The dashboard could not be loaded.";
+            return;
+        }
+
+        _metrics = result.Value;
+        _asOfLabel = _metrics.AsOf.ToString("MMMM d, yyyy");
+        decimal agingMax = Math.Max(1m, _metrics.Aging.Max(bucket => bucket.BalanceDue));
+        _agingChart = _metrics.Aging.Select(bucket => new ReportBarItem(
+            bucket.Label,
+            bucket.BalanceDue,
+            InvoiceFormatting.FormatAmount(bucket.BalanceDue, _metrics.CurrencyCode),
+            agingMax)).ToList();
+        decimal monthMax = Math.Max(1m, _metrics.PaymentsByMonth.Max(row => row.Amount));
+        _monthChart = _metrics.PaymentsByMonth.Select(row => new ReportBarItem(
+            row.PeriodLabel,
+            row.Amount,
+            InvoiceFormatting.FormatAmount(row.Amount, _metrics.CurrencyCode),
+            monthMax)).ToList();
+    }
+}

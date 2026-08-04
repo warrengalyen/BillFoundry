@@ -692,5 +692,118 @@ code {
     .filter-bar-invoices {
         grid-template-columns: 2fr 1fr 1fr 1fr 1fr 8rem auto;
     }
+
+    .filter-bar-reports {
+        grid-template-columns: repeat(4, minmax(8rem, 1fr)) auto;
+    }
+}
+
+.metric-grid {
+    display: grid;
+    gap: 1rem;
+    margin: 0 0 1.5rem;
+    max-width: 72rem;
+}
+
+@media (min-width: 40rem) {
+    .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 64rem) {
+    .metric-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.metric-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem 1.15rem;
+}
+
+.metric-card h2 {
+    margin: 0 0 0.35rem;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    font-weight: 650;
+}
+
+.metric-value {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.metric-detail {
+    margin: 0.35rem 0 0;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+}
+
+.report-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin: 0 0 1.25rem;
+    max-width: 72rem;
+}
+
+.report-index {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.report-index li + li {
+    margin-top: 0.85rem;
+}
+
+.report-index p {
+    margin: 0.25rem 0 0;
+    color: var(--color-muted);
+}
+
+.bar-chart {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0 0 1.25rem;
+}
+
+.bar-chart-row {
+    display: grid;
+    grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr) minmax(6rem, auto);
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.bar-chart-label,
+.bar-chart-value {
+    font-size: 0.875rem;
+}
+
+.bar-chart-value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.bar-chart-track {
+    height: 0.7rem;
+    background: #e8edf2;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.bar-chart-fill {
+    height: 100%;
+    background: #3d4f61;
+}
+
+.results-count {
+    margin: 0 0 0.75rem;
+    color: var(--color-muted);
 }
 
