@@ -5,6 +5,7 @@ using BillFoundry.Web.Components;
 using BillFoundry.Web.Hosting;
 using BillFoundry.Web.Documents;
 using BillFoundry.Web.Organizations;
+using BillFoundry.Web.Reporting;
 using BillFoundry.Web.Security;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -68,6 +69,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapOrganizationLogo();
 app.MapDocumentDownloads();
+app.MapReportExports();
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
