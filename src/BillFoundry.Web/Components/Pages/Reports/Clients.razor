@@ -1,0 +1,131 @@
+@page "/Reports/Clients"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
+@using BillFoundry.Application.Invoices
+@using BillFoundry.Application.Reporting
+@using BillFoundry.Web.Invoices
+@using BillFoundry.Web.Reporting
+@inject IReportingService Reporting
+@inject IInvoiceService Invoices
+
+<PageTitle>Revenue by client - BillFoundry</PageTitle>
+
+<section class="page-header page-header-split">
+    <div>
+        <h1>Revenue by client</h1>
+        <p class="lede">Net payments grouped by the billed-to name stored on each invoice.</p>
+    </div>
+    <p>
+        <a class="button-secondary" href="@ReportQuery.RevenueByClientCsv(From, To, ClientId)">Download CSV</a>
+    </p>
+</section>
+
+<ReportsNav />
+
+@if (_error is not null)
+{
+    <div class="form-alert" role="alert">@_error</div>
+}
+
+<section class="panel panel-wide">
+    <form method="get" class="filter-bar filter-bar-reports">
+        <div class="form-field">
+            <label for="from">From</label>
+            <input id="from" name="From" class="form-input" type="date" value="@(From?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="form-field">
+            <label for="to">To</label>
+            <input id="to" name="To" class="form-input" type="date" value="@(To?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="form-field">
+            <label for="client">Client</label>
+            <select id="client" name="ClientId" class="form-input">
+                <option value="">All clients</option>
+                @foreach (InvoiceClientOption client in _clients)
+                {
+                    <option value="@client.Id" selected="@(ClientId == client.Id)">@client.Name (@client.Code)</option>
+                }
+            </select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="button-primary">Apply</button>
+        </div>
+    </form>
+
+    @if (_rows is not null)
+    {
+        <ReportBarChart Items="_chart" />
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Net revenue by client</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Client</th>
+                        <th scope="col">Code</th>
+                        <th class="numeric" scope="col">Receipts</th>
+                        <th class="numeric" scope="col">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (ClientRevenueRow row in _rows)
+                    {
+                        <tr>
+                            <td>@row.ClientName</td>
+                            <td>@row.ClientCode</td>
+                            <td class="numeric">@row.PaymentCount</td>
+                            <td class="numeric">@InvoiceFormatting.FormatAmount(row.Amount, _currency)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery]
+    public DateOnly? From { get; set; }
+
+    [SupplyParameterFromQuery]
+    public DateOnly? To { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? ClientId { get; set; }
+
+    private IReadOnlyList<ClientRevenueRow>? _rows;
+    private IReadOnlyList<InvoiceClientOption> _clients = [];
+    private string? _error;
+    private string _currency = "USD";
+    private IReadOnlyList<ReportBarItem> _chart = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        InvoiceOptionsResult options = await Invoices.GetOptionsAsync();
+        if (options.Succeeded && options.Options is not null)
+        {
+            _clients = options.Options.Clients;
+            _currency = options.Options.CurrencyCode;
+        }
+
+        ReportingResult<IReadOnlyList<ClientRevenueRow>> result =
+            await Reporting.GetRevenueByClientAsync(ReportQuery.Create(From, To, ClientId, null));
+        if (result.IsForbidden)
+        {
+            _error = "You are not allowed to view this report.";
+            return;
+        }
+
+        if (!result.Succeeded || result.Value is null)
+        {
+            _error = "The client revenue report could not be loaded.";
+            return;
+        }
+
+        _rows = result.Value;
+        decimal scale = Math.Max(1m, _rows.Count == 0 ? 1m : _rows.Max(row => row.Amount));
+        _chart = _rows.Take(12).Select(row => new ReportBarItem(
+            row.ClientName,
+            row.Amount,
+            InvoiceFormatting.FormatAmount(row.Amount, _currency),
+            scale)).ToList();
+    }
+}

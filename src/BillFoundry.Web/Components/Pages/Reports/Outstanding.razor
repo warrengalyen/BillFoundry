@@ -1,0 +1,139 @@
+@page "/Reports/Outstanding"
+@attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
+@using BillFoundry.Application.Invoices
+@using BillFoundry.Application.Reporting
+@using BillFoundry.Web.Invoices
+@using BillFoundry.Web.Reporting
+@inject IReportingService Reporting
+@inject IInvoiceService Invoices
+
+<PageTitle>Outstanding invoices - BillFoundry</PageTitle>
+
+<section class="page-header page-header-split">
+    <div>
+        <h1>Outstanding invoices</h1>
+        <p class="lede">Sent and partially paid invoices with a remaining balance. Date filters apply to due date.</p>
+    </div>
+    <p>
+        <a class="button-secondary" href="@ReportQuery.OutstandingCsv(From, To, ClientId, AsOf)">Download CSV</a>
+    </p>
+</section>
+
+<ReportsNav />
+
+@if (_error is not null)
+{
+    <div class="form-alert" role="alert">@_error</div>
+}
+
+<section class="panel panel-wide">
+    <form method="get" class="filter-bar filter-bar-reports">
+        <div class="form-field">
+            <label for="from">Due from</label>
+            <input id="from" name="From" class="form-input" type="date" value="@(From?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="form-field">
+            <label for="to">Due to</label>
+            <input id="to" name="To" class="form-input" type="date" value="@(To?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="form-field">
+            <label for="as-of">As of</label>
+            <input id="as-of" name="AsOf" class="form-input" type="date" value="@(AsOf?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="form-field">
+            <label for="client">Client</label>
+            <select id="client" name="ClientId" class="form-input">
+                <option value="">All clients</option>
+                @foreach (InvoiceClientOption client in _clients)
+                {
+                    <option value="@client.Id" selected="@(ClientId == client.Id)">@client.Name (@client.Code)</option>
+                }
+            </select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="button-primary">Apply</button>
+        </div>
+    </form>
+
+    @if (_rows is not null)
+    {
+        <p class="results-count">@_rows.Count outstanding invoice@(_rows.Count == 1 ? "" : "s").</p>
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Outstanding invoices</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Invoice</th>
+                        <th scope="col">Client</th>
+                        <th scope="col">Issued</th>
+                        <th scope="col">Due</th>
+                        <th scope="col">Status</th>
+                        <th class="numeric" scope="col">Total</th>
+                        <th class="numeric" scope="col">Paid</th>
+                        <th class="numeric" scope="col">Balance</th>
+                        <th class="numeric" scope="col">Days overdue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (OutstandingInvoiceRow row in _rows)
+                    {
+                        <tr>
+                            <td><a href="@($"/Invoices/{row.Id}")">@row.Number</a></td>
+                            <td>@row.ClientName</td>
+                            <td>@row.IssueDate.ToString("yyyy-MM-dd")</td>
+                            <td>@row.DueDate.ToString("yyyy-MM-dd")</td>
+                            <td>@row.StatusLabel</td>
+                            <td class="numeric">@InvoiceFormatting.FormatAmount(row.Total, row.CurrencyCode)</td>
+                            <td class="numeric">@InvoiceFormatting.FormatAmount(row.AmountPaid, row.CurrencyCode)</td>
+                            <td class="numeric">@InvoiceFormatting.FormatAmount(row.BalanceDue, row.CurrencyCode)</td>
+                            <td class="numeric">@row.DaysOverdue</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery]
+    public DateOnly? From { get; set; }
+
+    [SupplyParameterFromQuery]
+    public DateOnly? To { get; set; }
+
+    [SupplyParameterFromQuery]
+    public DateOnly? AsOf { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? ClientId { get; set; }
+
+    private IReadOnlyList<OutstandingInvoiceRow>? _rows;
+    private IReadOnlyList<InvoiceClientOption> _clients = [];
+    private string? _error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        InvoiceOptionsResult options = await Invoices.GetOptionsAsync();
+        if (options.Succeeded && options.Options is not null)
+        {
+            _clients = options.Options.Clients;
+        }
+
+        ReportingResult<IReadOnlyList<OutstandingInvoiceRow>> result =
+            await Reporting.GetOutstandingInvoicesAsync(ReportQuery.Create(From, To, ClientId, AsOf));
+        if (result.IsForbidden)
+        {
+            _error = "You are not allowed to view this report.";
+            return;
+        }
+
+        if (!result.Succeeded || result.Value is null)
+        {
+            _error = "The outstanding invoice report could not be loaded.";
+            return;
+        }
+
+        _rows = result.Value;
+    }
+}
