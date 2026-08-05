@@ -96,6 +96,10 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 
         builder.HasIndex(invoice => invoice.Status);
 
+        builder.HasIndex(invoice => new { invoice.Status, invoice.DueDate })
+            .IncludeProperties(invoice => invoice.BalanceDue)
+            .HasDatabaseName("IX_Invoices_Status_DueDate");
+
         builder.Property(invoice => invoice.PurchaseOrder)
             .HasMaxLength(Invoice.PurchaseOrderMaxLength);
 

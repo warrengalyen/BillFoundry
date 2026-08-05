@@ -36,6 +36,9 @@ internal sealed class InvoicePaymentConfiguration : IEntityTypeConfiguration<Inv
 
         builder.HasIndex(payment => new { payment.InvoiceId, payment.PaymentDate });
 
+        builder.HasIndex(payment => payment.PaymentDate)
+            .HasDatabaseName("IX_InvoicePayments_PaymentDate");
+
         builder.Property(payment => payment.Amount)
             .HasPrecision(Invoice.AmountPrecision, Invoice.AmountScale)
             .IsRequired();
