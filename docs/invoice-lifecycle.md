@@ -203,6 +203,8 @@ Authorized Administrator or User roles (`ManageInvoices`) can:
 - Search, filter, sort, and page the invoice list on the server (number, client
   snapshot name/code, purchase order, notes, client, status including overdue,
   issue-date range, due-date range, and total range)
+- Open the dashboard and reports for outstanding, aging, payments, and CSV
+  export ([reporting.md](reporting.md))
 
 Optimistic concurrency uses the invoice `rowversion` for header, line, send,
 void, payment, and reversal saves. Estimate conversion also uses the estimate

@@ -94,11 +94,11 @@ by a direct estimate status change. See [estimates.md](estimates.md) and
 
 `IInvoiceService` authorizes `ManageInvoices` before listing or mutating
 invoices, including recording and reversing payments. Invoice pages require the
-same policy. Sent, paid, and void invoices cannot be edited. Invoices and
-payments are not permanently deleted; voiding keeps the invoice number and
-history, and reversing a payment keeps the original receipt. Overdue is
-computed from due date, balance due, and `TimeProvider`. See
-[invoice-lifecycle.md](invoice-lifecycle.md) and [payments.md](payments.md).
+same policy. `IReportingService` authorizes `ManageInvoices` before returning
+dashboard metrics, reports, or CSV. Report pages and `/Reports/*.csv`
+endpoints require the same policy. CSV downloads are reads, so Demo Mode does
+not block them. Responses include only a Content-Disposition file name. See
+[reporting.md](reporting.md).
 
 `IInvoiceDocumentService` and `IEstimateDocumentService` authorize
 `ManageInvoices` / `ManageEstimates` before generating PDFs. Download endpoints

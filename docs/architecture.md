@@ -81,8 +81,9 @@ uses a locked `DocumentSequences` row inside a transaction. See
 [estimates.md](estimates.md). The `AddEstimates` migration adds
 `DocumentSequences`, `Estimates`, and `EstimateLines`. Invoices, invoice lines,
 and the invoice sequence seed are the `AddInvoices` migration. Invoice payments
-are the `AddInvoicePayments` migration. See [invoice-lifecycle.md](invoice-lifecycle.md)
-and [payments.md](payments.md).
+are the `AddInvoicePayments` migration. Reporting indexes are the
+`AddReportingIndexes` migration. See [invoice-lifecycle.md](invoice-lifecycle.md),
+[payments.md](payments.md), and [reporting.md](reporting.md).
 
 Invoices store billed-to identity as a client snapshot, required issue and due
 dates, status, optional purchase order, notes, payment instructions, persisted
@@ -156,4 +157,5 @@ Application pages require authentication unless marked `[AllowAnonymous]`.
 - Integration tests use `WebApplicationFactory` against the Web host.
 - Authentication tests disable development identity seeding and do not require SQL Server
   except when a test explicitly exercises the database.
-- Organization, client, catalog, estimate, invoice, and payment persistence, concurrency, and constraint tests require SQL Server LocalDB.
+- Organization, client, catalog, estimate, invoice, payment, and reporting
+  persistence and aggregation tests require SQL Server LocalDB.

@@ -116,4 +116,5 @@ Draft. It does not copy payments, amount paid, or paid status.
 `IInvoiceService.RecordPaymentAsync` and `ReversePaymentAsync` require the
 `ManageInvoices` policy (Administrator or User). Invoice detail shows payment
 history for authorized operators. Authorization is enforced in the service, not
-only in the UI.
+only in the UI. Dashboard payment totals and payment reports use the same
+policy; see [reporting.md](reporting.md).

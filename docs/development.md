@@ -156,3 +156,5 @@ Payment recording, settlement, and reversals are documented in
 [payments.md](payments.md). Invoice and estimate PDF generation, the PDFsharp
 library choice, and download endpoints are documented in [pdf.md](pdf.md).
 Generator tests assert `%PDF` headers and extracted field text with PdfPig.
+Dashboard metrics, aging, payment reports, outstanding invoices, and CSV
+exports are documented in [reporting.md](reporting.md).
