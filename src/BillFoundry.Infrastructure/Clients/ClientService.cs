@@ -1,7 +1,9 @@
+using BillFoundry.Application.Auditing;
 using BillFoundry.Application.Clients;
 using BillFoundry.Application.Security;
 using BillFoundry.Domain.Clients;
 using BillFoundry.Domain.Organizations;
+using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Data.SqlClient;
@@ -13,7 +15,8 @@ internal sealed class ClientService(
     BillFoundryDbContext dbContext,
     IAuthorizationService authorizationService,
     ICurrentUser currentUser,
-    TimeProvider timeProvider) : IClientService
+    TimeProvider timeProvider,
+    IAuditRecorder auditRecorder) : IClientService
 {
     public async Task<ClientListResult> ListAsync(ClientListQuery query, CancellationToken cancellationToken = default)
     {
@@ -139,6 +142,11 @@ internal sealed class ClientService(
             command.Notes);
 
         dbContext.Clients.Add(client);
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.ClientCreated,
+            AuditEntityTypes.Client,
+            client.Id,
+            $"Created client {client.Name} ({client.Code})."));
         ClientResult result = await SaveAsync(client, cancellationToken).ConfigureAwait(false);
         if (result.Succeeded)
         {
@@ -182,6 +190,11 @@ internal sealed class ClientService(
 
         ApplyRowVersion(client, command.RowVersion);
         client.Update(code, command.Name, command.Email, command.Phone, command.Website, CreateAddress(command), command.Notes);
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.ClientUpdated,
+            AuditEntityTypes.Client,
+            client.Id,
+            $"Updated client {client.Name} ({client.Code})."));
         return await SaveAsync(client, cancellationToken).ConfigureAwait(false);
     }
 
@@ -277,6 +290,11 @@ internal sealed class ClientService(
         }
 
         Touch(client);
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.ClientUpdated,
+            AuditEntityTypes.Client,
+            client.Id,
+            $"Updated contacts for client {client.Name} ({client.Code})."));
         return await SaveAsync(client, cancellationToken).ConfigureAwait(false);
     }
 
@@ -338,6 +356,13 @@ internal sealed class ClientService(
             client.Deactivate();
         }
 
+        auditRecorder.Record(AuditWrites.Event(
+            active ? AuditActions.ClientActivated : AuditActions.ClientDeactivated,
+            AuditEntityTypes.Client,
+            client.Id,
+            active
+                ? $"Activated client {client.Name} ({client.Code})."
+                : $"Deactivated client {client.Name} ({client.Code})."));
         return await SaveAsync(client, cancellationToken).ConfigureAwait(false);
     }
 
@@ -375,6 +400,11 @@ internal sealed class ClientService(
 
             mutate();
             Touch(client);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.ClientUpdated,
+                AuditEntityTypes.Client,
+                client.Id,
+                $"Updated contacts for client {client.Name} ({client.Code})."));
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return ClientResult.Success(ToDetails(client));
@@ -442,10 +472,12 @@ internal sealed class ClientService(
         }
         catch (DbUpdateConcurrencyException)
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             return ClientResult.ConcurrencyConflict(await ReloadDetailsAsync(client, cancellationToken).ConfigureAwait(false));
         }
         catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             return ClientResult.Invalid(
                 ["A client with this code already exists, or another contact is already marked primary."],
                 ToDetails(client));

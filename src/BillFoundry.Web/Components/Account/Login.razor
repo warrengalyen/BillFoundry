@@ -5,6 +5,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager Navigation
 @inject ILogger<Login> Logger
+@inject IAuditRecorder Audit
 
 <PageTitle>Log in - BillFoundry</PageTitle>
 
@@ -90,6 +91,16 @@
 
         if (result.IsLockedOut)
         {
+            Audit.Record(new AuditWriteRequest
+            {
+                Action = AuditActions.AccountLockedOut,
+                EntityType = AuditEntityTypes.User,
+                EntityId = user.Id,
+                Description = "Locked the account after too many failed sign-in attempts.",
+                ActorUserId = user.Id,
+                ActorUserName = user.Email
+            });
+            await Audit.PersistAsync();
             ErrorMessage = "This account is locked. Try again later.";
             return;
         }

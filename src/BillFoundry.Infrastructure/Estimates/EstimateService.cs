@@ -1,3 +1,4 @@
+using BillFoundry.Application.Auditing;
 using BillFoundry.Application.Estimates;
 using BillFoundry.Application.Security;
 using BillFoundry.Domain.Catalog;
@@ -5,6 +6,7 @@ using BillFoundry.Domain.Clients;
 using BillFoundry.Domain.Documents;
 using BillFoundry.Domain.Estimates;
 using BillFoundry.Domain.Organizations;
+using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Documents;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -17,7 +19,8 @@ internal sealed class EstimateService(
     BillFoundryDbContext dbContext,
     IAuthorizationService authorizationService,
     ICurrentUser currentUser,
-    TimeProvider timeProvider) : IEstimateService
+    TimeProvider timeProvider,
+    IAuditRecorder auditRecorder) : IEstimateService
 {
     public async Task<EstimateListResult> ListAsync(EstimateListQuery query, CancellationToken cancellationToken = default)
     {
@@ -224,6 +227,11 @@ internal sealed class EstimateService(
                 settings.Currency);
 
             dbContext.Estimates.Add(estimate);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.EstimateCreated,
+                AuditEntityTypes.Estimate,
+                estimate.Id,
+                $"Created estimate {estimate.Number}."));
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return EstimateResult.Success(await ToDetailsAsync(estimate, cancellationToken).ConfigureAwait(false));
@@ -303,6 +311,11 @@ internal sealed class EstimateService(
                 await ToDetailsAsync(estimate, cancellationToken).ConfigureAwait(false));
         }
 
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.EstimateUpdated,
+            AuditEntityTypes.Estimate,
+            estimate.Id,
+            $"Updated estimate {estimate.Number}."));
         return await SaveAsync(estimate, cancellationToken).ConfigureAwait(false);
     }
 
@@ -390,6 +403,11 @@ internal sealed class EstimateService(
 
             estimate.ReorderLines(command.LineIds);
             Touch(estimate);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.EstimateUpdated,
+                AuditEntityTypes.Estimate,
+                estimate.Id,
+                $"Updated estimate {estimate.Number}."));
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return EstimateResult.Success(await ToDetailsAsync(estimate, cancellationToken).ConfigureAwait(false));
@@ -454,6 +472,12 @@ internal sealed class EstimateService(
 
             Estimate copy = source.Duplicate(sequence, number, issueDate, expiration);
             dbContext.Estimates.Add(copy);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.EstimateDuplicated,
+                AuditEntityTypes.Estimate,
+                copy.Id,
+                $"Created estimate {copy.Number} as a copy of {source.Number}.",
+                new Dictionary<string, string?> { ["sourceEstimateId"] = source.Id.ToString() }));
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return EstimateResult.Success(await ToDetailsAsync(copy, cancellationToken).ConfigureAwait(false));
@@ -497,6 +521,11 @@ internal sealed class EstimateService(
             command,
             EstimateValidator.ValidateConcurrency(command),
             estimate => estimate.TransitionTo(command.Target),
+            estimate => AuditWrites.Event(
+                AuditActions.EstimateStatusChanged,
+                AuditEntityTypes.Estimate,
+                estimate.Id,
+                $"Changed estimate {estimate.Number} to {EstimateStatusRules.Label(estimate.Status)}."),
             cancellationToken);
     }
 
@@ -504,6 +533,23 @@ internal sealed class EstimateService(
         EstimateConcurrencyCommand command,
         IReadOnlyList<string> errors,
         Action<Estimate> mutate,
+        CancellationToken cancellationToken) =>
+        await MutateAsync(
+            command,
+            errors,
+            mutate,
+            estimate => AuditWrites.Event(
+                AuditActions.EstimateUpdated,
+                AuditEntityTypes.Estimate,
+                estimate.Id,
+                $"Updated estimate {estimate.Number}."),
+            cancellationToken).ConfigureAwait(false);
+
+    private async Task<EstimateResult> MutateAsync(
+        EstimateConcurrencyCommand command,
+        IReadOnlyList<string> errors,
+        Action<Estimate> mutate,
+        Func<Estimate, AuditWriteRequest> audit,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -529,6 +575,7 @@ internal sealed class EstimateService(
         {
             mutate(estimate);
             Touch(estimate);
+            auditRecorder.Record(audit(estimate));
             return await SaveAsync(estimate, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
@@ -616,10 +663,12 @@ internal sealed class EstimateService(
         }
         catch (DbUpdateConcurrencyException)
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             return EstimateResult.ConcurrencyConflict(await ReloadDetailsAsync(estimate, cancellationToken).ConfigureAwait(false));
         }
         catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             return EstimateResult.Invalid(
                 ["The estimate could not be saved because a uniqueness constraint was violated."],
                 await ToDetailsAsync(estimate, cancellationToken).ConfigureAwait(false));

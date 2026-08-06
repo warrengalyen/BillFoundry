@@ -1,7 +1,9 @@
+using BillFoundry.Application.Auditing;
 using BillFoundry.Application.Catalog;
 using BillFoundry.Application.Security;
 using BillFoundry.Domain.Catalog;
 using BillFoundry.Domain.Organizations;
+using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Data.SqlClient;
@@ -12,7 +14,8 @@ namespace BillFoundry.Infrastructure.Catalog;
 internal sealed class CatalogService(
     BillFoundryDbContext dbContext,
     IAuthorizationService authorizationService,
-    ICurrentUser currentUser) : ICatalogService
+    ICurrentUser currentUser,
+    IAuditRecorder auditRecorder) : ICatalogService
 {
     public async Task<CatalogListResult> ListAsync(CatalogListQuery query, CancellationToken cancellationToken = default)
     {
@@ -141,6 +144,11 @@ internal sealed class CatalogService(
             command.IsTaxable);
 
         dbContext.CatalogItems.Add(item);
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.CatalogItemCreated,
+            AuditEntityTypes.CatalogItem,
+            item.Id,
+            $"Created service item {item.Name}."));
         return await SaveAsync(item, cancellationToken).ConfigureAwait(false);
     }
 
@@ -178,6 +186,11 @@ internal sealed class CatalogService(
 
         ApplyRowVersion(item, command.RowVersion);
         item.Update(command.Name, command.Description, sku, command.UnitType, command.DefaultUnitPrice, command.IsTaxable);
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.CatalogItemUpdated,
+            AuditEntityTypes.CatalogItem,
+            item.Id,
+            $"Updated service item {item.Name}."));
         return await SaveAsync(item, cancellationToken).ConfigureAwait(false);
     }
 
@@ -222,6 +235,13 @@ internal sealed class CatalogService(
             item.Deactivate();
         }
 
+        auditRecorder.Record(AuditWrites.Event(
+            active ? AuditActions.CatalogItemActivated : AuditActions.CatalogItemDeactivated,
+            AuditEntityTypes.CatalogItem,
+            item.Id,
+            active
+                ? $"Activated service item {item.Name}."
+                : $"Deactivated service item {item.Name}."));
         return await SaveAsync(item, cancellationToken).ConfigureAwait(false);
     }
 
@@ -267,6 +287,7 @@ internal sealed class CatalogService(
         }
         catch (DbUpdateConcurrencyException)
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             dbContext.ChangeTracker.Clear();
             CatalogItem? current = await LoadAsync(item.Id, cancellationToken).ConfigureAwait(false);
             return current is null
@@ -275,6 +296,7 @@ internal sealed class CatalogService(
         }
         catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             return CatalogItemResult.Invalid(
                 ["A catalog item with this SKU already exists."],
                 await ToDetailsAsync(item, cancellationToken).ConfigureAwait(false));

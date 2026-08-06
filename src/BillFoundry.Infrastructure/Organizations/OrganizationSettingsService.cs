@@ -1,6 +1,8 @@
+using BillFoundry.Application.Auditing;
 using BillFoundry.Application.Organizations;
 using BillFoundry.Application.Security;
 using BillFoundry.Domain.Organizations;
+using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,8 @@ internal sealed class OrganizationSettingsService(
     BillFoundryDbContext dbContext,
     IOrganizationLogoStore logoStore,
     IAuthorizationService authorizationService,
-    ICurrentUser currentUser) : IOrganizationSettingsService
+    ICurrentUser currentUser,
+    IAuditRecorder auditRecorder) : IOrganizationSettingsService
 {
     public async Task<OrganizationSettingsResult> GetAsync(CancellationToken cancellationToken = default)
     {
@@ -68,6 +71,17 @@ internal sealed class OrganizationSettingsService(
             command.DefaultInvoiceNotes,
             command.DefaultPaymentInstructions);
 
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.OrganizationUpdated,
+            AuditEntityTypes.Organization,
+            organization.Id,
+            "Updated organization settings.",
+            new Dictionary<string, string?>
+            {
+                ["legalName"] = organization.LegalName,
+                ["displayName"] = organization.DisplayName
+            }));
+
         return await SaveAsync(organization, cancellationToken).ConfigureAwait(false);
     }
 
@@ -117,6 +131,11 @@ internal sealed class OrganizationSettingsService(
             try
             {
                 organization.SetLogo(new OrganizationLogo(storedFileName, inspection.ContentType!, buffer.Length));
+                auditRecorder.Record(AuditWrites.Event(
+                    AuditActions.OrganizationLogoUploaded,
+                    AuditEntityTypes.Organization,
+                    organization.Id,
+                    "Uploaded the organization logo."));
                 OrganizationSettingsResult result = await SaveAsync(organization, cancellationToken).ConfigureAwait(false);
                 if (result.Succeeded && previousFileName is not null)
                 {
@@ -154,6 +173,11 @@ internal sealed class OrganizationSettingsService(
         ApplyRowVersion(organization, rowVersion);
         string? previousFileName = organization.Logo?.StoredFileName;
         organization.ClearLogo();
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.OrganizationLogoRemoved,
+            AuditEntityTypes.Organization,
+            organization.Id,
+            "Removed the organization logo."));
 
         OrganizationSettingsResult result = await SaveAsync(organization, cancellationToken).ConfigureAwait(false);
         if (result.Succeeded && previousFileName is not null)
@@ -210,6 +234,7 @@ internal sealed class OrganizationSettingsService(
         }
         catch (DbUpdateConcurrencyException)
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             await dbContext.Entry(organization).ReloadAsync(cancellationToken).ConfigureAwait(false);
             return OrganizationSettingsResult.ConcurrencyConflict(OrganizationSettingsDto.From(organization));
         }

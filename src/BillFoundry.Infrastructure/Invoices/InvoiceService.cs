@@ -1,3 +1,5 @@
+using System.Globalization;
+using BillFoundry.Application.Auditing;
 using BillFoundry.Application.Invoices;
 using BillFoundry.Application.Security;
 using BillFoundry.Domain.Catalog;
@@ -6,6 +8,7 @@ using BillFoundry.Domain.Documents;
 using BillFoundry.Domain.Estimates;
 using BillFoundry.Domain.Invoices;
 using BillFoundry.Domain.Organizations;
+using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Documents;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +22,8 @@ internal sealed class InvoiceService(
     BillFoundryDbContext dbContext,
     IAuthorizationService authorizationService,
     ICurrentUser currentUser,
-    TimeProvider timeProvider) : IInvoiceService
+    TimeProvider timeProvider,
+    IAuditRecorder auditRecorder) : IInvoiceService
 {
     public async Task<InvoiceListResult> ListAsync(InvoiceListQuery query, CancellationToken cancellationToken = default)
     {
@@ -253,6 +257,11 @@ internal sealed class InvoiceService(
                 settings.Currency);
 
             dbContext.Invoices.Add(invoice);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.InvoiceCreated,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Created invoice {invoice.Number}."));
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Success(await ToDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
@@ -328,6 +337,11 @@ internal sealed class InvoiceService(
                 await ToDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
         }
 
+        auditRecorder.Record(AuditWrites.Event(
+            AuditActions.InvoiceUpdated,
+            AuditEntityTypes.Invoice,
+            invoice.Id,
+            $"Updated invoice {invoice.Number}."));
         return await SaveAsync(invoice, cancellationToken).ConfigureAwait(false);
     }
 
@@ -358,6 +372,11 @@ internal sealed class InvoiceService(
                 command.Unit,
                 command.UnitPrice,
                 command.IsTaxable),
+            invoice => AuditWrites.Event(
+                AuditActions.InvoiceUpdated,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Updated invoice {invoice.Number}."),
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -415,6 +434,11 @@ internal sealed class InvoiceService(
 
             invoice.ReorderLines(command.LineIds);
             Touch(invoice);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.InvoiceUpdated,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Updated invoice {invoice.Number}."));
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Success(await ToDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
@@ -479,6 +503,12 @@ internal sealed class InvoiceService(
                 issueDate,
                 dueDate);
             dbContext.Invoices.Add(copy);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.InvoiceDuplicated,
+                AuditEntityTypes.Invoice,
+                copy.Id,
+                $"Created invoice {copy.Number} as a copy of {source.Number}.",
+                new Dictionary<string, string?> { ["sourceInvoiceId"] = source.Id.ToString() }));
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Success(await ToDetailsAsync(copy, cancellationToken).ConfigureAwait(false));
@@ -496,10 +526,28 @@ internal sealed class InvoiceService(
     }
 
     public Task<InvoiceResult> MarkSentAsync(InvoiceConcurrencyCommand command, CancellationToken cancellationToken = default) =>
-        MutateAsync(command, InvoiceValidator.ValidateConcurrency(command), invoice => invoice.MarkSent(), cancellationToken);
+        MutateAsync(
+            command,
+            InvoiceValidator.ValidateConcurrency(command),
+            invoice => invoice.MarkSent(),
+            invoice => AuditWrites.Event(
+                AuditActions.InvoiceSent,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Marked invoice {invoice.Number} as sent."),
+            cancellationToken);
 
     public Task<InvoiceResult> VoidAsync(VoidInvoiceCommand command, CancellationToken cancellationToken = default) =>
-        MutateAsync(command, InvoiceValidator.ValidateVoid(command), invoice => invoice.Void(command.Reason), cancellationToken);
+        MutateAsync(
+            command,
+            InvoiceValidator.ValidateVoid(command),
+            invoice => invoice.Void(command.Reason),
+            invoice => AuditWrites.Event(
+                AuditActions.InvoiceVoided,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Voided invoice {invoice.Number}."),
+            cancellationToken);
 
     public async Task<InvoiceResult> RecordPaymentAsync(
         RecordPaymentCommand command,
@@ -535,6 +583,16 @@ internal sealed class InvoiceService(
                 command.Reference,
                 command.Notes);
             Touch(invoice);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.PaymentRecorded,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Recorded a {AuditWrites.Money(command.Amount, invoice.Currency.Value)} payment on invoice {invoice.Number}.",
+                new Dictionary<string, string?>
+                {
+                    ["amount"] = command.Amount.ToString("0.00", CultureInfo.InvariantCulture),
+                    ["method"] = PaymentMethodDisplay.Label(command.Method)
+                }));
             return await SaveAsync(invoice, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
@@ -573,6 +631,12 @@ internal sealed class InvoiceService(
         {
             invoice.ReversePayment(command.PaymentId, Today(), command.Reason);
             Touch(invoice);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.PaymentReversed,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Reversed a payment on invoice {invoice.Number}.",
+                new Dictionary<string, string?> { ["paymentId"] = command.PaymentId.ToString() }));
             return await SaveAsync(invoice, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
@@ -659,6 +723,17 @@ internal sealed class InvoiceService(
             estimate.TransitionTo(EstimateStatus.Converted);
             TouchEstimate(estimate);
             dbContext.Invoices.Add(invoice);
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.InvoiceConvertedFromEstimate,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Created invoice {invoice.Number} from estimate {estimate.Number}.",
+                new Dictionary<string, string?> { ["estimateId"] = estimate.Id.ToString() }));
+            auditRecorder.Record(AuditWrites.Event(
+                AuditActions.EstimateStatusChanged,
+                AuditEntityTypes.Estimate,
+                estimate.Id,
+                $"Changed estimate {estimate.Number} to {EstimateStatusRules.Label(estimate.Status)}."));
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Success(await ToDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
@@ -684,6 +759,23 @@ internal sealed class InvoiceService(
         InvoiceConcurrencyCommand command,
         IReadOnlyList<string> errors,
         Action<Invoice> mutate,
+        CancellationToken cancellationToken) =>
+        await MutateAsync(
+            command,
+            errors,
+            mutate,
+            invoice => AuditWrites.Event(
+                AuditActions.InvoiceUpdated,
+                AuditEntityTypes.Invoice,
+                invoice.Id,
+                $"Updated invoice {invoice.Number}."),
+            cancellationToken).ConfigureAwait(false);
+
+    private async Task<InvoiceResult> MutateAsync(
+        InvoiceConcurrencyCommand command,
+        IReadOnlyList<string> errors,
+        Action<Invoice> mutate,
+        Func<Invoice, AuditWriteRequest> audit,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -709,6 +801,7 @@ internal sealed class InvoiceService(
         {
             mutate(invoice);
             Touch(invoice);
+            auditRecorder.Record(audit(invoice));
             return await SaveAsync(invoice, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
@@ -811,10 +904,12 @@ internal sealed class InvoiceService(
         }
         catch (DbUpdateConcurrencyException)
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             return InvoiceResult.ConcurrencyConflict(await ReloadDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
         }
         catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
         {
+            AuditChangeTracker.DiscardPending(dbContext);
             return InvoiceResult.Invalid(
                 ["The invoice could not be saved because a uniqueness constraint was violated."],
                 await ReloadDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
