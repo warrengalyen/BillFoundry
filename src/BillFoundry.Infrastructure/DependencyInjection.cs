@@ -1,3 +1,4 @@
+using BillFoundry.Application.Auditing;
 using BillFoundry.Application.Catalog;
 using BillFoundry.Application.Documents;
 using BillFoundry.Application.Clients;
@@ -7,6 +8,7 @@ using BillFoundry.Application.Invoices;
 using BillFoundry.Application.Notifications;
 using BillFoundry.Application.Organizations;
 using BillFoundry.Application.Reporting;
+using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Catalog;
 using BillFoundry.Infrastructure.Clients;
 using BillFoundry.Infrastructure.Documents;
@@ -53,6 +55,7 @@ public static class DependencyInjection
         }
 
         services.AddScoped<AuditableInterceptor>();
+        services.AddScoped<AuditAppendOnlyInterceptor>();
         services.AddDbContext<BillFoundryDbContext>((serviceProvider, options) =>
         {
             var resolvedConnectionString = configuration.GetConnectionString(DatabaseOptions.ConnectionStringName);
@@ -63,7 +66,9 @@ public static class DependencyInjection
             }
 
             var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-            options.AddInterceptors(serviceProvider.GetRequiredService<AuditableInterceptor>());
+            options.AddInterceptors(
+                serviceProvider.GetRequiredService<AuditableInterceptor>(),
+                serviceProvider.GetRequiredService<AuditAppendOnlyInterceptor>());
             options.UseSqlServer(
                 resolvedConnectionString,
                 sqlServer =>
@@ -93,6 +98,9 @@ public static class DependencyInjection
         services.AddScoped<ICatalogService, CatalogService>();
         services.AddScoped<IEstimateService, EstimateService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
+        services.AddScoped<AuditService>();
+        services.AddScoped<IAuditRecorder>(provider => provider.GetRequiredService<AuditService>());
+        services.AddScoped<IAuditService>(provider => provider.GetRequiredService<AuditService>());
         services.AddScoped<IReportingService, ReportingService>();
         services.AddSingleton<IInvoiceDocumentGenerator, PdfInvoiceDocumentGenerator>();
         services.AddSingleton<IEstimateDocumentGenerator, PdfEstimateDocumentGenerator>();

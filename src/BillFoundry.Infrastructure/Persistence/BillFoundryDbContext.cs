@@ -1,3 +1,4 @@
+using BillFoundry.Domain.Auditing;
 using BillFoundry.Domain.Catalog;
 using BillFoundry.Domain.Clients;
 using BillFoundry.Domain.Documents;
@@ -33,6 +34,8 @@ public sealed class BillFoundryDbContext(DbContextOptions<BillFoundryDbContext> 
     public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
 
     public DbSet<InvoicePayment> InvoicePayments => Set<InvoicePayment>();
+
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
