@@ -55,6 +55,15 @@
                         Reports
                     </NavLink>
                 </li>
+                <AuthorizeView Policy="@AuthorizationPolicies.Administrator">
+                    <Authorized Context="auditAccess">
+                        <li>
+                            <NavLink class="nav-link" href="Audit" @onclick="CloseNav">
+                                Audit log
+                            </NavLink>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
                 <AuthorizeView Policy="@AuthorizationPolicies.ManageOrganizationSettings">
                     <Authorized Context="organizationAccess">
                         <li>

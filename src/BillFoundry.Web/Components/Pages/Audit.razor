@@ -1,0 +1,238 @@
+@page "/Audit"
+@attribute [Authorize(Policy = AuthorizationPolicies.Administrator)]
+@using BillFoundry.Application.Auditing
+@inject IAuditService AuditLog
+
+<PageTitle>Audit log - BillFoundry</PageTitle>
+
+<section class="page-header">
+    <h1>Audit log</h1>
+    <p class="lede">Business activity recorded for this installation. These records cannot be edited. Times are UTC.</p>
+</section>
+
+@if (_error is not null)
+{
+    <div class="form-alert" role="alert">@_error</div>
+}
+
+<section class="panel panel-wide">
+    <form method="get" class="filter-bar filter-bar-audit">
+        <div class="form-field">
+            <label for="from">From</label>
+            <input id="from" name="From" class="form-input" type="date" value="@(From?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="form-field">
+            <label for="to">To</label>
+            <input id="to" name="To" class="form-input" type="date" value="@(To?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="form-field">
+            <label for="user">User</label>
+            <select id="user" name="UserId" class="form-input">
+                <option value="">All users</option>
+                @foreach (AuditActorOption actor in _actors)
+                {
+                    <option value="@actor.UserId" selected="@(UserId == actor.UserId)">@actor.UserName</option>
+                }
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="action">Action</label>
+            <select id="action" name="Action" class="form-input">
+                <option value="">All actions</option>
+                @foreach ((string value, string label) in AuditActions.All)
+                {
+                    <option value="@value" selected="@(string.Equals(Action, value, StringComparison.Ordinal))">@label</option>
+                }
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="entity-type">Record type</label>
+            <select id="entity-type" name="EntityType" class="form-input">
+                <option value="">All types</option>
+                @foreach ((string value, string label) in AuditEntityTypes.All)
+                {
+                    <option value="@value" selected="@(string.Equals(EntityType, value, StringComparison.Ordinal))">@label</option>
+                }
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="entity-id">Record id</label>
+            <input id="entity-id" name="EntityId" class="form-input" value="@EntityId" />
+        </div>
+        <div class="form-field">
+            <label for="search">Search</label>
+            <input id="search" name="Search" class="form-input" value="@Search" />
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="button-primary">Apply</button>
+        </div>
+    </form>
+
+    @if (_result is not null)
+    {
+        <p class="results-count">@_result.TotalCount matching event@(_result.TotalCount == 1 ? "" : "s").</p>
+        @if (_result.Items.Count == 0)
+        {
+            <p>No audit events match the current filters.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Audit events</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">When (UTC)</th>
+                            <th scope="col">User</th>
+                            <th scope="col">Action</th>
+                            <th scope="col">Record</th>
+                            <th scope="col">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (AuditEventDto item in _result.Items)
+                        {
+                            <tr>
+                                <td>@item.OccurredAtUtc.UtcDateTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.UserName) ? "System" : item.UserName)</td>
+                                <td>@item.ActionLabel</td>
+                                <td>
+                                    @if (item.EntityId is Guid entityId && EntityHref(item.EntityType, entityId) is string href)
+                                    {
+                                        <a href="@href">@item.EntityTypeLabel</a>
+                                    }
+                                    else
+                                    {
+                                        @item.EntityTypeLabel
+                                    }
+                                </td>
+                                <td>@item.Description</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (_result.TotalCount > _result.PageSize)
+            {
+                <nav class="pagination" aria-label="Audit pages">
+                    @if (_result.Page > 1)
+                    {
+                        <a class="button-secondary" href="@PageHref(_result.Page - 1)">Previous</a>
+                    }
+                    <p>Page @_result.Page of @TotalPages</p>
+                    @if (_result.Page < TotalPages)
+                    {
+                        <a class="button-secondary" href="@PageHref(_result.Page + 1)">Next</a>
+                    }
+                </nav>
+            }
+        }
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery]
+    public DateOnly? From { get; set; }
+
+    [SupplyParameterFromQuery]
+    public DateOnly? To { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? UserId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Action { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? EntityType { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? EntityId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Search { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int Page { get; set; } = 1;
+
+    private AuditSearchResult? _result;
+    private IReadOnlyList<AuditActorOption> _actors = [];
+    private string? _error;
+
+    private int TotalPages =>
+        _result is null || _result.PageSize == 0
+            ? 1
+            : Math.Max(1, (int)Math.Ceiling(_result.TotalCount / (double)_result.PageSize));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        AuditQueryResult<IReadOnlyList<AuditActorOption>> actors = await AuditLog.ListActorsAsync();
+        if (actors.IsForbidden)
+        {
+            _error = "You are not allowed to view the audit log.";
+            return;
+        }
+
+        _actors = actors.Value ?? [];
+
+        Guid? entityId = Guid.TryParse(EntityId, out Guid parsed) ? parsed : null;
+        AuditQueryResult<AuditSearchResult> result = await AuditLog.SearchAsync(new AuditSearchQuery
+        {
+            From = From,
+            To = To,
+            UserId = UserId,
+            Action = Action,
+            EntityType = EntityType,
+            EntityId = entityId,
+            Search = Search,
+            Page = Page
+        });
+
+        if (result.IsForbidden)
+        {
+            _error = "You are not allowed to view the audit log.";
+            _result = null;
+            return;
+        }
+
+        _error = null;
+        _result = result.Value;
+    }
+
+    private string PageHref(int page)
+    {
+        var parts = new List<string>();
+        Add(parts, "From", From?.ToString("yyyy-MM-dd"));
+        Add(parts, "To", To?.ToString("yyyy-MM-dd"));
+        Add(parts, "UserId", UserId is Guid userId ? userId.ToString() : null);
+        Add(parts, "Action", Action);
+        Add(parts, "EntityType", EntityType);
+        Add(parts, "EntityId", EntityId);
+        Add(parts, "Search", Search);
+        if (page > 1)
+        {
+            parts.Add($"Page={page}");
+        }
+
+        return parts.Count == 0 ? "/Audit" : $"/Audit?{string.Join("&", parts)}";
+    }
+
+    private static void Add(List<string> parts, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            parts.Add($"{key}={Uri.EscapeDataString(value)}");
+        }
+    }
+
+    private static string? EntityHref(string entityType, Guid entityId) => entityType switch
+    {
+        AuditEntityTypes.Invoice => $"/Invoices/{entityId}",
+        AuditEntityTypes.Estimate => $"/Estimates/{entityId}",
+        AuditEntityTypes.Client => $"/Clients/{entityId}",
+        AuditEntityTypes.CatalogItem => $"/Catalog/{entityId}",
+        AuditEntityTypes.Organization => "/Settings/Organization",
+        _ => null
+    };
+}

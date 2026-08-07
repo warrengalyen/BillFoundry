@@ -807,3 +807,49 @@ code {
     color: var(--color-muted);
 }
 
+.filter-bar-audit {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.activity-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--color-border);
+}
+
+.activity-timeline li {
+    position: relative;
+    padding: 0 0 1.25rem 1.25rem;
+}
+
+.activity-timeline li:last-child {
+    padding-bottom: 0;
+}
+
+.activity-timeline li::before {
+    content: "";
+    position: absolute;
+    left: -0.45rem;
+    top: 0.35rem;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: #3d4f61;
+}
+
+.activity-timeline time {
+    display: block;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+}
+
+.activity-timeline p {
+    margin: 0.25rem 0 0;
+}
+
+.activity-meta {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+}
+
