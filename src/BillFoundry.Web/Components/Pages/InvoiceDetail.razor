@@ -1,11 +1,13 @@
 @page "/Invoices/{Id:guid}"
 @attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
 @rendermode InteractiveServer
+@using BillFoundry.Application.Auditing
 @using BillFoundry.Application.Invoices
 @using BillFoundry.Domain.Catalog
 @using BillFoundry.Domain.Invoices
 @using BillFoundry.Web.Invoices
 @inject IInvoiceService Invoices
+@inject IAuditService Audit
 @inject NavigationManager Navigation
 
 <PageTitle>@(Invoice?.Number ?? "Invoice") - BillFoundry</PageTitle>
@@ -449,5 +451,10 @@ else if (Invoice is not null)
                 </div>
             </EditForm>
         }
+    </section>
+
+    <section class="panel panel-wide" aria-labelledby="activity-heading">
+        <h2 id="activity-heading">Activity</h2>
+        <ActivityTimeline Events="Activity" />
     </section>
 }

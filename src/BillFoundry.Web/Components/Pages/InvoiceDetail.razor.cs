@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BillFoundry.Application.Auditing;
 using BillFoundry.Application.Invoices;
 using BillFoundry.Domain.Invoices;
 using BillFoundry.Web.Invoices;
@@ -18,6 +19,8 @@ public partial class InvoiceDetail
     public Guid Id { get; set; }
 
     private InvoiceDetailsDto? Invoice { get; set; }
+
+    private IReadOnlyList<AuditEventDto> Activity { get; set; } = [];
 
     private IReadOnlyList<InvoiceCatalogOption> CatalogItems { get; set; } = [];
 
@@ -56,7 +59,7 @@ public partial class InvoiceDetail
         _loading = true;
         InvoiceResult result = await Invoices.GetAsync(Id);
         _loading = false;
-        ApplyResult(result, successMessage: null);
+        await ApplyResultAsync(result, successMessage: null);
         InitializePaymentForm();
     }
 
@@ -112,11 +115,11 @@ public partial class InvoiceDetail
         if (result.Succeeded)
         {
             CancelLineEdit();
-            ApplyResult(result, message);
+            await ApplyResultAsync(result, message);
             return;
         }
 
-        ApplyResult(result, successMessage: null);
+        await ApplyResultAsync(result, successMessage: null);
     }
 
     private async Task RemoveLineAsync(Guid lineId)
@@ -133,7 +136,7 @@ public partial class InvoiceDetail
             LineId = lineId,
             RowVersion = Invoice.RowVersion
         });
-        ApplyResult(result, "The line was removed.");
+        await ApplyResultAsync(result, "The line was removed.");
     }
 
     private async Task MoveLineAsync(Guid lineId, int delta)
@@ -161,7 +164,7 @@ public partial class InvoiceDetail
             RowVersion = Invoice.RowVersion,
             LineIds = ids
         });
-        ApplyResult(result, "The line order was updated.");
+        await ApplyResultAsync(result, "The line order was updated.");
     }
 
     private async Task MarkSentAsync()
@@ -177,7 +180,7 @@ public partial class InvoiceDetail
             Id = Id,
             RowVersion = Invoice.RowVersion
         });
-        ApplyResult(result, "The invoice is sent.");
+        await ApplyResultAsync(result, "The invoice is sent.");
         InitializePaymentForm();
     }
 
@@ -200,7 +203,7 @@ public partial class InvoiceDetail
             VoidInput = new();
         }
 
-        ApplyResult(result, "The invoice is void.");
+        await ApplyResultAsync(result, "The invoice is void.");
     }
 
     private async Task RecordPaymentAsync()
@@ -215,12 +218,12 @@ public partial class InvoiceDetail
         if (result.Succeeded)
         {
             CancelReverse();
-            ApplyResult(result, "The payment was recorded.");
+            await ApplyResultAsync(result, "The payment was recorded.");
             InitializePaymentForm();
             return;
         }
 
-        ApplyResult(result, successMessage: null);
+        await ApplyResultAsync(result, successMessage: null);
     }
 
     private void BeginReverse(Guid paymentId)
@@ -254,12 +257,12 @@ public partial class InvoiceDetail
         if (result.Succeeded)
         {
             CancelReverse();
-            ApplyResult(result, "The payment was reversed.");
+            await ApplyResultAsync(result, "The payment was reversed.");
             InitializePaymentForm();
             return;
         }
 
-        ApplyResult(result, successMessage: null);
+        await ApplyResultAsync(result, successMessage: null);
     }
 
     private void InitializePaymentForm()
@@ -288,10 +291,10 @@ public partial class InvoiceDetail
             return;
         }
 
-        ApplyResult(result, successMessage: null);
+        await ApplyResultAsync(result, successMessage: null);
     }
 
-    private void ApplyResult(InvoiceResult result, string? successMessage)
+    private async Task ApplyResultAsync(InvoiceResult result, string? successMessage)
     {
         if (result.IsForbidden)
         {
@@ -303,12 +306,18 @@ public partial class InvoiceDetail
         {
             _notFound = true;
             Invoice = null;
+            Activity = [];
             return;
         }
 
         if (result.Invoice is not null)
         {
             Invoice = result.Invoice;
+        }
+
+        if (Invoice is not null)
+        {
+            await RefreshActivityAsync();
         }
 
         if (result.Succeeded)
@@ -323,6 +332,13 @@ public partial class InvoiceDetail
             ErrorMessage = result.Errors.Count > 0 ? result.Errors[0] : "The invoice was updated by another user.";
             Errors = [];
         }
+    }
+
+    private async Task RefreshActivityAsync()
+    {
+        AuditQueryResult<IReadOnlyList<AuditEventDto>> result =
+            await Audit.ListForEntityAsync(AuditEntityTypes.Invoice, Id);
+        Activity = result.Succeeded && result.Value is not null ? result.Value : [];
     }
 
     private void ClearMessages()

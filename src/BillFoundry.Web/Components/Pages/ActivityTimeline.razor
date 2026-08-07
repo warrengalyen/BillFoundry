@@ -1,0 +1,27 @@
+@using BillFoundry.Application.Auditing
+
+@if (Events.Count == 0)
+{
+    <p>No activity has been recorded for this record yet.</p>
+}
+else
+{
+    <ol class="activity-timeline">
+        @foreach (AuditEventDto item in Events)
+        {
+            <li>
+                <time datetime="@item.OccurredAtUtc.UtcDateTime.ToString("o")">
+                    @item.OccurredAtUtc.UtcDateTime.ToString("yyyy-MM-dd HH:mm") UTC
+                </time>
+                <p>@item.Description</p>
+                <p class="activity-meta">@item.ActionLabel · @(string.IsNullOrWhiteSpace(item.UserName) ? "System" : item.UserName)</p>
+            </li>
+        }
+    </ol>
+}
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlyList<AuditEventDto> Events { get; set; } = [];
+}
