@@ -149,6 +149,9 @@ Entities that implement `IAuditable` receive:
 `Organization`, `Client`, `ClientContact`, `CatalogItem`, `Estimate`,
 `EstimateLine`, `Invoice`, and `InvoiceLine` implement the pattern.
 
+Business activity history is a separate `AuditEvent` table. See [audit.md](audit.md).
+Those rows are append-only and are not written by `AuditableInterceptor`.
+
 ## Development seeding
 
 When `IdentitySeed:Enabled` is true in Development, the host seeds the two roles

@@ -78,7 +78,7 @@ Production (non-Development) startup fails if
 
 EF Core is registered against SQL Server through `BillFoundryDbContext`, which
 includes ASP.NET Core Identity, the installation organization profile,
-clients, the service catalog, estimates, invoices, invoice payments, and document number sequences. Apply
+clients, the service catalog, estimates, invoices, invoice payments, document number sequences, and the business audit trail. Apply
 migrations before first sign-in:
 
 ```bash
@@ -157,4 +157,5 @@ Payment recording, settlement, and reversals are documented in
 library choice, and download endpoints are documented in [pdf.md](pdf.md).
 Generator tests assert `%PDF` headers and extracted field text with PdfPig.
 Dashboard metrics, aging, payment reports, outstanding invoices, and CSV
-exports are documented in [reporting.md](reporting.md).
+exports are documented in [reporting.md](reporting.md). The append-only
+business audit trail is documented in [audit.md](audit.md).

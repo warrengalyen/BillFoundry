@@ -82,8 +82,10 @@ uses a locked `DocumentSequences` row inside a transaction. See
 `DocumentSequences`, `Estimates`, and `EstimateLines`. Invoices, invoice lines,
 and the invoice sequence seed are the `AddInvoices` migration. Invoice payments
 are the `AddInvoicePayments` migration. Reporting indexes are the
-`AddReportingIndexes` migration. See [invoice-lifecycle.md](invoice-lifecycle.md),
-[payments.md](payments.md), and [reporting.md](reporting.md).
+`AddReportingIndexes` migration. Business audit events are the `AddAuditEvents`
+migration. See [invoice-lifecycle.md](invoice-lifecycle.md),
+[payments.md](payments.md), [reporting.md](reporting.md), and
+[audit.md](audit.md).
 
 Invoices store billed-to identity as a client snapshot, required issue and due
 dates, status, optional purchase order, notes, payment instructions, persisted
