@@ -17,4 +17,8 @@
     <ProjectReference Include="..\BillFoundry.Infrastructure\BillFoundry.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="BillFoundry.IntegrationTests" />
+  </ItemGroup>
+
 </Project>
