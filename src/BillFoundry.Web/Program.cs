@@ -8,7 +8,9 @@ using BillFoundry.Web.Organizations;
 using BillFoundry.Web.Reporting;
 using BillFoundry.Web.Security;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,8 +51,17 @@ builder.Services.Configure<Microsoft.AspNetCore.SignalR.HubOptions>(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+ConfigureDataProtection(builder);
+ConfigureForwardedHeaders(builder);
+
 var app = builder.Build();
 
+if (app.Configuration.GetValue("ForwardedHeaders:Enabled", false))
+{
+    app.UseForwardedHeaders();
+}
+
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseExceptionHandler("/Error", createScopeForErrors: true);
 
 if (!app.Environment.IsDevelopment())
@@ -82,5 +93,37 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 }).AllowAnonymous();
 
 app.Run();
+
+static void ConfigureDataProtection(WebApplicationBuilder builder)
+{
+    IDataProtectionBuilder dataProtection = builder.Services.AddDataProtection()
+        .SetApplicationName("BillFoundry");
+
+    string? keyPath = builder.Configuration["DataProtection:KeyPath"];
+    if (string.IsNullOrWhiteSpace(keyPath))
+    {
+        return;
+    }
+
+    Directory.CreateDirectory(keyPath);
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keyPath));
+}
+
+static void ConfigureForwardedHeaders(WebApplicationBuilder builder)
+{
+    if (!builder.Configuration.GetValue("ForwardedHeaders:Enabled", false))
+    {
+        return;
+    }
+
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        // Trust the immediate reverse proxy. Only enable behind a proxy that overwrites
+        // incoming forwarded headers. See docs/deployment.md.
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
 
 public partial class Program;

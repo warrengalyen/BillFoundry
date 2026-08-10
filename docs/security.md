@@ -24,7 +24,12 @@ Email confirmation is not required for sign-in while production email delivery
 is unimplemented.
 
 Logout is a POST from `/Account/Logout` so the request is covered by antiforgery.
-Login `returnUrl` values are accepted only when they are local paths.
+Login `returnUrl` values are accepted only when they are local paths without
+protocol-relative prefixes or control characters (`LocalUrl`).
+
+The host emits `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+`Permissions-Policy`, and `Content-Security-Policy` on HTML and API responses.
+See [security-review.md](security-review.md).
 
 ## Account notifications
 
@@ -166,3 +171,5 @@ commit production credentials.
 - Forgot-password always shows the same queued-message result
 - Health liveness remains anonymous; readiness still checks the database
 - Privileged actions must be authorized on the server
+- Persist data-protection keys when running in containers (`DataProtection:KeyPath`)
+- Enable `ForwardedHeaders:Enabled` only behind a proxy that overwrites forwarded headers

@@ -66,6 +66,30 @@ public sealed class AuthenticationTests : IClassFixture<BillFoundryWebApplicatio
         Assert.Contains("<h1 id=\"login-heading\">Log in</h1>", html, StringComparison.Ordinal);
         Assert.Contains("type=\"password\"", html, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task Health_endpoint_includes_security_headers()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync(new Uri("/health", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").Single());
+        Assert.Equal("no-referrer", response.Headers.GetValues("Referrer-Policy").Single());
+        Assert.Contains("frame-ancestors 'none'", response.Headers.GetValues("Content-Security-Policy").Single(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Ready_endpoint_is_mapped()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync(new Uri("/health/ready", UriKind.Relative));
+
+        Assert.NotEqual(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }
 
 public sealed class AuthenticatedPageTests : IClassFixture<AuthenticatedWebApplicationFactory>
