@@ -60,7 +60,7 @@ else
         <h2 id="estimate-form-heading" class="visually-hidden">Estimate form</h2>
         <EditForm Model="Input" OnValidSubmit="SaveAsync">
             <DataAnnotationsValidator />
-            <ValidationSummary class="form-errors" />
+            <ValidationSummary class="form-errors" role="alert" />
             <EstimateEditorFields Input="Input" Clients="Clients" CurrencyCode="CurrencyCode" />
             <div class="form-actions">
                 <button type="submit" class="button-primary">Save estimate</button>

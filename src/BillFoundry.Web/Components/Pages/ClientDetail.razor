@@ -156,7 +156,7 @@ else if (Client is not null)
         <h3 id="contact-form-heading">@(_editingContactId is null ? "Add contact" : "Edit contact")</h3>
         <EditForm Model="ContactInput" OnValidSubmit="SaveContactAsync" aria-labelledby="contact-form-heading">
             <DataAnnotationsValidator />
-            <ValidationSummary class="form-errors" />
+            <ValidationSummary class="form-errors" role="alert" />
             <div class="form-grid">
                 <div class="form-field">
                     <label for="contact-name">Name</label>

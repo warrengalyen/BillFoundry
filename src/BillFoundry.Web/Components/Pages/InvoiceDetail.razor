@@ -260,7 +260,7 @@ else if (Invoice is not null)
             <h3 id="line-form-heading">@(_editingLineId is null ? "Add line" : "Edit line")</h3>
             <EditForm Model="LineInput" OnValidSubmit="SaveLineAsync" aria-labelledby="line-form-heading">
                 <DataAnnotationsValidator />
-                <ValidationSummary class="form-errors" />
+                <ValidationSummary class="form-errors" role="alert" />
                 @if (CatalogItems.Count > 0 && _editingLineId is null)
                 {
                     <div class="form-field">
@@ -412,7 +412,7 @@ else if (Invoice is not null)
             <h3 id="payment-form-heading">Record payment</h3>
             <EditForm Model="PaymentInput" OnValidSubmit="RecordPaymentAsync" aria-labelledby="payment-form-heading">
                 <DataAnnotationsValidator />
-                <ValidationSummary class="form-errors" />
+                <ValidationSummary class="form-errors" role="alert" />
                 <div class="form-grid">
                     <div class="form-field">
                         <label for="payment-date">Payment date</label>

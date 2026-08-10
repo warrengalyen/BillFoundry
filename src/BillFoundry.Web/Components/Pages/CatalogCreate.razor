@@ -35,7 +35,7 @@
     <h2 id="catalog-form-heading" class="visually-hidden">Catalog item form</h2>
     <EditForm Model="Input" OnValidSubmit="SaveAsync">
         <DataAnnotationsValidator />
-        <ValidationSummary class="form-errors" />
+        <ValidationSummary class="form-errors" role="alert" />
         <CatalogEditorFields Input="Input" CurrencyCode="CurrencyCode" />
         <div class="form-actions">
             <button type="submit" class="button-primary">Create item</button>

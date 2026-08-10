@@ -163,7 +163,11 @@ code {
     position: fixed;
     inset: var(--header-height) 0 0 0;
     z-index: 15;
+    margin: 0;
+    padding: 0;
+    border: 0;
     background: rgba(27, 36, 48, 0.45);
+    cursor: pointer;
 }
 
 .app-sidebar {

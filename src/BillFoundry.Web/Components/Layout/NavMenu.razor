@@ -15,7 +15,10 @@
 
 @if (_navOpen)
 {
-    <div class="nav-backdrop" @onclick="CloseNav"></div>
+    <button type="button"
+            class="nav-backdrop"
+            aria-label="Close navigation"
+            @onclick="CloseNav"></button>
 }
 
 <nav id="app-sidebar"

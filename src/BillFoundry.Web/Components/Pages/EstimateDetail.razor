@@ -226,7 +226,7 @@ else if (Estimate is not null)
             <h3 id="line-form-heading">@(_editingLineId is null ? "Add line" : "Edit line")</h3>
             <EditForm Model="LineInput" OnValidSubmit="SaveLineAsync" aria-labelledby="line-form-heading">
                 <DataAnnotationsValidator />
-                <ValidationSummary class="form-errors" />
+                <ValidationSummary class="form-errors" role="alert" />
                 @if (CatalogItems.Count > 0 && _editingLineId is null)
                 {
                     <div class="form-field">

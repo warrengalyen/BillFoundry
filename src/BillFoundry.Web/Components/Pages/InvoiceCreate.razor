@@ -48,7 +48,7 @@ else
         <h2 id="invoice-form-heading" class="visually-hidden">Invoice form</h2>
         <EditForm Model="Input" OnValidSubmit="SaveAsync">
             <DataAnnotationsValidator />
-            <ValidationSummary class="form-errors" />
+            <ValidationSummary class="form-errors" role="alert" />
             <InvoiceEditorFields Input="Input" Clients="Clients" CurrencyCode="CurrencyCode" />
             <div class="form-actions">
                 <button type="submit" class="button-primary">Create invoice</button>

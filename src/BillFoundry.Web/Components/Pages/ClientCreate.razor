@@ -35,7 +35,7 @@
     <h2 id="client-form-heading" class="visually-hidden">Client form</h2>
     <EditForm Model="Input" OnValidSubmit="SaveAsync">
         <DataAnnotationsValidator />
-        <ValidationSummary class="form-errors" />
+        <ValidationSummary class="form-errors" role="alert" />
         <ClientEditorFields Input="Input" />
         <div class="form-actions">
             <button type="submit" class="button-primary">Create client</button>
