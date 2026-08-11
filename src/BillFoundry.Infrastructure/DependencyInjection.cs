@@ -107,6 +107,7 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceDocumentService, InvoiceDocumentService>();
         services.AddScoped<IEstimateDocumentService, EstimateDocumentService>();
         services.AddSingleton<IOrganizationLogoStore, FileSystemOrganizationLogoStore>();
+        services.AddHostedService<DatabaseMigrationHostedService>();
         services.AddHostedService<IdentitySeedHostedService>();
 
         services.AddHealthChecks()
