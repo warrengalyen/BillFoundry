@@ -1,0 +1,64 @@
+# Local BillFoundry + SQL Server environment.
+# DEVELOPMENT ONLY. Passwords below are placeholders, not production secrets.
+#
+#   docker compose up --build
+#
+# The web process applies pending EF Core migrations at startup because
+# Database__ApplyMigrationsOnStartup=true. That option never drops the database.
+# Identity development seed runs only because ASPNETCORE_ENVIRONMENT=Development.
+
+name: billfoundry
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      # DEVELOPMENT ONLY. Override with MSSQL_SA_PASSWORD in a gitignored .env file.
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-DevOnly_P@ssw0rd}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" -b -o /dev/null || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  web:
+    build:
+      context: .
+      dockerfile: src/BillFoundry.Web/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      Database__ApplyMigrationsOnStartup: "true"
+      DataProtection__KeyPath: /app/data-protection-keys
+      OrganizationLogoStorage__RootPath: /app/App_Data/organization-logos
+      ConnectionStrings__BillFoundry: "Server=db,1433;Database=BillFoundry;User Id=sa;Password=${MSSQL_SA_PASSWORD:-DevOnly_P@ssw0rd};TrustServerCertificate=True;MultipleActiveResultSets=True"
+    ports:
+      - "8080:8080"
+    volumes:
+      - data-protection-keys:/app/data-protection-keys
+      - organization-logos:/app/App_Data/organization-logos
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+
+volumes:
+  sql-data:
+  data-protection-keys:
+  organization-logos:

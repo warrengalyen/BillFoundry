@@ -484,6 +484,5 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# Local secrets and machine-specific configuration
-appsettings.*.local.json
-secrets.json
+# Local container data
+data-protection-keys/
