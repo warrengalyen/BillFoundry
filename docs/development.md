@@ -89,9 +89,34 @@ dotnet ef database update --project src/BillFoundry.Infrastructure --startup-pro
 The Web project references `Microsoft.EntityFrameworkCore.Design` so the EF tools
 can use it as the startup project.
 
+`Database:ApplyMigrationsOnStartup` defaults to `false`. When `true`, the host
+applies pending EF Core migrations at process start. It never drops or recreates
+the database. The local Compose stack enables this so a clean container can
+reach a usable schema. Prefer `dotnet ef database update` for developer
+workstations unless you are using Compose.
+
 Relative `OrganizationLogoStorage:RootPath` values are resolved from the Web
 content root. The default is `App_Data/organization-logos`. That directory is
 gitignored. Do not place uploaded logos in `wwwroot`.
+
+## Docker Compose
+
+`compose.yaml` runs BillFoundry and SQL Server 2022 for local container work.
+See [deployment.md](deployment.md) for image details, volumes, and health
+checks.
+
+```bash
+docker compose up --build
+```
+
+The stack is **development only**. It sets `ASPNETCORE_ENVIRONMENT=Development`,
+applies pending migrations at startup, and uses the placeholder SA password
+`DevOnly_P@ssw0rd` unless you override `MSSQL_SA_PASSWORD` in a gitignored
+`.env` file (see `.env.example`). Open `http://localhost:8080` and sign in
+with the Development Identity seed accounts.
+
+`docker compose down` stops containers and keeps the SQL volume.
+`docker compose down -v` deletes database data.
 
 ## Identity seed (Development)
 
@@ -138,6 +163,7 @@ ProblemDetails. HTML requests use the Blazor error page.
 
 WCAG 2.2 AA is a project requirement. New UI must keep semantic landmarks,
 keyboard access, and visible focus. The shell includes a skip-to-content link.
+See [accessibility.md](accessibility.md) for the Community Edition review.
 
 ## Tests
 

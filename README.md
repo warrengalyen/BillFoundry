@@ -48,6 +48,18 @@ dotnet run --project src/BillFoundry.Web
 
 By default the HTTPS development profile listens on `https://localhost:7270`.
 
+### Docker
+
+A production image and a local SQL Server Compose stack are documented in
+[docs/deployment.md](docs/deployment.md):
+
+```bash
+docker compose up --build
+```
+
+Compose is a development environment. It uses placeholder credentials, not
+production secrets.
+
 ### Configuration and secrets
 
 Non-secret defaults live in `src/BillFoundry.Web/appsettings.json`. Development
@@ -70,6 +82,9 @@ See [docs/development.md](docs/development.md) for more detail.
 - [Architecture](docs/architecture.md)
 - [Development](docs/development.md)
 - [Security](docs/security.md)
+- [Security review](docs/security-review.md)
+- [Accessibility](docs/accessibility.md)
+- [Deployment](docs/deployment.md)
 
 ## License
 

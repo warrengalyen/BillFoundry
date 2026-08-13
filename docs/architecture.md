@@ -144,6 +144,14 @@ health checks.
 
 - `/health` is a liveness probe, allows anonymous access, and does not require SQL Server.
 - `/health/ready` includes an EF Core database check and allows anonymous access.
+- Optional `Database:ApplyMigrationsOnStartup` applies pending EF Core migrations
+  at process start. It never drops the database. Default is false.
+- Optional `DataProtection:KeyPath` persists the ASP.NET Core key ring so
+  authentication cookies survive container replacement.
+- `SecurityHeadersMiddleware` adds `X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`, `Permissions-Policy`, and `Content-Security-Policy`.
+- `ForwardedHeaders:Enabled` is off by default. Enable it only behind a reverse
+  proxy that overwrites `X-Forwarded-*` headers. See [deployment.md](deployment.md).
 
 Interactive Server is enabled per component, not globally. Identity account pages
 use static SSR. The shell navigation is interactive so the mobile menu can work.
