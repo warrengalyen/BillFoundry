@@ -1,0 +1,28 @@
+@using BillFoundry.Application.Configuration
+@using Microsoft.Extensions.Options
+@inject IDemoMode DemoMode
+@inject IOptions<DemoSeedOptions> Seed
+
+@if (DemoMode.IsEnabled)
+{
+    <aside class="demo-credentials" aria-labelledby="demo-access-heading">
+        <h2 id="demo-access-heading">Try the demo</h2>
+        <p>
+            Sign in with either published account. Passwords are restored when an operator reseeds
+            the demonstration database. Later visitors should still be able to sign in.
+        </p>
+        <dl>
+            <div>
+                <dt>Administrator</dt>
+                <dd><code>@Seed.Value.AdministratorEmail</code></dd>
+                <dd><code>@Seed.Value.AdministratorPassword</code></dd>
+            </div>
+            <div>
+                <dt>Standard user</dt>
+                <dd><code>@Seed.Value.UserEmail</code></dd>
+                <dd><code>@Seed.Value.UserPassword</code></dd>
+            </div>
+        </dl>
+        <p>Every client, invoice, estimate, and payment in this installation is invented.</p>
+    </aside>
+}

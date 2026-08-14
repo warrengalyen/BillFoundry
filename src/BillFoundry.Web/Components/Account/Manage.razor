@@ -28,7 +28,14 @@
                 <dd>@(Account.IsDisabled ? "Disabled" : "Active")</dd>
             </div>
         </dl>
-        <p><a href="/Account/Manage/ChangePassword">Change password</a></p>
+        <AuthorizeView Policy="@AuthorizationPolicies.NotDemoMode">
+            <Authorized>
+                <p><a href="/Account/Manage/ChangePassword">Change password</a></p>
+            </Authorized>
+            <NotAuthorized>
+                <p>Password changes are disabled while Demo Mode is on so later visitors can still sign in.</p>
+            </NotAuthorized>
+        </AuthorizeView>
     }
 </section>
 

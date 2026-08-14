@@ -34,7 +34,7 @@ internal sealed class OrganizationSettingsService(
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        OrganizationSettingsResult? forbidden = await ForbidIfUnauthorizedAsync().ConfigureAwait(false);
+        OrganizationSettingsResult? forbidden = await ForbidIfMutationNotAllowedAsync().ConfigureAwait(false);
         if (forbidden is not null)
         {
             return forbidden;
@@ -93,7 +93,7 @@ internal sealed class OrganizationSettingsService(
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(rowVersion);
 
-        OrganizationSettingsResult? forbidden = await ForbidIfUnauthorizedAsync().ConfigureAwait(false);
+        OrganizationSettingsResult? forbidden = await ForbidIfMutationNotAllowedAsync().ConfigureAwait(false);
         if (forbidden is not null)
         {
             return forbidden;
@@ -163,7 +163,7 @@ internal sealed class OrganizationSettingsService(
     {
         ArgumentNullException.ThrowIfNull(rowVersion);
 
-        OrganizationSettingsResult? forbidden = await ForbidIfUnauthorizedAsync().ConfigureAwait(false);
+        OrganizationSettingsResult? forbidden = await ForbidIfMutationNotAllowedAsync().ConfigureAwait(false);
         if (forbidden is not null)
         {
             return forbidden;
@@ -195,6 +195,21 @@ internal sealed class OrganizationSettingsService(
             .ConfigureAwait(false);
 
         return authorization.Succeeded ? null : OrganizationSettingsResult.Forbidden();
+    }
+
+    private async Task<OrganizationSettingsResult?> ForbidIfMutationNotAllowedAsync()
+    {
+        OrganizationSettingsResult? forbidden = await ForbidIfUnauthorizedAsync().ConfigureAwait(false);
+        if (forbidden is not null)
+        {
+            return forbidden;
+        }
+
+        AuthorizationResult demo = await authorizationService
+            .AuthorizeAsync(currentUser.Principal, AuthorizationPolicies.NotDemoMode)
+            .ConfigureAwait(false);
+
+        return demo.Succeeded ? null : OrganizationSettingsResult.Forbidden();
     }
 
     private async Task<Organization> GetOrCreateAsync(CancellationToken cancellationToken)

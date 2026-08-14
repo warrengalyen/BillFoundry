@@ -1,0 +1,8 @@
+@inject IDemoMode DemoMode
+
+@if (DemoMode.IsEnabled)
+{
+    <div class="demo-banner" role="status">
+        This is a public BillFoundry demonstration. Organization, client, and financial records are fictional.
+    </div>
+}

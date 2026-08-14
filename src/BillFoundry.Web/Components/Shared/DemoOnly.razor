@@ -1,0 +1,11 @@
+@inject IDemoMode DemoMode
+
+@if (DemoMode.IsEnabled)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

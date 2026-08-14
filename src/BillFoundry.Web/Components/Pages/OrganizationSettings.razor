@@ -164,7 +164,14 @@
             </div>
         </fieldset>
 
-        <button type="submit" class="button-primary">Save organization</button>
+        <AuthorizeView Policy="@AuthorizationPolicies.NotDemoMode">
+            <Authorized Context="demoSave">
+                <button type="submit" class="button-primary">Save organization</button>
+            </Authorized>
+            <NotAuthorized Context="demoSaveBlocked">
+                <p class="form-status" role="status">Organization details cannot be changed while Demo Mode is on.</p>
+            </NotAuthorized>
+        </AuthorizeView>
     </EditForm>
 </section>
 
@@ -188,15 +195,22 @@
                    OnChange="OnLogoSelected" />
     </div>
 
-    <div class="form-actions">
-        <button type="button" class="button-primary" @onclick="UploadLogoAsync" disabled="@(_pendingLogo is null)">
-            Upload logo
-        </button>
-        @if (HasLogo)
-        {
-            <button type="button" class="button-secondary" @onclick="RemoveLogoAsync">
-                Remove logo
-            </button>
-        }
-    </div>
+    <AuthorizeView Policy="@AuthorizationPolicies.NotDemoMode">
+        <Authorized Context="demoLogo">
+            <div class="form-actions">
+                <button type="button" class="button-primary" @onclick="UploadLogoAsync" disabled="@(_pendingLogo is null)">
+                    Upload logo
+                </button>
+                @if (HasLogo)
+                {
+                    <button type="button" class="button-secondary" @onclick="RemoveLogoAsync">
+                        Remove logo
+                    </button>
+                }
+            </div>
+        </Authorized>
+        <NotAuthorized Context="demoLogoBlocked">
+            <p class="form-status" role="status">Logo changes are disabled while Demo Mode is on.</p>
+        </NotAuthorized>
+    </AuthorizeView>
 </section>

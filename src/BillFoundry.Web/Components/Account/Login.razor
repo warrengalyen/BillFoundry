@@ -51,9 +51,13 @@
         <button type="submit" class="button-primary">Log in</button>
     </EditForm>
 
-    <p class="form-footer">
-        <a href="/Account/ForgotPassword">Forgot your password?</a>
-    </p>
+    <WhenNotDemo>
+        <p class="form-footer">
+            <a href="/Account/ForgotPassword">Forgot your password?</a>
+        </p>
+    </WhenNotDemo>
+
+    <DemoSignInHint />
 </section>
 
 @code {
@@ -85,7 +89,7 @@
 
         if (result.Succeeded)
         {
-            Navigation.NavigateTo(LocalUrl.Resolve(ReturnUrl), forceLoad: true);
+            Navigation.NavigateTo(LocalUrl.Resolve(ReturnUrl, "/Dashboard"), forceLoad: true);
             return;
         }
 
