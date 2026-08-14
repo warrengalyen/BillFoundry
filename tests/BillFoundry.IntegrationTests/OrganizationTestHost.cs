@@ -4,6 +4,7 @@ using BillFoundry.Application.Organizations;
 using BillFoundry.Application.Security;
 using BillFoundry.Domain.Identity;
 using BillFoundry.Infrastructure;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -16,23 +17,36 @@ internal static class OrganizationTestHost
     public static ServiceProvider Create(
         SqlServerFixture sql,
         ICurrentUser currentUser,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        IReadOnlyDictionary<string, string?>? extra = null)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
+        var settings = new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:BillFoundry"] = sql.ConnectionString,
+            ["Database:CommandTimeoutSeconds"] = "30",
+            ["OrganizationLogoStorage:RootPath"] = sql.LogoRoot,
+            ["IdentitySeed:Enabled"] = "false",
+            ["DemoMode:Enabled"] = "false",
+            ["DemoSeed:Enabled"] = "false"
+        };
+
+        if (extra is not null)
+        {
+            foreach ((string key, string? value) in extra)
             {
-                ["ConnectionStrings:BillFoundry"] = sql.ConnectionString,
-                ["Database:CommandTimeoutSeconds"] = "30",
-                ["OrganizationLogoStorage:RootPath"] = sql.LogoRoot,
-                ["IdentitySeed:Enabled"] = "false",
-                ["DemoMode:Enabled"] = "false"
-            })
+                settings[key] = value;
+            }
+        }
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(settings)
             .Build();
 
         var environment = new TestHostEnvironment();
         var services = new ServiceCollection();
         services.AddSingleton<IHostEnvironment>(environment);
         services.AddLogging();
+        services.AddDataProtection();
         services.AddApplication(configuration);
         services.AddInfrastructure(configuration, environment);
         services.AddScoped<ICurrentUser>(_ => currentUser);

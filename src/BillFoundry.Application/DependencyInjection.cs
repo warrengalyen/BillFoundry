@@ -21,6 +21,12 @@ public static class DependencyInjection
         services.AddOptions<IdentitySeedOptions>()
             .Bind(configuration.GetSection(IdentitySeedOptions.SectionName));
 
+        services.AddOptions<DemoSeedOptions>()
+            .Bind(configuration.GetSection(DemoSeedOptions.SectionName));
+
+        services.AddOptions<PublicSiteOptions>()
+            .Bind(configuration.GetSection(PublicSiteOptions.SectionName));
+
         services.AddSingleton<IDemoMode, DemoMode>();
         services.AddScoped<ICurrentUser, UnauthenticatedCurrentUser>();
         services.AddSingleton<IAuthorizationHandler, NotDemoModeHandler>();

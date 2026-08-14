@@ -9,5 +9,6 @@ public class BillFoundryWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.UseSetting("IdentitySeed:Enabled", "false");
         builder.UseSetting("DemoMode:Enabled", "false");
+        builder.UseSetting("DemoSeed:Enabled", "false");
     }
 }

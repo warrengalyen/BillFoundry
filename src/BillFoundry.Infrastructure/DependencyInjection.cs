@@ -8,9 +8,11 @@ using BillFoundry.Application.Invoices;
 using BillFoundry.Application.Notifications;
 using BillFoundry.Application.Organizations;
 using BillFoundry.Application.Reporting;
+using BillFoundry.Application.Security;
 using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Catalog;
 using BillFoundry.Infrastructure.Clients;
+using BillFoundry.Infrastructure.Demo;
 using BillFoundry.Infrastructure.Documents;
 using BillFoundry.Infrastructure.Estimates;
 using BillFoundry.Infrastructure.Identity;
@@ -85,6 +87,16 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         services.Configure<IdentityOptions>(configuration.GetSection("Identity"));
+        services.AddOptions<IdentityOptions>().PostConfigure<IDemoMode>((identity, demoMode) =>
+        {
+            if (!demoMode.IsEnabled)
+            {
+                return;
+            }
+
+            identity.Lockout.AllowedForNewUsers = false;
+            identity.Lockout.MaxFailedAccessAttempts = int.MaxValue;
+        });
 
         services.AddOptions<OrganizationLogoStorageOptions>()
             .Bind(configuration.GetSection(OrganizationLogoStorageOptions.SectionName))
@@ -107,8 +119,10 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceDocumentService, InvoiceDocumentService>();
         services.AddScoped<IEstimateDocumentService, EstimateDocumentService>();
         services.AddSingleton<IOrganizationLogoStore, FileSystemOrganizationLogoStore>();
+        services.AddScoped<DemoSeeder>();
         services.AddHostedService<DatabaseMigrationHostedService>();
         services.AddHostedService<IdentitySeedHostedService>();
+        services.AddHostedService<DemoSeedHostedService>();
 
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
