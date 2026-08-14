@@ -857,3 +857,124 @@ code {
     font-size: 0.875rem;
 }
 
+.demo-banner {
+    margin: 0;
+    padding: 0.65rem 1.25rem;
+    background: #123524;
+    color: #f4f7f5;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.demo-credentials {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+}
+
+.demo-credentials dl {
+    display: grid;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.demo-credentials dt {
+    font-weight: 600;
+}
+
+.demo-credentials dd {
+    margin: 0.15rem 0 0;
+}
+
+.landing-header,
+.landing-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: var(--color-header);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.landing-footer {
+    border-bottom: 0;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-muted);
+}
+
+.landing-header-nav {
+    margin-left: auto;
+}
+
+.landing-main {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+}
+
+.landing-hero {
+    margin-bottom: 2.5rem;
+}
+
+.landing-kicker {
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    margin: 0 0 0.5rem;
+}
+
+.landing-hero h1 {
+    font-size: clamp(1.75rem, 4vw, 2.4rem);
+    max-width: 18ch;
+}
+
+.landing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.landing-note {
+    margin-top: 1.25rem;
+    padding: 0.85rem 1rem;
+    background: #eef6f2;
+    border-radius: var(--radius);
+}
+
+.landing-section {
+    margin-bottom: 2.25rem;
+}
+
+.landing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.landing-grid li {
+    padding: 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.landing-grid h3 {
+    margin-bottom: 0.35rem;
+}
+
+@media (max-width: 40rem) {
+    .landing-header {
+        flex-wrap: wrap;
+    }
+
+    .landing-header-nav {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+

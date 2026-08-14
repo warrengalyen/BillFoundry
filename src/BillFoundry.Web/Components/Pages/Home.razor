@@ -1,0 +1,94 @@
+@page "/"
+@attribute [AllowAnonymous]
+@layout LandingLayout
+@using BillFoundry.Application.Configuration
+@using Microsoft.Extensions.Options
+@inject IOptions<PublicSiteOptions> PublicSite
+
+<PageTitle>BillFoundry — freelance invoicing</PageTitle>
+
+<section class="landing-hero" aria-labelledby="hero-heading">
+    <p class="landing-kicker">Community Edition</p>
+    <h1 id="hero-heading">Invoicing software you can run yourself.</h1>
+    <p class="lede">
+        BillFoundry is a freelance invoicing application for estimates, invoices, payments,
+        and reporting. The Community Edition is meant for real day-to-day billing work,
+        not a throwaway demo shell.
+    </p>
+    <p class="landing-actions">
+        <a class="button-primary" href="/Account/Login">Log in</a>
+        <a class="button-secondary" href="@PublicSite.Value.RepositoryUrl">View the source on GitHub</a>
+    </p>
+    <DemoOnly>
+        <p class="landing-note" role="note">
+            This public site is a live demonstration. Business names, clients, invoices,
+            and payments are fictional.
+        </p>
+    </DemoOnly>
+</section>
+
+<section class="landing-section" aria-labelledby="capabilities-heading">
+    <h2 id="capabilities-heading">What it does</h2>
+    <ul class="landing-grid">
+        <li>
+            <h3>Clients and catalog</h3>
+            <p>Keep client records, contacts, and reusable billable items with unit prices.</p>
+        </li>
+        <li>
+            <h3>Estimates</h3>
+            <p>Draft, send, accept, decline, expire, or convert an estimate into an invoice.</p>
+        </li>
+        <li>
+            <h3>Invoices and payments</h3>
+            <p>Issue invoices, record partial or full payments, void mistakes, and track overdue balances.</p>
+        </li>
+        <li>
+            <h3>Documents and reports</h3>
+            <p>Download US Letter PDFs and CSV exports. The dashboard summarizes receivables.</p>
+        </li>
+    </ul>
+</section>
+
+<section class="landing-section" aria-labelledby="stack-heading">
+    <h2 id="stack-heading">How it is built</h2>
+    <p>
+        BillFoundry is a modular .NET 10 monolith: ASP.NET Core, Blazor Interactive Server,
+        Entity Framework Core, SQL Server, and ASP.NET Core Identity. Domain rules live in
+        C# types, not in a mediator pipeline.
+    </p>
+</section>
+
+<section class="landing-section" aria-labelledby="license-heading">
+    <h2 id="license-heading">Open source</h2>
+    <p>
+        BillFoundry Community Edition is licensed under the
+        <a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License v3.0</a>.
+        If you run a modified version as a network service, you must offer the corresponding
+        source to that service’s users.
+    </p>
+    <p>
+        Source code:
+        <a href="@PublicSite.Value.RepositoryUrl">@PublicSite.Value.RepositoryUrl</a>
+    </p>
+    <p>
+        A separate commercial license may be offered later for a Pro edition. That possibility
+        does not change the AGPLv3 terms that apply to this Community Edition.
+    </p>
+    <p>
+        Published demonstration data is entirely fictional. It is never real client, invoice,
+        or payment information.
+    </p>
+</section>
+
+<DemoOnly>
+    <section class="landing-section" aria-labelledby="demo-heading">
+        <h2 id="demo-heading">Public demonstration</h2>
+        <p>
+            Use the published accounts on the login page. Destructive administration such as
+            changing those passwords or rewriting the organization profile is blocked so the
+            next visitor can still sign in. An operator can restore the fictional dataset
+            with <code>DemoSeed:ResetOnStartup</code>.
+        </p>
+        <DemoSignInHint />
+    </section>
+</DemoOnly>

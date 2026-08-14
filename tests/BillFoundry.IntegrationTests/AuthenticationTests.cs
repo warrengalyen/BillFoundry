@@ -32,10 +32,27 @@ public sealed class AuthenticationTests : IClassFixture<BillFoundryWebApplicatio
             AllowAutoRedirect = false
         });
 
-        using HttpResponseMessage response = await client.GetAsync(new Uri("/", UriKind.Relative));
+        using HttpResponseMessage response = await client.GetAsync(new Uri("/Dashboard", UriKind.Relative));
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Contains("/Account/Login", response.Headers.Location?.OriginalString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Landing_page_is_public_and_explains_the_product()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync(new Uri("/", UriKind.Relative));
+        string html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Skip to content", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"main-content\"", html, StringComparison.Ordinal);
+        Assert.Contains("BillFoundry", html, StringComparison.Ordinal);
+        Assert.Contains("AGPL", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("fictional", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("/Account/Login", html, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -109,7 +126,7 @@ public sealed class AuthenticatedPageTests : IClassFixture<AuthenticatedWebAppli
         client.DefaultRequestHeaders.Add(TestAuthHandler.EmailHeader, "user@localhost");
         client.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, AppRoles.User);
 
-        using HttpResponseMessage response = await client.GetAsync(new Uri("/", UriKind.Relative));
+        using HttpResponseMessage response = await client.GetAsync(new Uri("/Dashboard", UriKind.Relative));
         string html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<DemoBanner />
+
+<header class="landing-header">
+    <a class="app-brand" href="/">BillFoundry</a>
+    <span class="app-edition">Community</span>
+    <nav class="landing-header-nav" aria-label="Account">
+        <a class="button-secondary" href="/Account/Login">Log in</a>
+    </nav>
+</header>
+
+<main id="main-content" class="landing-main" tabindex="-1">
+    @Body
+</main>
+
+<footer class="landing-footer">
+    <p>BillFoundry Community Edition. Licensed under the GNU Affero General Public License v3.0.</p>
+</footer>
