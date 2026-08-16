@@ -45,8 +45,9 @@ workflows.
 ## Authorization
 
 Application pages require an authenticated user unless they are marked
-`[AllowAnonymous]`. Public routes include login, password reset, access denied,
-error, not-found, and health endpoints.
+`[AllowAnonymous]`. Public routes include the landing page (`/`), login,
+password reset (when Demo Mode is off), access denied, error, not-found, and
+health endpoints.
 
 Authorization is enforced by ASP.NET Core endpoint metadata and cookie
 challenges, not only by hiding links in the UI. Blazor `AuthorizeRouteView`
@@ -73,8 +74,8 @@ than a raw role check:
 - `ManageInvoices` — authenticated Administrator or User role may list, create,
   edit drafts, manage line items, duplicate, mark sent, void, and convert
   accepted estimates
-- `NotDemoMode` — succeeds only when Demo Mode is disabled; reserved for later
-  mutation restrictions
+- `NotDemoMode` — succeeds only when Demo Mode is disabled. Password change,
+  password reset, and organization profile mutations require this policy.
 
 Do not authorize privileged work only in Razor. Application services and
 endpoints must demand the same policies or equivalent server-side checks.
@@ -139,9 +140,32 @@ services should depend on it instead of `HttpContext`, Blazor
 
 ## Demo Mode
 
-`DemoMode` / `IDemoMode` bind the `DemoMode` configuration section. The
-`NotDemoMode` policy is registered for later phases. This phase does not block
-writes or expose a public demo tenant.
+`IDemoMode` binds `DemoMode:Enabled` (default false). The `NotDemoMode` policy
+succeeds only when Demo Mode is off. It does not require an authenticated user,
+so anonymous password-reset pages stay available on a normal install and stay
+blocked on a public demo.
+
+When Demo Mode is on:
+
+- A site-wide banner states that the installation is a demonstration and that
+  business data is fictional
+- The landing page and login page publish the configured demo accounts
+- Account lockout is disabled so visitors cannot lock the shared accounts
+- Changing a password, requesting a reset, and completing a reset are denied
+- Organization profile, logo upload, and logo removal are denied in
+  `IOrganizationSettingsService` and hidden in the UI via the same policy
+
+Demo restrictions live behind `NotDemoMode` and a few dedicated components
+(`DemoBanner`, `DemoOnly`, `WhenNotDemo`, `DemoSignInHint`). Pages do not
+scatter `if (DemoMode)` checks for those rules.
+
+`DemoSeed:Enabled` is a separate opt-in. It loads fictional North Beacon Studio
+data. Production does not enable it unless an operator sets the flag (for
+example through `compose.demo.yaml`). Identity development seed still cannot run outside
+Development.
+
+CSV downloads and PDF downloads remain allowed in Demo Mode because they are
+reads.
 
 ## Audit metadata
 

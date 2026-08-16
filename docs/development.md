@@ -134,10 +134,32 @@ dotnet user-secrets set "IdentitySeed:AdministratorPassword" "YOUR_DEV_PASSWORD"
 dotnet user-secrets set "IdentitySeed:UserPassword" "YOUR_DEV_PASSWORD" --project src/BillFoundry.Web
 ```
 
-## Demo Mode
+## Demo Mode and demo seed
 
-`DemoMode:Enabled` defaults to false. `IDemoMode` and the `NotDemoMode` policy
-are available for later features. They do not yet restrict application writes.
+`DemoMode:Enabled` defaults to false. When it is true, the `NotDemoMode`
+authorization policy fails. Application services and account pages use that
+policy so a public demo cannot change published passwords or the organization
+profile. Account lockout is disabled while Demo Mode is on.
+
+`DemoSeed:Enabled` is also false by default. When true, a hosted service loads
+the fictional North Beacon Studio dataset (organization, users, clients,
+catalog items, estimates, invoices, payments, and audit events). It runs in
+any environment, including Production, so a live portfolio demo can opt in
+explicitly. Production `appsettings.json` leaves it off.
+
+`DemoSeed:ResetOnStartup` replaces business data and restores the published
+demo passwords. Compose overlay `compose.demo.yaml` turns that on so a
+container restart returns the site to a known state.
+
+Published demo accounts (fictional):
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Administrator | `admin@northbeacon.example` | `Demo-Admin-Passw0rd!` |
+| User | `user@northbeacon.example` | `Demo-User-Passw0rd!` |
+
+Identity development seed (`IdentitySeed`) still runs only in Development and
+is independent of Demo Seed. Do not enable Identity seed in Production.
 
 See [security.md](security.md) for authentication, authorization, and account
 notification details.

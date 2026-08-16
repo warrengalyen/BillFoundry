@@ -72,14 +72,16 @@ requests from a TLS-terminating proxy mark the cookie Secure. Forcing
 
 ### Already in good shape
 
-- Pages under `Components/Pages` require `[Authorize]`; account login/reset
-  pages are `[AllowAnonymous]`
+- Pages under `Components/Pages` require `[Authorize]` except the public
+  landing page; account login is `[AllowAnonymous]`; password reset requires
+  `NotDemoMode`
 - Application services re-check policies; endpoints require the same policies
 - Logout is POST + antiforgery
 - Logo uploads: signature inspection, 1 MB cap, generated names, not in `wwwroot`
 - EF Core LINQ / `FromSql` with parameters; no string-concatenated SQL
 - Production refuses to start without `ConnectionStrings:BillFoundry`
 - Identity seed cannot run outside Development
+- Demo seed is off by default in Production
 - Failed sign-in messages do not reveal whether an email exists
 - Account notifications do not log tokens or passwords
 - HTML error page shows a request id, not exception details
@@ -96,7 +98,6 @@ requests from a TLS-terminating proxy mark the cookie Secure. Forcing
   transactions
 - A separate secrets manager or vault
 - Redis, Kubernetes, or a service mesh
-- Demo Mode write blocking (policy exists; product behavior is still open)
 - Email confirmation (no production mail provider yet)
 
 ## Tests

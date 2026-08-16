@@ -23,9 +23,7 @@ Community Edition UI. Prefer native semantics over ARIA.
 
 ## Current behavior
 
-The authenticated shell has a skip link, a header, a labeled primary `nav`,
-and a `main` landmark with `id="main-content"`. Account pages use the same
-skip-link and main pattern. `FocusOnNavigate` moves focus to `h1`.
+The unauthenticated landing page uses the same skip-link and `main` pattern.
 
 List pages use labeled filters, `aria-busy` while loading, polite result
 counts, and visually hidden table captions. Status badges include text, not

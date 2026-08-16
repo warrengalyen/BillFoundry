@@ -157,6 +157,12 @@ Interactive Server is enabled per component, not globally. Identity account page
 use static SSR. The shell navigation is interactive so the mobile menu can work.
 
 Application pages require authentication unless marked `[AllowAnonymous]`.
+The public landing page (`/`), login, and health endpoints are anonymous.
+Password reset is anonymous when Demo Mode is off and blocked by `NotDemoMode`
+when Demo Mode is on.
+
+GitHub Actions workflow `.github/workflows/ci.yml` restores, builds, and tests
+the solution on Windows with the .NET SDK pinned by `global.json`.
 
 ## Testing
 
@@ -167,5 +173,7 @@ Application pages require authentication unless marked `[AllowAnonymous]`.
 - Integration tests use `WebApplicationFactory` against the Web host.
 - Authentication tests disable development identity seeding and do not require SQL Server
   except when a test explicitly exercises the database.
-- Organization, client, catalog, estimate, invoice, payment, and reporting
-  persistence and aggregation tests require SQL Server LocalDB.
+- Organization, client, catalog, estimate, invoice, payment, reporting, and
+  demo-seed persistence tests require SQL Server LocalDB.
+- GitHub Actions (`.github/workflows/ci.yml`) restores, builds, and tests on
+  Windows with the SDK from `global.json`.

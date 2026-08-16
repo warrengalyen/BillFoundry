@@ -93,8 +93,9 @@ Volumes:
 - `data-protection-keys` — ASP.NET Core key ring
 - `organization-logos` — uploaded logos
 
-`web` waits until `db` is healthy. `web` is healthy when
-`GET /health/ready` succeeds (SQL reachable).
+`web` waits until `db` is healthy. The Compose `web` healthcheck opens TCP
+port 8080 (the process is accepting connections). HTTP liveness is still
+`GET /health`; readiness is `GET /health/ready`.
 
 Stop and start again with the same volumes; the database and keys remain.
 
@@ -110,6 +111,18 @@ is not part of normal restart.
 
 Compose publishes `1433` for local tools. The SA password is the Compose
 placeholder unless `.env` overrides it.
+
+## Public demo Compose overlay
+
+`compose.demo.yaml` layers onto `compose.yaml`:
+
+```bash
+docker compose -f compose.yaml -f compose.demo.yaml up --build
+```
+
+The overlay sets Production, enables Demo Mode, enables demo seed with
+`DemoSeed__ResetOnStartup=true`, and keeps Identity development seed off.
+All seeded business data is fictional.
 
 ## Health checks
 
