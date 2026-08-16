@@ -1,0 +1,100 @@
+@use "../abstracts/tokens" as *;
+
+.button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.45rem 1.1rem;
+    border: 0;
+    border-radius: $bf-radius-md;
+    background: var(--bf-accent);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.button-primary:hover {
+    background: var(--bf-accent-hover);
+}
+
+.button-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.45rem 1.1rem;
+    border: 1px solid var(--bf-border-default);
+    border-radius: $bf-radius-md;
+    background: var(--bf-surface-primary);
+    color: var(--bf-text-primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.button-secondary:hover {
+    background: var(--bf-surface-page);
+}
+
+.button-secondary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.button-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.45rem 1.1rem;
+    border: 0;
+    border-radius: $bf-radius-md;
+    background: transparent;
+    color: var(--bf-text-primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.button-ghost:hover {
+    background: var(--bf-surface-page);
+}
+
+.button-destructive {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.45rem 1.1rem;
+    border: 1px solid $bf-error-border;
+    border-radius: $bf-radius-md;
+    background: var(--bf-error-bg);
+    color: var(--bf-error);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.button-destructive:hover {
+    background: #fad4d4;
+}
+
+@media (pointer: coarse) {
+    .button-primary,
+    .button-secondary,
+    .button-ghost,
+    .button-destructive {
+        min-height: 2.75rem;
+    }
+}

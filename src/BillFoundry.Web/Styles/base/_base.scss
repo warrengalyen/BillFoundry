@@ -1,0 +1,96 @@
+@use "../abstracts/tokens" as *;
+
+:focus-visible {
+    outline: 3px solid var(--bf-accent);
+    outline-offset: 2px;
+}
+
+a {
+    color: var(--bf-accent);
+}
+
+a:hover {
+    color: var(--bf-accent-hover);
+}
+
+code {
+    font-family: var(--bf-font-mono);
+    font-size: 0.9em;
+    background: $bf-border-subtle;
+    padding: 0.1em 0.35em;
+    border-radius: $bf-radius-sm;
+}
+
+.skip-link {
+    position: absolute;
+    left: $bf-space-3;
+    top: -4rem;
+    z-index: 3000;
+    padding: $bf-space-2 0.85rem;
+    background: var(--bf-accent);
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 0 0 $bf-radius-md $bf-radius-md;
+}
+
+.skip-link:focus {
+    top: 0;
+    color: #ffffff;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+#blazor-error-ui {
+    background: var(--bf-error-bg);
+    color: var(--bf-error);
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: $bf-space-3 $bf-space-5;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+
+    .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: $bf-space-3;
+        top: $bf-space-2;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+    }
+}
+
+.blazor-error-boundary {
+    background: var(--bf-error-bg);
+    color: var(--bf-error);
+    border: 1px solid $bf-error-border;
+    border-radius: $bf-radius-md;
+    padding: $bf-space-4 $bf-space-5;
+}
+
+.valid.modified:not([type="checkbox"]) {
+    outline: 1px solid var(--bf-accent);
+}
+
+.invalid {
+    outline: 1px solid var(--bf-error);
+}
+
+.validation-message {
+    color: var(--bf-error);
+}

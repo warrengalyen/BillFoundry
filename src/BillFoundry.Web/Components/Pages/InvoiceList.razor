@@ -26,71 +26,82 @@
 
 <section class="panel panel-wide" aria-labelledby="filter-heading">
     <h2 id="filter-heading" class="visually-hidden">Invoice filters</h2>
-    <EditForm Model="Filters" OnValidSubmit="ApplyFiltersAsync" class="filter-bar filter-bar-invoices">
-        <div class="form-field">
-            <label for="invoice-search">Search</label>
-            <InputText id="invoice-search"
-                       class="form-input"
-                       @bind-Value="Filters.Search"
-                       placeholder="Number, client, PO, or notes" />
+    <EditForm Model="Filters" OnValidSubmit="ApplyFiltersAsync">
+        <div class="filter-bar filter-bar-invoices">
+            <div class="form-field">
+                <label for="invoice-search">Search</label>
+                <InputText id="invoice-search"
+                           class="form-input"
+                           @bind-Value="Filters.Search"
+                           placeholder="Number, client, PO, or notes" />
+            </div>
+            <div class="form-field">
+                <label for="invoice-client-filter">Client</label>
+                <InputSelect id="invoice-client-filter" class="form-input" @bind-Value="SelectedClientId">
+                    <option value="@Guid.Empty">All clients</option>
+                    @foreach (InvoiceClientOption client in Clients)
+                    {
+                        <option value="@client.Id">@client.Name (@client.Code)</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="form-field">
+                <label for="invoice-status">Status</label>
+                <InputSelect id="invoice-status" class="form-input" @bind-Value="Filters.Status">
+                    <option value="@InvoiceStatusFilter.All">All</option>
+                    <option value="@InvoiceStatusFilter.Draft">Draft</option>
+                    <option value="@InvoiceStatusFilter.Sent">Sent</option>
+                    <option value="@InvoiceStatusFilter.PartiallyPaid">Partially paid</option>
+                    <option value="@InvoiceStatusFilter.Paid">Paid</option>
+                    <option value="@InvoiceStatusFilter.Overdue">Overdue</option>
+                    <option value="@InvoiceStatusFilter.Void">Void</option>
+                </InputSelect>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="button-primary">Apply</button>
+                <button type="button" class="button-ghost" @onclick="ToggleMoreFilters"
+                        aria-expanded="@_moreFiltersOpen">
+                    Filters@(AdvancedFilterCount > 0 ? $" ({AdvancedFilterCount})" : "")
+                </button>
+            </div>
         </div>
-        <div class="form-field">
-            <label for="invoice-client-filter">Client</label>
-            <InputSelect id="invoice-client-filter" class="form-input" @bind-Value="SelectedClientId">
-                <option value="@Guid.Empty">All clients</option>
-                @foreach (InvoiceClientOption client in Clients)
-                {
-                    <option value="@client.Id">@client.Name (@client.Code)</option>
-                }
-            </InputSelect>
-        </div>
-        <div class="form-field">
-            <label for="invoice-status">Status</label>
-            <InputSelect id="invoice-status" class="form-input" @bind-Value="Filters.Status">
-                <option value="@InvoiceStatusFilter.All">All</option>
-                <option value="@InvoiceStatusFilter.Draft">Draft</option>
-                <option value="@InvoiceStatusFilter.Sent">Sent</option>
-                <option value="@InvoiceStatusFilter.PartiallyPaid">Partially paid</option>
-                <option value="@InvoiceStatusFilter.Paid">Paid</option>
-                <option value="@InvoiceStatusFilter.Overdue">Overdue</option>
-                <option value="@InvoiceStatusFilter.Void">Void</option>
-            </InputSelect>
-        </div>
-        <div class="form-field">
-            <label for="invoice-issue-from">Issued from</label>
-            <InputDate id="invoice-issue-from" class="form-input" @bind-Value="Filters.IssueFrom" />
-        </div>
-        <div class="form-field">
-            <label for="invoice-issue-to">Issued to</label>
-            <InputDate id="invoice-issue-to" class="form-input" @bind-Value="Filters.IssueTo" />
-        </div>
-        <div class="form-field">
-            <label for="invoice-due-from">Due from</label>
-            <InputDate id="invoice-due-from" class="form-input" @bind-Value="Filters.DueFrom" />
-        </div>
-        <div class="form-field">
-            <label for="invoice-due-to">Due to</label>
-            <InputDate id="invoice-due-to" class="form-input" @bind-Value="Filters.DueTo" />
-        </div>
-        <div class="form-field">
-            <label for="invoice-min-total">Min total</label>
-            <InputNumber id="invoice-min-total" class="form-input" @bind-Value="Filters.MinTotal" step="0.01" />
-        </div>
-        <div class="form-field">
-            <label for="invoice-max-total">Max total</label>
-            <InputNumber id="invoice-max-total" class="form-input" @bind-Value="Filters.MaxTotal" step="0.01" />
-        </div>
-        <div class="form-field">
-            <label for="invoice-page-size">Page size</label>
-            <InputSelect id="invoice-page-size" class="form-input" @bind-Value="Filters.PageSize">
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-            </InputSelect>
-        </div>
-        <div class="filter-actions">
-            <button type="submit" class="button-primary">Apply</button>
-        </div>
+        @if (_moreFiltersOpen)
+        {
+            <div class="filter-bar filter-bar-extended" role="group" aria-label="Additional filters">
+                <div class="form-field">
+                    <label for="invoice-issue-from">Issued from</label>
+                    <InputDate id="invoice-issue-from" class="form-input" @bind-Value="Filters.IssueFrom" />
+                </div>
+                <div class="form-field">
+                    <label for="invoice-issue-to">Issued to</label>
+                    <InputDate id="invoice-issue-to" class="form-input" @bind-Value="Filters.IssueTo" />
+                </div>
+                <div class="form-field">
+                    <label for="invoice-due-from">Due from</label>
+                    <InputDate id="invoice-due-from" class="form-input" @bind-Value="Filters.DueFrom" />
+                </div>
+                <div class="form-field">
+                    <label for="invoice-due-to">Due to</label>
+                    <InputDate id="invoice-due-to" class="form-input" @bind-Value="Filters.DueTo" />
+                </div>
+                <div class="form-field">
+                    <label for="invoice-min-total">Min total</label>
+                    <InputNumber id="invoice-min-total" class="form-input" @bind-Value="Filters.MinTotal" step="0.01" />
+                </div>
+                <div class="form-field">
+                    <label for="invoice-max-total">Max total</label>
+                    <InputNumber id="invoice-max-total" class="form-input" @bind-Value="Filters.MaxTotal" step="0.01" />
+                </div>
+                <div class="form-field">
+                    <label for="invoice-page-size">Page size</label>
+                    <InputSelect id="invoice-page-size" class="form-input" @bind-Value="Filters.PageSize">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </InputSelect>
+                </div>
+            </div>
+        }
     </EditForm>
 </section>
 

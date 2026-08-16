@@ -27,3 +27,15 @@ https://github.com/UglyToad/PdfPig
 Test framework. Apache License 2.0.
 
 https://github.com/xunit/xunit
+
+## Lucide Icons
+
+Navigation icons derived from Lucide, an open-source icon library. ISC License.
+
+https://github.com/lucide-icons/lucide
+
+## EmbeddedSass.Net
+
+Sass compilation via the Embedded Sass Protocol. MIT License.
+
+https://github.com/gumbarros/EmbeddedSass.Net

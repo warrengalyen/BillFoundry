@@ -1,0 +1,55 @@
+@use "../abstracts/tokens" as *;
+@use "../abstracts/mixins" as *;
+
+.filter-bar {
+    display: grid;
+    gap: $bf-space-4;
+    align-items: end;
+
+    .form-field {
+        margin-bottom: 0;
+    }
+
+    .form-actions {
+        display: flex;
+        align-items: center;
+        margin-top: 0;
+    }
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+}
+
+@include respond-above($bp-md) {
+    .filter-bar {
+        grid-template-columns: 2fr 1fr 8rem auto;
+        align-items: end;
+    }
+
+    .filter-bar-catalog {
+        grid-template-columns: 2fr 1fr 1fr 8rem auto;
+    }
+
+    .filter-bar-estimates {
+        grid-template-columns: 2fr 1fr 8rem auto;
+    }
+
+    .filter-bar-invoices {
+        grid-template-columns: 2fr 1fr 1fr auto;
+    }
+
+    .filter-bar-reports {
+        grid-template-columns: repeat(4, minmax(8rem, 1fr)) auto;
+    }
+}
+
+.filter-bar-extended {
+    margin-top: $bf-space-4;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.filter-bar-audit {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}

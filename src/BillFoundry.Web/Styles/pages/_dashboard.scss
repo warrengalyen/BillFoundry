@@ -1,0 +1,142 @@
+@use "../abstracts/tokens" as *;
+@use "../abstracts/mixins" as *;
+
+// Financial KPI summary bar
+.dashboard-kpi {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    margin: 0 0 $bf-space-6;
+    max-width: $bf-panel-wide-width;
+    background: var(--bf-border-default);
+    border: 1px solid var(--bf-border-default);
+    border-radius: $bf-radius-md;
+    overflow: hidden;
+}
+
+.kpi-item {
+    display: flex;
+    flex-direction: column;
+    padding: $bf-space-4 $bf-space-5;
+    background: var(--bf-surface-primary);
+}
+
+.kpi-label {
+    color: var(--bf-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kpi-value {
+    font-size: 1.375rem;
+    font-weight: 700;
+    @include financial-value;
+    margin: $bf-space-1 0;
+}
+
+.kpi-detail {
+    color: var(--bf-text-muted);
+    font-size: 0.8125rem;
+}
+
+.kpi-overdue .kpi-value {
+    color: var(--bf-error);
+}
+
+// Two-panel grid for aging + payments
+.dashboard-panels {
+    display: grid;
+    gap: $bf-space-6;
+    margin-bottom: $bf-space-6;
+    max-width: $bf-panel-wide-width;
+
+    @include respond-above($bp-lg) {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+// Legacy metric grid (kept for backward compat until fully removed)
+.metric-grid {
+    display: grid;
+    gap: $bf-space-4;
+    margin: 0 0 $bf-space-6;
+    max-width: $bf-panel-wide-width;
+}
+
+@include respond-above(40rem) {
+    .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@include respond-above($bp-lg) {
+    .metric-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.metric-card {
+    background: var(--bf-surface-primary);
+    border: 1px solid var(--bf-border-default);
+    border-radius: $bf-radius-md;
+    box-shadow: var(--bf-shadow-md);
+    padding: $bf-space-4 1.15rem;
+
+    h2 {
+        margin: 0 0 0.35rem;
+        color: var(--bf-text-muted);
+        font-size: 0.875rem;
+        font-weight: 650;
+    }
+}
+
+.metric-value {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    @include financial-value;
+}
+
+.metric-detail {
+    margin: 0.35rem 0 0;
+    color: var(--bf-text-muted);
+    font-size: 0.875rem;
+}
+
+// Bar charts (used in dashboard aging + reports)
+.bar-chart {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0 0 $bf-space-5;
+}
+
+.bar-chart-row {
+    display: grid;
+    grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr) minmax(6rem, auto);
+    gap: $bf-space-3;
+    align-items: center;
+}
+
+.bar-chart-label,
+.bar-chart-value {
+    font-size: 0.875rem;
+}
+
+.bar-chart-value {
+    text-align: right;
+    @include tabular-nums;
+}
+
+.bar-chart-track {
+    height: 0.7rem;
+    background: $bf-chart-track;
+    border-radius: $bf-radius-full;
+    overflow: hidden;
+}
+
+.bar-chart-fill {
+    height: 100%;
+    background: $bf-chart-bar;
+}

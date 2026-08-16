@@ -1,0 +1,33 @@
+@use "../abstracts/tokens" as *;
+
+body {
+    font-family: var(--bf-font-family);
+    font-size: $bf-font-size-base;
+    line-height: $bf-line-height-base;
+    color: var(--bf-text-primary);
+    background: var(--bf-surface-page);
+}
+
+h1,
+h2,
+h3 {
+    line-height: $bf-line-height-heading;
+    margin: 0 0 $bf-space-3;
+}
+
+h1 {
+    font-size: 1.75rem;
+}
+
+h2 {
+    font-size: 1.25rem;
+}
+
+p {
+    margin: 0 0 $bf-space-4;
+}
+
+.lede {
+    color: var(--bf-text-muted);
+    font-size: 1.0625rem;
+}

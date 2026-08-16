@@ -10,6 +10,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="EmbeddedSass.Net.MsBuild" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedSass Include="Styles">
+      <OutputPath>wwwroot</OutputPath>
+    </EmbeddedSass>
   </ItemGroup>
 
   <ItemGroup>

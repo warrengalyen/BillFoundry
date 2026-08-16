@@ -6,6 +6,7 @@ namespace BillFoundry.Web.Components.Pages;
 public partial class InvoiceList
 {
     private bool _loading = true;
+    private bool _moreFiltersOpen;
 
     [SupplyParameterFromQuery(Name = "q")]
     public string? Search { get; set; }
@@ -66,6 +67,23 @@ public partial class InvoiceList
         || Filters.DueTo is not null
         || Filters.MinTotal is not null
         || Filters.MaxTotal is not null;
+
+    private int AdvancedFilterCount
+    {
+        get
+        {
+            int count = 0;
+            if (Filters.IssueFrom is not null) count++;
+            if (Filters.IssueTo is not null) count++;
+            if (Filters.DueFrom is not null) count++;
+            if (Filters.DueTo is not null) count++;
+            if (Filters.MinTotal is not null) count++;
+            if (Filters.MaxTotal is not null) count++;
+            return count;
+        }
+    }
+
+    private void ToggleMoreFilters() => _moreFiltersOpen = !_moreFiltersOpen;
 
     private string ResultsSummary
     {

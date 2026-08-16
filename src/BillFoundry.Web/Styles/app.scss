@@ -1,0 +1,28 @@
+/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+
+// Abstracts (tokens + mixins — no CSS output on their own)
+@use "abstracts/tokens";
+@use "abstracts/mixins";
+
+// Base
+@use "base/reset";
+@use "base/typography";
+@use "base/base";
+
+// Layout
+@use "layout/shell";
+@use "layout/responsive";
+
+// Components
+@use "components/buttons";
+@use "components/forms";
+@use "components/tables";
+@use "components/status";
+@use "components/filters";
+@use "components/feedback";
+
+// Pages
+@use "pages/dashboard";
+@use "pages/account";
+@use "pages/reports";
+@use "pages/landing";

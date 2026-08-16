@@ -1,0 +1,32 @@
+@use "../abstracts/tokens" as *;
+@use "../abstracts/mixins" as *;
+
+.report-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $bf-space-3 $bf-space-5;
+    margin: 0 0 $bf-space-5;
+    max-width: $bf-panel-wide-width;
+}
+
+.report-index {
+    margin: 0;
+    padding-left: 1.2rem;
+
+    li + li {
+        margin-top: 0.85rem;
+    }
+
+    p {
+        margin: 0.25rem 0 0;
+        color: var(--bf-text-muted);
+    }
+}
+
+// Responsive bar chart: narrow label column on mobile
+@include respond-below($bp-sm) {
+    .bar-chart-row {
+        grid-template-columns: minmax(5rem, 8rem) minmax(0, 1fr) minmax(4rem, auto);
+        gap: $bf-space-2;
+    }
+}

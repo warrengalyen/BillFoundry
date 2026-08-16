@@ -32,8 +32,8 @@ internal static class EstimateFormatting
     {
         EstimateStatus.Draft => "is-draft",
         EstimateStatus.Sent => "is-sent",
-        EstimateStatus.Accepted => "is-active",
-        EstimateStatus.Declined => "is-inactive",
+        EstimateStatus.Accepted => "is-accepted",
+        EstimateStatus.Declined => "is-declined",
         EstimateStatus.Expired => "is-expired",
         EstimateStatus.Converted => "is-converted",
         _ => "is-draft"

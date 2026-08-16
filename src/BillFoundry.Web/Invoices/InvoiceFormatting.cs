@@ -32,10 +32,10 @@ internal static class InvoiceFormatting
     {
         InvoiceStatus.Draft => "is-draft",
         InvoiceStatus.Sent => "is-sent",
-        InvoiceStatus.PartiallyPaid => "is-sent",
-        InvoiceStatus.Paid => "is-active",
-        InvoiceStatus.Overdue => "is-expired",
-        InvoiceStatus.Void => "is-inactive",
+        InvoiceStatus.PartiallyPaid => "is-partially-paid",
+        InvoiceStatus.Paid => "is-paid",
+        InvoiceStatus.Overdue => "is-overdue",
+        InvoiceStatus.Void => "is-void",
         _ => "is-draft"
     };
 

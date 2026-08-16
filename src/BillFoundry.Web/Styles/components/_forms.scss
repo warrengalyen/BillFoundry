@@ -1,0 +1,100 @@
+@use "../abstracts/tokens" as *;
+@use "../abstracts/mixins" as *;
+
+.form-field {
+    margin-bottom: $bf-space-4;
+
+    label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+    }
+}
+
+.form-input,
+.form-field input[type="text"],
+.form-field input[type="password"],
+.form-field input[type="email"],
+.form-field input[type="tel"],
+.form-field input[type="url"],
+.form-field input[type="number"],
+.form-field input[type="date"],
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--bf-border-default);
+    border-radius: $bf-radius-md;
+    font: inherit;
+    background: var(--bf-surface-primary);
+    color: var(--bf-text-primary);
+}
+
+.form-field textarea {
+    min-height: 6rem;
+    resize: vertical;
+}
+
+.form-hint {
+    margin: 0.35rem 0 0;
+    color: var(--bf-text-muted);
+    font-size: 0.875rem;
+}
+
+.form-grid {
+    display: grid;
+    gap: 0 $bf-space-4;
+}
+
+@include respond-above(40rem) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.form-fieldset {
+    margin: 0 0 $bf-space-6;
+    padding: 0;
+    border: 0;
+
+    legend {
+        font-size: 1.125rem;
+        font-weight: 650;
+        margin-bottom: 0.85rem;
+        padding: 0;
+    }
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $bf-space-3;
+    margin-top: $bf-space-2;
+}
+
+.form-field-checkbox {
+    display: flex;
+    align-items: center;
+    gap: $bf-space-2;
+
+    label {
+        margin: 0;
+        font-weight: 500;
+    }
+}
+
+.form-footer {
+    margin: $bf-space-5 0 0;
+}
+
+.logo-preview {
+    display: block;
+    max-width: 12rem;
+    max-height: 8rem;
+    width: auto;
+    height: auto;
+    margin: 0 0 $bf-space-4;
+    border: 1px solid var(--bf-border-default);
+    border-radius: $bf-radius-md;
+    background: var(--bf-surface-page);
+}

@@ -1,0 +1,11 @@
+@use "../abstracts/tokens" as *;
+
+.account-main {
+    max-width: 28rem;
+    margin: $bf-space-7 auto $bf-space-8;
+    padding: 0 $bf-space-5;
+}
+
+.account-panel {
+    max-width: none;
+}

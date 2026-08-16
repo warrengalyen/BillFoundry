@@ -1,0 +1,132 @@
+@use "../abstracts/tokens" as *;
+@use "../abstracts/mixins" as *;
+
+.landing-header,
+.landing-footer {
+    display: flex;
+    align-items: center;
+    gap: $bf-space-3;
+    padding: $bf-space-4 $bf-space-6;
+    background: var(--bf-surface-primary);
+    border-bottom: 1px solid var(--bf-border-default);
+}
+
+.landing-footer {
+    border-bottom: 0;
+    border-top: 1px solid var(--bf-border-default);
+    color: var(--bf-text-muted);
+}
+
+.landing-header-nav {
+    margin-left: auto;
+}
+
+.landing-main {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: $bf-space-7 $bf-space-6 $bf-space-8;
+}
+
+.landing-hero {
+    margin-bottom: 2.5rem;
+}
+
+.landing-kicker {
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--bf-text-muted);
+    margin: 0 0 $bf-space-2;
+}
+
+.landing-hero h1 {
+    font-size: clamp(1.75rem, 4vw, 2.4rem);
+    max-width: 18ch;
+}
+
+.landing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $bf-space-3;
+}
+
+.landing-note {
+    margin-top: $bf-space-5;
+    padding: 0.85rem $bf-space-4;
+    background: $bf-accent-subtle;
+    border-radius: $bf-radius-md;
+}
+
+.landing-section {
+    margin-bottom: 2.25rem;
+}
+
+.landing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: $bf-space-4;
+    padding: 0;
+    list-style: none;
+
+    li {
+        padding: $bf-space-4;
+        background: var(--bf-surface-primary);
+        border: 1px solid var(--bf-border-default);
+        border-radius: $bf-radius-md;
+    }
+
+    h3 {
+        margin-bottom: 0.35rem;
+    }
+}
+
+section + section {
+    margin-bottom: 10px;
+}
+
+#contact-form-heading {
+    margin-top: 10px;
+}
+
+// Demo
+.demo-banner {
+    margin: 0;
+    padding: 0.65rem $bf-space-5;
+    background: $bf-demo-bg;
+    color: $bf-demo-text;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.demo-credentials {
+    margin-top: $bf-space-6;
+    padding: $bf-space-5;
+    border: 1px solid var(--bf-border-default);
+    border-radius: $bf-radius-md;
+    background: var(--bf-surface-primary);
+
+    dl {
+        display: grid;
+        gap: $bf-space-4;
+        margin: $bf-space-4 0;
+    }
+
+    dt {
+        font-weight: 600;
+    }
+
+    dd {
+        margin: 0.15rem 0 0;
+    }
+}
+
+@include respond-below(40rem) {
+    .landing-header {
+        flex-wrap: wrap;
+    }
+
+    .landing-header-nav {
+        margin-left: 0;
+        width: 100%;
+    }
+}

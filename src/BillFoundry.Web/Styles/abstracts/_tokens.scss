@@ -1,0 +1,153 @@
+// ---------------------------------------------------------------------------
+// Design tokens — Sass variables for compile-time use, CSS custom properties
+// for runtime theming capability.
+// ---------------------------------------------------------------------------
+
+// Surfaces
+$bf-surface-page: #f4f6f8;
+$bf-surface-primary: #ffffff;
+$bf-surface-elevated: #ffffff;
+
+// Text
+$bf-text-primary: #1b2430;
+$bf-text-secondary: #5c6773;
+$bf-text-muted: #5c6773;
+
+// Accent
+$bf-accent: #0f6e56;
+$bf-accent-hover: #0c5a46;
+$bf-accent-subtle: #eef6f2;
+
+// Semantic
+$bf-success: #146c2e;
+$bf-success-bg: #e7f6ec;
+$bf-success-border: #b7e0c2;
+$bf-warning: #6b4f16;
+$bf-warning-bg: #f4efe6;
+$bf-error: #9b1c1c;
+$bf-error-bg: #fdecec;
+$bf-error-border: #f0b4b4;
+$bf-info: #1d4f91;
+$bf-info-bg: #e7eefc;
+
+// Borders
+$bf-border-default: #d7dde3;
+$bf-border-subtle: #e8edf2;
+
+// Spacing (4px base scale)
+$bf-space-1: 0.25rem;
+$bf-space-2: 0.5rem;
+$bf-space-3: 0.75rem;
+$bf-space-4: 1rem;
+$bf-space-5: 1.25rem;
+$bf-space-6: 1.5rem;
+$bf-space-7: 2rem;
+$bf-space-8: 3rem;
+
+// Typography
+$bf-font-family: "Segoe UI", Calibri, "Trebuchet MS", sans-serif;
+$bf-font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+$bf-font-size-base: 1rem;
+$bf-line-height-base: 1.5;
+$bf-line-height-heading: 1.25;
+
+// Radii
+$bf-radius-sm: 0.25rem;
+$bf-radius-md: 0.5rem;
+$bf-radius-full: 999px;
+
+// Shadows
+$bf-shadow-sm: 0 1px 2px rgba(27, 36, 48, 0.08);
+$bf-shadow-md: 0 1px 2px rgba(27, 36, 48, 0.08), 0 8px 24px rgba(27, 36, 48, 0.06);
+
+// Layout
+$bf-sidebar-width: 16rem;
+$bf-header-height: 3.5rem;
+
+// Sidebar
+$bf-sidebar-bg: #1b2430;
+$bf-sidebar-text: #e8edf2;
+$bf-sidebar-muted: #9aa6b2;
+
+// Status palette
+$bf-status-draft-bg: #eef2f6;
+$bf-status-draft-text: #334155;
+$bf-status-sent-bg: #e7eefc;
+$bf-status-sent-text: #1d4f91;
+$bf-status-expired-bg: #f4efe6;
+$bf-status-expired-text: #6b4f16;
+$bf-status-converted-bg: #f1e8fb;
+$bf-status-converted-text: #5b2d91;
+$bf-status-paid-bg: #e7f6ec;
+$bf-status-paid-text: #146c2e;
+$bf-status-overdue-bg: #fdecec;
+$bf-status-overdue-text: #9b1c1c;
+$bf-status-partialpaid-bg: #f0f7fe;
+$bf-status-partialpaid-text: #1a5276;
+$bf-status-void-bg: #f1f1f4;
+$bf-status-void-text: #4a4a5a;
+$bf-status-accepted-bg: #e7f6ec;
+$bf-status-accepted-text: #146c2e;
+$bf-status-declined-bg: #fdecec;
+$bf-status-declined-text: #9b1c1c;
+
+// Chart / visualization
+$bf-chart-bar: #3d4f61;
+$bf-chart-track: #e8edf2;
+
+// Demo
+$bf-demo-bg: #123524;
+$bf-demo-text: #f4f7f5;
+
+// Panel widths
+$bf-panel-width: 48rem;
+$bf-panel-wide-width: 72rem;
+
+:root {
+    --bf-surface-page: #{$bf-surface-page};
+    --bf-surface-primary: #{$bf-surface-primary};
+    --bf-surface-elevated: #{$bf-surface-elevated};
+
+    --bf-text-primary: #{$bf-text-primary};
+    --bf-text-secondary: #{$bf-text-secondary};
+    --bf-text-muted: #{$bf-text-muted};
+
+    --bf-accent: #{$bf-accent};
+    --bf-accent-hover: #{$bf-accent-hover};
+    --bf-accent-subtle: #{$bf-accent-subtle};
+
+    --bf-success: #{$bf-success};
+    --bf-success-bg: #{$bf-success-bg};
+    --bf-warning: #{$bf-warning};
+    --bf-warning-bg: #{$bf-warning-bg};
+    --bf-error: #{$bf-error};
+    --bf-error-bg: #{$bf-error-bg};
+    --bf-info: #{$bf-info};
+    --bf-info-bg: #{$bf-info-bg};
+
+    --bf-border-default: #{$bf-border-default};
+    --bf-border-subtle: #{$bf-border-subtle};
+
+    --bf-space-1: #{$bf-space-1};
+    --bf-space-2: #{$bf-space-2};
+    --bf-space-3: #{$bf-space-3};
+    --bf-space-4: #{$bf-space-4};
+    --bf-space-5: #{$bf-space-5};
+    --bf-space-6: #{$bf-space-6};
+    --bf-space-7: #{$bf-space-7};
+    --bf-space-8: #{$bf-space-8};
+
+    --bf-font-family: #{$bf-font-family};
+    --bf-font-mono: #{$bf-font-mono};
+
+    --bf-radius-sm: #{$bf-radius-sm};
+    --bf-radius-md: #{$bf-radius-md};
+
+    --bf-shadow-sm: #{$bf-shadow-sm};
+    --bf-shadow-md: #{$bf-shadow-md};
+
+    --bf-sidebar-width: #{$bf-sidebar-width};
+    --bf-sidebar-bg: #{$bf-sidebar-bg};
+    --bf-sidebar-text: #{$bf-sidebar-text};
+    --bf-header-height: #{$bf-header-height};
+}

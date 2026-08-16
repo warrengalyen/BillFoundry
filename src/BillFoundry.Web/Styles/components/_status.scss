@@ -1,0 +1,119 @@
+@use "../abstracts/tokens" as *;
+
+// Status badges
+.status-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: $bf-radius-full;
+    font-size: 0.8125rem;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.status-badge.is-active,
+.status-badge.is-paid,
+.status-badge.is-accepted {
+    background: $bf-status-paid-bg;
+    color: $bf-status-paid-text;
+}
+
+.status-badge.is-inactive,
+.status-badge.is-overdue,
+.status-badge.is-declined {
+    background: $bf-status-overdue-bg;
+    color: $bf-status-overdue-text;
+}
+
+.status-badge.is-draft {
+    background: $bf-status-draft-bg;
+    color: $bf-status-draft-text;
+}
+
+.status-badge.is-sent {
+    background: $bf-status-sent-bg;
+    color: $bf-status-sent-text;
+}
+
+.status-badge.is-expired {
+    background: $bf-status-expired-bg;
+    color: $bf-status-expired-text;
+}
+
+.status-badge.is-converted {
+    background: $bf-status-converted-bg;
+    color: $bf-status-converted-text;
+}
+
+.status-badge.is-partially-paid {
+    background: $bf-status-partialpaid-bg;
+    color: $bf-status-partialpaid-text;
+}
+
+.status-badge.is-void {
+    background: $bf-status-void-bg;
+    color: $bf-status-void-text;
+}
+
+// Definition lists
+.definition-list {
+    margin: 0 0 $bf-space-4;
+
+    div {
+        display: grid;
+        grid-template-columns: 8rem 1fr;
+        gap: $bf-space-2;
+        margin-bottom: 0.65rem;
+    }
+
+    dt {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    dd {
+        margin: 0;
+    }
+}
+
+// Activity timeline
+.activity-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--bf-border-default);
+
+    li {
+        position: relative;
+        padding: 0 0 $bf-space-5 $bf-space-5;
+
+        &:last-child {
+            padding-bottom: 0;
+        }
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: -0.45rem;
+            top: 0.35rem;
+            width: 0.7rem;
+            height: 0.7rem;
+            border-radius: 50%;
+            background: $bf-chart-bar;
+        }
+    }
+
+    time {
+        display: block;
+        color: var(--bf-text-muted);
+        font-size: 0.875rem;
+    }
+
+    p {
+        margin: 0.25rem 0 0;
+    }
+}
+
+.activity-meta {
+    color: var(--bf-text-muted);
+    font-size: 0.875rem;
+}

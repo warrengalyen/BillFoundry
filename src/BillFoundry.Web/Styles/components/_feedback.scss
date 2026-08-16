@@ -1,0 +1,32 @@
+@use "../abstracts/tokens" as *;
+
+.form-alert,
+.form-errors {
+    color: var(--bf-error);
+    background: var(--bf-error-bg);
+    border: 1px solid $bf-error-border;
+    border-radius: $bf-radius-md;
+    padding: $bf-space-3 $bf-space-4;
+    margin-bottom: $bf-space-4;
+}
+
+.form-status {
+    color: var(--bf-text-primary);
+    background: $bf-success-bg;
+    border: 1px solid $bf-success-border;
+    border-radius: $bf-radius-md;
+    padding: $bf-space-3 $bf-space-4;
+    margin-bottom: $bf-space-4;
+}
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $bf-space-3;
+    align-items: center;
+    margin-top: $bf-space-4;
+
+    p {
+        margin: 0;
+    }
+}

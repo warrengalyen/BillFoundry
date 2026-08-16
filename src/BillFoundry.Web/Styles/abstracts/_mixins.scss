@@ -1,0 +1,45 @@
+@use "tokens" as *;
+
+// ---------------------------------------------------------------------------
+// Breakpoints
+// ---------------------------------------------------------------------------
+
+$bp-sm: 30rem;  // ~480px — mobile
+$bp-md: 48rem;  // ~768px — tablet portrait / sidebar transition
+$bp-lg: 64rem;  // ~1024px — tablet landscape / laptop
+$bp-xl: 80rem;  // ~1280px — desktop
+
+@mixin respond-above($bp) {
+    @media (min-width: $bp) { @content; }
+}
+
+@mixin respond-below($bp) {
+    @media (max-width: calc(#{$bp} - 0.0625rem)) { @content; }
+}
+
+// ---------------------------------------------------------------------------
+// Typography helpers
+// ---------------------------------------------------------------------------
+
+@mixin tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+@mixin financial-value {
+    @include tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+@mixin text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// ---------------------------------------------------------------------------
+// Motion
+// ---------------------------------------------------------------------------
+
+@mixin reduced-motion {
+    @media (prefers-reduced-motion: reduce) { @content; }
+}

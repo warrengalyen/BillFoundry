@@ -1,19 +1,22 @@
 @page "/Dashboard"
 @attribute [Authorize(Policy = AuthorizationPolicies.ManageInvoices)]
+@using BillFoundry.Application.Invoices
 @using BillFoundry.Application.Reporting
 @using BillFoundry.Web.Invoices
 @inject IReportingService Reporting
+@inject IInvoiceService InvoiceService
 
 <PageTitle>Dashboard - BillFoundry</PageTitle>
 
 <section class="page-header page-header-split">
     <div>
         <h1>Dashboard</h1>
-        <p class="lede">Receivables and collections as of @_asOfLabel. Amounts use persisted invoice balances and recorded payments.</p>
+        <p class="lede">Receivables and collections as of @_asOfLabel.</p>
     </div>
-    <p>
-        <a class="button-secondary" href="/Reports">All reports</a>
-    </p>
+    <div class="form-actions">
+        <a class="button-primary" href="/Invoices/Create">Create invoice</a>
+        <a class="button-secondary" href="/Estimates/Create">Create estimate</a>
+    </div>
 </section>
 
 @if (_error is not null)
@@ -26,102 +29,135 @@ else if (_metrics is null)
 }
 else
 {
-    <section class="metric-grid" aria-label="Receivables summary">
-        <article class="metric-card">
-            <h2>Outstanding receivables</h2>
-            <p class="metric-value">@InvoiceFormatting.FormatAmount(_metrics.OutstandingReceivables, _metrics.CurrencyCode)</p>
-            <p class="metric-detail">@_metrics.OpenInvoiceCount open invoice@(_metrics.OpenInvoiceCount == 1 ? "" : "s")</p>
-        </article>
-        <article class="metric-card">
-            <h2>Overdue receivables</h2>
-            <p class="metric-value">@InvoiceFormatting.FormatAmount(_metrics.OverdueReceivables, _metrics.CurrencyCode)</p>
-            <p class="metric-detail">@_metrics.OverdueInvoiceCount overdue invoice@(_metrics.OverdueInvoiceCount == 1 ? "" : "s")</p>
-        </article>
-        <article class="metric-card">
-            <h2>Payments this month</h2>
-            <p class="metric-value">@InvoiceFormatting.FormatAmount(_metrics.PaymentsThisMonth, _metrics.CurrencyCode)</p>
-            <p class="metric-detail">Net receipts in @_metrics.AsOf.ToString("MMMM yyyy")</p>
-        </article>
-        <article class="metric-card">
-            <h2>Payments this year</h2>
-            <p class="metric-value">@InvoiceFormatting.FormatAmount(_metrics.PaymentsThisYear, _metrics.CurrencyCode)</p>
-            <p class="metric-detail">Net receipts in @_metrics.AsOf.Year</p>
-        </article>
-        <article class="metric-card">
-            <h2>Open invoices</h2>
-            <p class="metric-value">@_metrics.OpenInvoiceCount</p>
-            <p class="metric-detail">Sent or partially paid with a remaining balance</p>
-        </article>
-        <article class="metric-card">
-            <h2>Overdue invoices</h2>
-            <p class="metric-value">@_metrics.OverdueInvoiceCount</p>
-            <p class="metric-detail">Due before @_asOfLabel with a remaining balance</p>
-        </article>
-    </section>
-
-    <section class="panel panel-wide" aria-labelledby="aging-heading">
-        <div class="results-header">
-            <h2 id="aging-heading">Invoice aging</h2>
-            <a href="/Reports/Aging">Full aging report</a>
+    <section class="dashboard-kpi" aria-label="Financial summary">
+        <div class="kpi-item">
+            <span class="kpi-label">Outstanding</span>
+            <span class="kpi-value">@InvoiceFormatting.FormatAmount(_metrics.OutstandingReceivables, _metrics.CurrencyCode)</span>
+            <span class="kpi-detail">@_metrics.OpenInvoiceCount open</span>
         </div>
-        <ReportBarChart Items="_agingChart" />
-        <div class="table-wrap">
-            <table class="data-table">
-                <caption class="visually-hidden">Invoice aging by bucket</caption>
-                <thead>
-                    <tr>
-                        <th scope="col">Bucket</th>
-                        <th class="numeric" scope="col">Invoices</th>
-                        <th class="numeric" scope="col">Balance due</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (AgingBucketRow bucket in _metrics.Aging)
-                    {
-                        <tr>
-                            <td>@bucket.Label</td>
-                            <td class="numeric">@bucket.InvoiceCount</td>
-                            <td class="numeric">@InvoiceFormatting.FormatAmount(bucket.BalanceDue, _metrics.CurrencyCode)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="kpi-item kpi-overdue">
+            <span class="kpi-label">Overdue</span>
+            <span class="kpi-value">@InvoiceFormatting.FormatAmount(_metrics.OverdueReceivables, _metrics.CurrencyCode)</span>
+            <span class="kpi-detail">@_metrics.OverdueInvoiceCount overdue</span>
+        </div>
+        <div class="kpi-item">
+            <span class="kpi-label">Paid this month</span>
+            <span class="kpi-value">@InvoiceFormatting.FormatAmount(_metrics.PaymentsThisMonth, _metrics.CurrencyCode)</span>
+            <span class="kpi-detail">@_metrics.AsOf.ToString("MMMM yyyy")</span>
+        </div>
+        <div class="kpi-item">
+            <span class="kpi-label">Paid this year</span>
+            <span class="kpi-value">@InvoiceFormatting.FormatAmount(_metrics.PaymentsThisYear, _metrics.CurrencyCode)</span>
+            <span class="kpi-detail">@_metrics.AsOf.Year</span>
         </div>
     </section>
 
-    <section class="panel panel-wide" aria-labelledby="payments-heading">
-        <div class="results-header">
-            <h2 id="payments-heading">Payments by month (@_metrics.AsOf.Year)</h2>
-            <a href="/Reports/Payments">Payment reports</a>
-        </div>
-        <ReportBarChart Items="_monthChart" />
-        <div class="table-wrap">
-            <table class="data-table">
-                <caption class="visually-hidden">Net payments received by month this year</caption>
-                <thead>
-                    <tr>
-                        <th scope="col">Month</th>
-                        <th class="numeric" scope="col">Receipts</th>
-                        <th class="numeric" scope="col">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (MonthlyPaymentRow row in _metrics.PaymentsByMonth)
-                    {
+    <div class="dashboard-panels">
+        <section class="panel" aria-labelledby="aging-heading">
+            <div class="results-header">
+                <h2 id="aging-heading">Invoice aging</h2>
+                <a href="/Reports/Aging">Full report</a>
+            </div>
+            <ReportBarChart Items="_agingChart" />
+            <div class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Invoice aging by bucket</caption>
+                    <thead>
                         <tr>
-                            <td>@row.PeriodLabel</td>
-                            <td class="numeric">@row.PaymentCount</td>
-                            <td class="numeric">@InvoiceFormatting.FormatAmount(row.Amount, _metrics.CurrencyCode)</td>
+                            <th scope="col">Bucket</th>
+                            <th class="numeric" scope="col">Invoices</th>
+                            <th class="numeric" scope="col">Balance due</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (AgingBucketRow bucket in _metrics.Aging)
+                        {
+                            <tr>
+                                <td>@bucket.Label</td>
+                                <td class="numeric">@bucket.InvoiceCount</td>
+                                <td class="numeric">@InvoiceFormatting.FormatAmount(bucket.BalanceDue, _metrics.CurrencyCode)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="payments-heading">
+            <div class="results-header">
+                <h2 id="payments-heading">Payments (@_metrics.AsOf.Year)</h2>
+                <a href="/Reports/Payments">Payment reports</a>
+            </div>
+            <ReportBarChart Items="_monthChart" />
+            <div class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Net payments received by month this year</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Month</th>
+                            <th class="numeric" scope="col">Receipts</th>
+                            <th class="numeric" scope="col">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (MonthlyPaymentRow row in _metrics.PaymentsByMonth)
+                        {
+                            <tr>
+                                <td>@row.PeriodLabel</td>
+                                <td class="numeric">@row.PaymentCount</td>
+                                <td class="numeric">@InvoiceFormatting.FormatAmount(row.Amount, _metrics.CurrencyCode)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <section class="panel panel-wide" aria-labelledby="recent-invoices-heading">
+        <div class="results-header">
+            <h2 id="recent-invoices-heading">Recent open invoices</h2>
+            <a href="/Invoices">View all invoices</a>
         </div>
+        @if (_recentInvoices is { Count: > 0 })
+        {
+            <div class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Recent open invoices requiring attention</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Invoice</th>
+                            <th scope="col">Client</th>
+                            <th scope="col">Due</th>
+                            <th scope="col">Status</th>
+                            <th class="numeric" scope="col">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (InvoiceListItemDto invoice in _recentInvoices)
+                        {
+                            <tr>
+                                <td><a href="/Invoices/@invoice.Id">@invoice.Number</a></td>
+                                <td>@invoice.ClientName</td>
+                                <td>@invoice.DueDate.ToString("MMM d, yyyy")</td>
+                                <td><span class="status-badge @InvoiceFormatting.StatusClass(invoice.EffectiveStatus)">@invoice.StatusLabel</span></td>
+                                <td class="numeric">@InvoiceFormatting.FormatAmount(invoice.BalanceDue, invoice.CurrencyCode)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="results-count">No open invoices.</p>
+        }
     </section>
 }
 
 @code {
     private DashboardMetrics? _metrics;
+    private IReadOnlyList<InvoiceListItemDto>? _recentInvoices;
     private string? _error;
     private string _asOfLabel = string.Empty;
     private IReadOnlyList<ReportBarItem> _agingChart = [];
@@ -156,5 +192,26 @@ else
             row.Amount,
             InvoiceFormatting.FormatAmount(row.Amount, _metrics.CurrencyCode),
             monthMax)).ToList();
+
+        InvoiceListQuery recentQuery = new()
+        {
+            PageSize = 10,
+            SortBy = InvoiceSortField.DueDate,
+            SortDescending = false,
+            OverdueOnly = false,
+            Status = InvoiceStatusFilter.All
+        };
+        recentQuery.Normalize();
+
+        InvoiceListResult invoiceResult = await InvoiceService.ListAsync(recentQuery);
+        if (invoiceResult.Succeeded && invoiceResult.Page is not null)
+        {
+            _recentInvoices = invoiceResult.Page.Items
+                .Where(i => i.EffectiveStatus is Domain.Invoices.InvoiceStatus.Sent
+                    or Domain.Invoices.InvoiceStatus.PartiallyPaid
+                    or Domain.Invoices.InvoiceStatus.Overdue)
+                .Take(10)
+                .ToList();
+        }
     }
 }
