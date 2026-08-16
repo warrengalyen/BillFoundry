@@ -20,6 +20,27 @@ Run the web application:
 dotnet run --project src/BillFoundry.Web
 ```
 
+For layout and CSS work, use `dotnet watch` so `wwwroot/app.css` reloads
+without rebuilding the container image:
+
+```bash
+dotnet watch run --project src/BillFoundry.Web
+```
+
+Open `https://localhost:7270` (or `http://localhost:5095`). Edit
+`src/BillFoundry.Web/wwwroot/app.css` and save. Development serves that file
+without fingerprinting and with `Cache-Control: no-cache`, so a refresh shows
+the new rules. `dotnet watch` also applies most Razor markup changes.
+
+Do not iterate on CSS against `docker compose` web. Compose publishes a
+Release image; `app.css` is copied at build time and will not pick up editor
+saves. Leave SQL Server in Compose if you want (`docker compose up db -d`) and
+point the connection string at `localhost,1433`, or use LocalDB from
+`appsettings.Development.json`.
+
+Scoped CSS (`*.razor.css`) still goes through the Blazor bundle. Those files
+need `dotnet watch` or a rebuild; `app.css` does not.
+
 HTTPS development URLs are defined in
 `src/BillFoundry.Web/Properties/launchSettings.json`.
 

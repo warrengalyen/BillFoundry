@@ -75,6 +75,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        OnPrepareResponse = context =>
+        {
+            if (context.File.Name.EndsWith(".css", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+            }
+        }
+    });
+}
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
