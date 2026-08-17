@@ -96,8 +96,10 @@ response uses that file name only.
   invoice and estimate field mapping in the PDF generators so persisted
   values stay explicit.
 - PDFsharp Core resolves fonts through `SystemSansFontResolver`, which loads
-  Arial from the OS fonts directory on Windows. Deployments without Arial need
-  a resolver that supplies a licensed sans-serif TTF.
+  embedded Liberation Sans TrueType faces from
+  `src/BillFoundry.Infrastructure/Pdf/Fonts`. That keeps PDF generation working
+  in the production container, which does not install OS fonts. The faces are
+  SIL OFL 1.1; see `THIRD-PARTY-NOTICES.md`.
 - Upgrade PDFsharp with `Directory.Packages.props`. Re-run generator tests
   after upgrades; they assert `%PDF` headers and extracted field text via
   PdfPig (test-only, Apache-2.0).

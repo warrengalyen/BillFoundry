@@ -16,6 +16,15 @@ Used to generate invoice and estimate PDFs. MIT License.
 
 https://github.com/empira/PDFsharp
 
+## Liberation Fonts
+
+Liberation Sans is embedded for invoice and estimate PDFs so documents can be
+generated in containers that do not install system fonts. SIL Open Font
+License 1.1. The license text is in
+`src/BillFoundry.Infrastructure/Pdf/Fonts/OFL.txt`.
+
+https://github.com/liberationfonts/liberation-fonts
+
 ## PdfPig
 
 Used in tests to read generated PDF text. Apache License 2.0.

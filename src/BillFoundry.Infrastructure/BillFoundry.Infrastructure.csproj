@@ -20,4 +20,8 @@
     <ProjectReference Include="..\BillFoundry.Domain\BillFoundry.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Pdf\Fonts\LiberationSans-*.ttf" />
+  </ItemGroup>
+
 </Project>

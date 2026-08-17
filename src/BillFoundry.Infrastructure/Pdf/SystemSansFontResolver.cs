@@ -1,3 +1,4 @@
+using System.Reflection;
 using PdfSharp.Fonts;
 
 namespace BillFoundry.Infrastructure.Pdf;
@@ -6,7 +7,13 @@ internal sealed class SystemSansFontResolver : IFontResolver
 {
     internal const string FaceName = "BillFoundrySans";
 
+    private const string RegularResource = "BillFoundry.Infrastructure.Pdf.Fonts.LiberationSans-Regular.ttf";
+    private const string BoldResource = "BillFoundry.Infrastructure.Pdf.Fonts.LiberationSans-Bold.ttf";
+    private const string ItalicResource = "BillFoundry.Infrastructure.Pdf.Fonts.LiberationSans-Italic.ttf";
+    private const string BoldItalicResource = "BillFoundry.Infrastructure.Pdf.Fonts.LiberationSans-BoldItalic.ttf";
+
     private static readonly object Gate = new();
+    private static readonly Assembly ResourceAssembly = typeof(SystemSansFontResolver).Assembly;
     private static bool _registered;
 
     public static void EnsureRegistered()
@@ -41,51 +48,26 @@ internal sealed class SystemSansFontResolver : IFontResolver
         return new FontResolverInfo($"{FaceName}#{suffix}");
     }
 
-    public byte[] GetFont(string faceName)
-    {
-        string fonts = Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
-        string? file = faceName switch
+    public byte[] GetFont(string faceName) =>
+        faceName switch
         {
-            FaceName + "#BoldItalic" => FirstExisting(fonts, "arialbi.ttf", "ArialBI.ttf", "LiberationSans-BoldItalic.ttf"),
-            FaceName + "#Bold" => FirstExisting(fonts, "arialbd.ttf", "ArialBd.ttf", "LiberationSans-Bold.ttf"),
-            FaceName + "#Italic" => FirstExisting(fonts, "ariali.ttf", "ArialI.ttf", "LiberationSans-Italic.ttf"),
-            _ => FirstExisting(fonts, "arial.ttf", "Arial.ttf", "LiberationSans-Regular.ttf", "DejaVuSans.ttf")
+            FaceName + "#BoldItalic" => ReadEmbedded(BoldItalicResource),
+            FaceName + "#Bold" => ReadEmbedded(BoldResource),
+            FaceName + "#Italic" => ReadEmbedded(ItalicResource),
+            _ => ReadEmbedded(RegularResource)
         };
 
-        if (file is null)
+    private static byte[] ReadEmbedded(string resourceName)
+    {
+        using Stream? stream = ResourceAssembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
         {
             throw new InvalidOperationException(
-                "A sans-serif TrueType font (Arial or Liberation Sans) is required to generate PDF documents.");
+                $"Embedded PDF font '{resourceName}' is missing from {ResourceAssembly.GetName().Name}.");
         }
 
-        return File.ReadAllBytes(file);
-    }
-
-    private static string? FirstExisting(string directory, params string[] names)
-    {
-        foreach (string name in names)
-        {
-            string path = Path.Combine(directory, name);
-            if (File.Exists(path))
-            {
-                return path;
-            }
-        }
-
-        string linuxFonts = "/usr/share/fonts";
-        if (Directory.Exists(linuxFonts))
-        {
-            foreach (string name in names)
-            {
-                string? match = Directory.EnumerateFiles(linuxFonts, name, SearchOption.AllDirectories)
-                    .FirstOrDefault();
-                if (match is not null)
-                {
-                    return match;
-                }
-            }
-        }
-
-        return null;
+        using var buffer = new MemoryStream(capacity: (int)stream.Length);
+        stream.CopyTo(buffer);
+        return buffer.ToArray();
     }
 }
