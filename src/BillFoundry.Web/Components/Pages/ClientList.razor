@@ -116,8 +116,8 @@
                         <tr>
                             <td><a href="@($"/Clients/{client.Id}")">@client.Code</a></td>
                             <td><a href="@($"/Clients/{client.Id}")">@client.Name</a></td>
-                            <td>@(client.Email ?? "—")</td>
-                            <td>@(client.PrimaryContactName ?? "—")</td>
+                            <td>@(client.Email ?? "-")</td>
+                            <td>@(client.PrimaryContactName ?? "-")</td>
                             <td>
                                 <span class="status-badge @(client.IsActive ? "is-active" : "is-inactive")">
                                     @(client.IsActive ? "Active" : "Inactive")

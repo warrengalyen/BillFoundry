@@ -97,7 +97,7 @@ else if (Invoice is not null)
             </div>
             <div>
                 <dt>Purchase order</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Invoice.PurchaseOrder) ? "—" : Invoice.PurchaseOrder)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(Invoice.PurchaseOrder) ? "-" : Invoice.PurchaseOrder)</dd>
             </div>
             <div>
                 <dt>Currency</dt>
@@ -112,11 +112,11 @@ else if (Invoice is not null)
             }
             <div>
                 <dt>Notes</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Invoice.Notes) ? "—" : Invoice.Notes)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(Invoice.Notes) ? "-" : Invoice.Notes)</dd>
             </div>
             <div>
                 <dt>Payment instructions</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Invoice.PaymentInstructions) ? "—" : Invoice.PaymentInstructions)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(Invoice.PaymentInstructions) ? "-" : Invoice.PaymentInstructions)</dd>
             </div>
             @if (!string.IsNullOrWhiteSpace(Invoice.VoidReason))
             {
@@ -269,7 +269,7 @@ else if (Invoice is not null)
                             <option value="@Guid.Empty">Ad-hoc line (no catalog item)</option>
                             @foreach (InvoiceCatalogOption item in CatalogItems)
                             {
-                                <option value="@item.Id">@item.Name — @InvoiceFormatting.FormatPrice(item.UnitPrice, Invoice.CurrencyCode)</option>
+                                <option value="@item.Id">@item.Name - @InvoiceFormatting.FormatPrice(item.UnitPrice, Invoice.CurrencyCode)</option>
                             }
                         </InputSelect>
                         <p class="form-hint">Choosing a catalog item copies the current description, unit, price, and taxable flag. You can edit the snapshot before adding the line.</p>
@@ -348,7 +348,7 @@ else if (Invoice is not null)
                             <tr>
                                 <td>@payment.PaymentDate.ToString("d")</td>
                                 <td>@payment.MethodLabel</td>
-                                <td>@(string.IsNullOrWhiteSpace(payment.Reference) ? "—" : payment.Reference)</td>
+                                <td>@(string.IsNullOrWhiteSpace(payment.Reference) ? "-" : payment.Reference)</td>
                                 <td>
                                     @if (payment.IsReversal)
                                     {
@@ -356,7 +356,7 @@ else if (Invoice is not null)
                                     }
                                     else
                                     {
-                                        @(string.IsNullOrWhiteSpace(payment.Notes) ? "—" : payment.Notes)
+                                        @(string.IsNullOrWhiteSpace(payment.Notes) ? "-" : payment.Notes)
                                     }
                                 </td>
                                 <td class="numeric">

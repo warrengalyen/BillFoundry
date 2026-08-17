@@ -9,7 +9,7 @@ a {
     color: var(--bf-accent);
 }
 
-a:hover {
+a:hover:not(.button-primary):not(.button-secondary):not(.button-ghost):not(.button-destructive):not(.skip-link) {
     color: var(--bf-accent-hover);
 }
 
@@ -33,9 +33,13 @@ code {
     border-radius: 0 0 $bf-radius-md $bf-radius-md;
 }
 
+.skip-link:hover,
+.skip-link:focus {
+    color: #ffffff;
+}
+
 .skip-link:focus {
     top: 0;
-    color: #ffffff;
 }
 
 .visually-hidden {

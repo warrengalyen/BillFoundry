@@ -61,20 +61,20 @@ Roles:
 Policies in `AuthorizationPolicies` should be used when a capability is more
 than a raw role check:
 
-- `Administrator` — authenticated user in the Administrator role
-- `ManageOrganizationSettings` — administrators may read and change the
+- `Administrator` - authenticated user in the Administrator role
+- `ManageOrganizationSettings` - administrators may read and change the
   installation organization profile, including logo upload and removal
-- `ManageClients` — authenticated Administrator or User role may list, create,
+- `ManageClients` - authenticated Administrator or User role may list, create,
   edit, activate, and deactivate clients and their contacts
-- `ManageCatalog` — authenticated Administrator or User role may list, create,
+- `ManageCatalog` - authenticated Administrator or User role may list, create,
   edit, activate, and deactivate service catalog items
-- `ManageEstimates` — authenticated Administrator or User role may list, create,
+- `ManageEstimates` - authenticated Administrator or User role may list, create,
   edit drafts, manage line items, duplicate, and apply allowed estimate status
   transitions
-- `ManageInvoices` — authenticated Administrator or User role may list, create,
+- `ManageInvoices` - authenticated Administrator or User role may list, create,
   edit drafts, manage line items, duplicate, mark sent, void, and convert
   accepted estimates
-- `NotDemoMode` — succeeds only when Demo Mode is disabled. Password change,
+- `NotDemoMode` - succeeds only when Demo Mode is disabled. Password change,
   password reset, and organization profile mutations require this policy.
 
 Do not authorize privileged work only in Razor. Application services and

@@ -102,7 +102,7 @@ requests from a TLS-terminating proxy mark the cookie Secure. Forcing
 
 ## Tests
 
-- `LocalUrlTests` — local vs unsafe return URLs
+- `LocalUrlTests` - local vs unsafe return URLs
 - `AuthenticationTests.Health_endpoint_includes_security_headers`
 - Existing authorization tests for organization, clients, catalog, estimates,
   invoices, reports, documents, and audit remain the server-side policy suite

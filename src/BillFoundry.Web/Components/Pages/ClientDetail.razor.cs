@@ -220,7 +220,7 @@ public partial class ClientDetail
         }.Where(value => !string.IsNullOrWhiteSpace(value));
 
         string formatted = string.Join(", ", parts);
-        return string.IsNullOrWhiteSpace(formatted) ? "—" : formatted;
+        return string.IsNullOrWhiteSpace(formatted) ? "-" : formatted;
     }
 
     private sealed class ContactInputModel

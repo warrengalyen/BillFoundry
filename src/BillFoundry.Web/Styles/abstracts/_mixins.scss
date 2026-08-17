@@ -4,10 +4,10 @@
 // Breakpoints
 // ---------------------------------------------------------------------------
 
-$bp-sm: 30rem;  // ~480px — mobile
-$bp-md: 48rem;  // ~768px — tablet portrait / sidebar transition
-$bp-lg: 64rem;  // ~1024px — tablet landscape / laptop
-$bp-xl: 80rem;  // ~1280px — desktop
+$bp-sm: 30rem;  // ~480px - mobile
+$bp-md: 48rem;  // ~768px - tablet portrait / sidebar transition
+$bp-lg: 64rem;  // ~1024px - tablet landscape / laptop
+$bp-xl: 80rem;  // ~1280px - desktop
 
 @mixin respond-above($bp) {
     @media (min-width: $bp) { @content; }

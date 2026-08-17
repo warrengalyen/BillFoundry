@@ -51,7 +51,7 @@ need `dotnet watch` or a rebuild.
 Styles are written in SCSS and compiled to `wwwroot/app.css` by
 [EmbeddedSass.Net.MsBuild](https://github.com/gumbarros/EmbeddedSass.Net),
 which uses the official Dart Sass compiler via the Embedded Sass Protocol.
-Compilation happens automatically during `dotnet build` — no Node.js, npm, or
+Compilation happens automatically during `dotnet build` - no Node.js, npm, or
 additional CLI tools are needed.
 
 - **Debug builds** produce expanded CSS with source maps
@@ -199,10 +199,10 @@ solve a current problem.
 
 Configuration sources:
 
-- `appsettings.json` — non-secret defaults, including logging and database option defaults
-- `appsettings.Development.json` — local development values, including a LocalDB connection string
-- User Secrets — secrets and non-LocalDB credentials on a developer machine
-- Environment variables — secrets and overrides in deployed environments
+- `appsettings.json` - non-secret defaults, including logging and database option defaults
+- `appsettings.Development.json` - local development values, including a LocalDB connection string
+- User Secrets - secrets and non-LocalDB credentials on a developer machine
+- Environment variables - secrets and overrides in deployed environments
 
 Set a secret connection string:
 
@@ -313,8 +313,8 @@ notification details.
 
 ## Health checks
 
-- `GET /health` — liveness. Does not contact SQL Server.
-- `GET /health/ready` — readiness, including an EF Core database check.
+- `GET /health` - liveness. Does not contact SQL Server.
+- `GET /health/ready` - readiness, including an EF Core database check.
 
 Smoke tests use `/health` so they can run without a database. Unauthenticated
 requests to application pages should redirect to `/Account/Login`.

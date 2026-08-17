@@ -88,7 +88,7 @@ else if (Estimate is not null)
             </div>
             <div>
                 <dt>Expiration date</dt>
-                <dd>@(Estimate.ExpirationDate?.ToString("d") ?? "—")</dd>
+                <dd>@(Estimate.ExpirationDate?.ToString("d") ?? "-")</dd>
             </div>
             <div>
                 <dt>Currency</dt>
@@ -96,11 +96,11 @@ else if (Estimate is not null)
             </div>
             <div>
                 <dt>Notes</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Estimate.Notes) ? "—" : Estimate.Notes)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(Estimate.Notes) ? "-" : Estimate.Notes)</dd>
             </div>
             <div>
                 <dt>Terms</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Estimate.Terms) ? "—" : Estimate.Terms)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(Estimate.Terms) ? "-" : Estimate.Terms)</dd>
             </div>
         </dl>
         @if (Estimate.AllowedTransitions.Count > 0)
@@ -235,7 +235,7 @@ else if (Estimate is not null)
                             <option value="@Guid.Empty">Ad-hoc line (no catalog item)</option>
                             @foreach (EstimateCatalogOption item in CatalogItems)
                             {
-                                <option value="@item.Id">@item.Name — @EstimateFormatting.FormatPrice(item.UnitPrice, Estimate.CurrencyCode)</option>
+                                <option value="@item.Id">@item.Name - @EstimateFormatting.FormatPrice(item.UnitPrice, Estimate.CurrencyCode)</option>
                             }
                         </InputSelect>
                         <p class="form-hint">Choosing a catalog item copies the current description, unit, price, and taxable flag. You can edit the snapshot before adding the line.</p>

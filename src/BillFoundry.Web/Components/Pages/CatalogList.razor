@@ -126,7 +126,7 @@
                     {
                         <tr>
                             <td><a href="@($"/Catalog/{item.Id}")">@item.Name</a></td>
-                            <td>@(item.Sku ?? "—")</td>
+                            <td>@(item.Sku ?? "-")</td>
                             <td>@item.UnitTypeLabel</td>
                             <td class="numeric">@CatalogFormatting.FormatPrice(item.DefaultUnitPrice, CurrencyCode)</td>
                             <td>@(item.IsTaxable ? "Taxable" : "No")</td>

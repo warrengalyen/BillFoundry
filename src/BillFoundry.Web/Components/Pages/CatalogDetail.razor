@@ -63,7 +63,7 @@ else if (Item is not null)
         <dl class="definition-list">
             <div>
                 <dt>SKU</dt>
-                <dd>@(Item.Sku ?? "—")</dd>
+                <dd>@(Item.Sku ?? "-")</dd>
             </div>
             <div>
                 <dt>Unit</dt>
@@ -79,7 +79,7 @@ else if (Item is not null)
             </div>
             <div>
                 <dt>Description</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Item.Description) ? "—" : Item.Description)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(Item.Description) ? "-" : Item.Description)</dd>
             </div>
         </dl>
         <p class="form-hint">Prices are in the organization default currency. This item is deactivated rather than deleted so later invoices can still refer to it.</p>

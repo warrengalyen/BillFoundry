@@ -89,9 +89,9 @@ That password is a **development placeholder**. Copy `.env.example` to `.env`
 
 Volumes:
 
-- `sql-data` — SQL Server data files
-- `data-protection-keys` — ASP.NET Core key ring
-- `organization-logos` — uploaded logos
+- `sql-data` - SQL Server data files
+- `data-protection-keys` - ASP.NET Core key ring
+- `organization-logos` - uploaded logos
 
 `web` waits until `db` is healthy. The Compose `web` healthcheck opens TCP
 port 8080 (the process is accepting connections). HTTP liveness is still
@@ -126,8 +126,8 @@ All seeded business data is fictional.
 
 ## Health checks
 
-- `GET /health` — process is up. No SQL.
-- `GET /health/ready` — SQL Server is reachable.
+- `GET /health` - process is up. No SQL.
+- `GET /health/ready` - SQL Server is reachable.
 
 Orchestrators should use liveness → `/health` and readiness → `/health/ready`.
 

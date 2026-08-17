@@ -16,6 +16,11 @@
     text-decoration: none;
 }
 
+.button-primary:hover,
+.button-primary:visited {
+    color: #ffffff;
+}
+
 .button-primary:hover {
     background: var(--bf-accent-hover);
 }
@@ -39,6 +44,11 @@
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
+}
+
+.button-secondary:hover,
+.button-secondary:visited {
+    color: var(--bf-text-primary);
 }
 
 .button-secondary:hover {
@@ -66,6 +76,11 @@
     text-decoration: none;
 }
 
+.button-ghost:hover,
+.button-ghost:visited {
+    color: var(--bf-text-primary);
+}
+
 .button-ghost:hover {
     background: var(--bf-surface-page);
 }
@@ -84,6 +99,11 @@
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
+}
+
+.button-destructive:hover,
+.button-destructive:visited {
+    color: var(--bf-error);
 }
 
 .button-destructive:hover {

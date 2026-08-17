@@ -1,5 +1,5 @@
 @charset "UTF-8";
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 :root {
   --bf-surface-page: #f4f6f8;
   --bf-surface-primary: #ffffff;
@@ -40,7 +40,7 @@
   --bf-header-height: 3.5rem;
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 *,
 *::before,
 *::after {
@@ -57,7 +57,7 @@ html {
   color-scheme: light;
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 body {
   font-family: var(--bf-font-family);
   font-size: 1rem;
@@ -90,7 +90,7 @@ p {
   font-size: 1.0625rem;
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 :focus-visible {
   outline: 3px solid var(--bf-accent);
   outline-offset: 2px;
@@ -100,7 +100,7 @@ a {
   color: var(--bf-accent);
 }
 
-a:hover {
+a:hover:not(.button-primary):not(.button-secondary):not(.button-ghost):not(.button-destructive):not(.skip-link) {
   color: var(--bf-accent-hover);
 }
 
@@ -124,9 +124,13 @@ code {
   border-radius: 0 0 0.5rem 0.5rem;
 }
 
+.skip-link:hover,
+.skip-link:focus {
+  color: #ffffff;
+}
+
 .skip-link:focus {
   top: 0;
-  color: #ffffff;
 }
 
 .visually-hidden {
@@ -185,7 +189,7 @@ code {
   color: var(--bf-error);
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .app-shell {
   min-height: 100vh;
 }
@@ -379,7 +383,7 @@ code {
   max-width: 72rem;
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 @media (min-width: 48rem) {
   .nav-toggle,
   .nav-backdrop {
@@ -413,7 +417,7 @@ code {
     padding: 1rem;
   }
 }
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .button-primary {
   display: inline-flex;
   align-items: center;
@@ -428,6 +432,11 @@ code {
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+}
+
+.button-primary:hover,
+.button-primary:visited {
+  color: #ffffff;
 }
 
 .button-primary:hover {
@@ -455,6 +464,11 @@ code {
   text-decoration: none;
 }
 
+.button-secondary:hover,
+.button-secondary:visited {
+  color: var(--bf-text-primary);
+}
+
 .button-secondary:hover {
   background: var(--bf-surface-page);
 }
@@ -480,6 +494,11 @@ code {
   text-decoration: none;
 }
 
+.button-ghost:hover,
+.button-ghost:visited {
+  color: var(--bf-text-primary);
+}
+
 .button-ghost:hover {
   background: var(--bf-surface-page);
 }
@@ -500,6 +519,11 @@ code {
   text-decoration: none;
 }
 
+.button-destructive:hover,
+.button-destructive:visited {
+  color: var(--bf-error);
+}
+
 .button-destructive:hover {
   background: #fad4d4;
 }
@@ -512,7 +536,7 @@ code {
     min-height: 2.75rem;
   }
 }
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .form-field {
   margin-bottom: 1rem;
 }
@@ -607,7 +631,7 @@ code {
   background: var(--bf-surface-page);
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .table-wrap {
   overflow-x: auto;
 }
@@ -702,7 +726,7 @@ code {
     margin-bottom: 0.25rem;
   }
 }
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .status-badge {
   display: inline-block;
   padding: 0.15rem 0.5rem;
@@ -810,7 +834,7 @@ code {
   font-size: 0.875rem;
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .filter-bar {
   display: grid;
   gap: 1rem;
@@ -857,7 +881,7 @@ code {
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .form-alert,
 .form-errors {
   color: var(--bf-error);
@@ -888,7 +912,7 @@ code {
   margin: 0;
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .dashboard-kpi {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
@@ -1025,7 +1049,7 @@ code {
   background: #3d4f61;
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .account-main {
   max-width: 28rem;
   margin: 2rem auto 3rem;
@@ -1036,7 +1060,7 @@ code {
   max-width: none;
 }
 
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .report-nav {
   display: flex;
   flex-wrap: wrap;
@@ -1063,7 +1087,7 @@ code {
     gap: 0.5rem;
   }
 }
-/* Generated from Styles/app.scss — do not edit wwwroot/app.css manually. */
+/* Generated from Styles/app.scss - do not edit wwwroot/app.css manually. */
 .landing-header,
 .landing-footer {
   display: flex;

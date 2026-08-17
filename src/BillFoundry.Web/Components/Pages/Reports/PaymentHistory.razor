@@ -78,7 +78,7 @@
                             <td class="numeric">@InvoiceFormatting.FormatAmount(row.Amount, row.CurrencyCode)</td>
                             <td>@(row.IsReversal ? "Reversal" : "Receipt")</td>
                             <td>@row.MethodLabel</td>
-                            <td>@(row.Reference ?? "—")</td>
+                            <td>@(row.Reference ?? "-")</td>
                         </tr>
                     }
                 </tbody>

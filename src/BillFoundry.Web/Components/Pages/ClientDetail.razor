@@ -76,18 +76,18 @@ else if (Client is not null)
             </div>
             <div>
                 <dt>Billing email</dt>
-                <dd>@(Client.Email ?? "—")</dd>
+                <dd>@(Client.Email ?? "-")</dd>
             </div>
             <div>
                 <dt>Phone</dt>
-                <dd>@(Client.Phone ?? "—")</dd>
+                <dd>@(Client.Phone ?? "-")</dd>
             </div>
             <div>
                 <dt>Website</dt>
                 <dd>
                     @if (Client.Website is null)
                     {
-                        <text>—</text>
+                        <text>-</text>
                     }
                     else
                     {
@@ -101,7 +101,7 @@ else if (Client is not null)
             </div>
             <div>
                 <dt>Notes</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Client.Notes) ? "—" : Client.Notes)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(Client.Notes) ? "-" : Client.Notes)</dd>
             </div>
         </dl>
     </section>
@@ -132,10 +132,10 @@ else if (Client is not null)
                         {
                             <tr>
                                 <td>@contact.Name</td>
-                                <td>@(contact.JobTitle ?? "—")</td>
-                                <td>@(contact.Email ?? "—")</td>
-                                <td>@(contact.Phone ?? "—")</td>
-                                <td>@(contact.IsPrimary ? "Primary" : "—")</td>
+                                <td>@(contact.JobTitle ?? "-")</td>
+                                <td>@(contact.Email ?? "-")</td>
+                                <td>@(contact.Phone ?? "-")</td>
+                                <td>@(contact.IsPrimary ? "Primary" : "-")</td>
                                 <td>
                                     <div class="table-actions">
                                         <button type="button" class="button-secondary" @onclick="() => BeginEditContact(contact)">Edit</button>
