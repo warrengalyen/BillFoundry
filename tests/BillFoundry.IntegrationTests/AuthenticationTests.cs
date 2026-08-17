@@ -109,19 +109,21 @@ public sealed class AuthenticationTests : IClassFixture<BillFoundryWebApplicatio
     }
 }
 
-public sealed class AuthenticatedPageTests : IClassFixture<AuthenticatedWebApplicationFactory>
+[Collection(SqlServerCollection.Name)]
+public sealed class DashboardPageTests
 {
-    private readonly AuthenticatedWebApplicationFactory _factory;
+    private readonly SqlServerFixture _sql;
 
-    public AuthenticatedPageTests(AuthenticatedWebApplicationFactory factory)
+    public DashboardPageTests(SqlServerFixture sql)
     {
-        _factory = factory;
+        _sql = sql;
     }
 
     [Fact]
     public async Task Dashboard_allows_authenticated_user()
     {
-        using HttpClient client = _factory.CreateClient();
+        await using var factory = new SqlAuthenticatedWebApplicationFactory(_sql);
+        using HttpClient client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, Guid.NewGuid().ToString());
         client.DefaultRequestHeaders.Add(TestAuthHandler.EmailHeader, "user@localhost");
         client.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, AppRoles.User);
@@ -132,5 +134,7 @@ public sealed class AuthenticatedPageTests : IClassFixture<AuthenticatedWebAppli
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("Skip to content", html, StringComparison.Ordinal);
         Assert.Contains("<h1>Dashboard</h1>", html, StringComparison.Ordinal);
+        Assert.Contains("Outstanding", html, StringComparison.Ordinal);
+        Assert.Contains("Recent open invoices", html, StringComparison.Ordinal);
     }
 }
