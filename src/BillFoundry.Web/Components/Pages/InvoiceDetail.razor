@@ -189,15 +189,15 @@ else if (Invoice is not null)
                         @foreach (InvoiceLineDto line in Invoice.Lines)
                         {
                             <tr>
-                                <td>@line.Description</td>
-                                <td class="numeric">@InvoiceFormatting.FormatQuantity(line.Quantity)</td>
-                                <td>@line.UnitLabel</td>
-                                <td class="numeric">@InvoiceFormatting.FormatPrice(line.UnitPrice, Invoice.CurrencyCode)</td>
-                                <td>@(line.IsTaxable ? "Taxable" : "No")</td>
-                                <td class="numeric">@InvoiceFormatting.FormatAmount(line.LineAmount, Invoice.CurrencyCode)</td>
+                                <td data-label="Description">@line.Description</td>
+                                <td class="numeric" data-label="Qty">@InvoiceFormatting.FormatQuantity(line.Quantity)</td>
+                                <td data-label="Unit">@line.UnitLabel</td>
+                                <td class="numeric" data-label="Unit price">@InvoiceFormatting.FormatPrice(line.UnitPrice, Invoice.CurrencyCode)</td>
+                                <td data-label="Tax">@(line.IsTaxable ? "Taxable" : "No")</td>
+                                <td class="numeric" data-label="Amount">@InvoiceFormatting.FormatAmount(line.LineAmount, Invoice.CurrencyCode)</td>
                                 @if (Invoice.CanEdit)
                                 {
-                                    <td>
+                                    <td data-label="Actions">
                                         <div class="table-actions">
                                             <button type="button" class="button-secondary" @onclick="() => BeginEditLine(line)">Edit</button>
                                             <button type="button"
