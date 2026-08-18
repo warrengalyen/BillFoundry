@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Sass source maps (Debug builds only; wwwroot/app.css is committed)
+*.css.map
+
 # Application-generated uploads
 App_Data/
 
