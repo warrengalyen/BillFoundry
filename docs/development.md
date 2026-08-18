@@ -54,9 +54,9 @@ which uses the official Dart Sass compiler via the Embedded Sass Protocol.
 Compilation happens automatically during `dotnet build` - no Node.js, npm, or
 additional CLI tools are needed.
 
-- **Debug builds** produce expanded CSS with source maps
+- **Debug builds** produce expanded CSS with source maps (maps are gitignored)
 - **Release builds** produce compressed CSS without source maps
-- The generated `wwwroot/app.css` is committed to source control so `dotnet run` works without a prior build step
+- The generated `wwwroot/app.css` is committed to source control so `dotnet run` works without a prior build step. Prefer a Debug build before committing stylesheet changes so the checked-in file stays expanded.
 
 ### File organization
 

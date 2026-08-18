@@ -39,6 +39,7 @@ AGPLv3 terms that apply to this code.
 - ASP.NET Core Blazor Web App (Interactive Server where the UI needs it)
 - Entity Framework Core 10 and SQL Server
 - ASP.NET Core Identity
+- Sass (Dart Sass via EmbeddedSass.Net) for the UI
 - PDFsharp for documents, PdfPig in tests
 - xUnit
 
