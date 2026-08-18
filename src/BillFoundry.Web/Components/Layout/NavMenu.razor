@@ -4,7 +4,8 @@
             aria-controls="app-sidebar"
             aria-expanded="@_navOpen"
             aria-label="@(_navOpen ? "Close navigation" : "Open navigation")"
-            @onclick="ToggleNav">
+            @ref="_navToggle"
+            @onclick="ToggleNavAsync">
         <span class="nav-toggle-bar" aria-hidden="true"></span>
         <span class="nav-toggle-bar" aria-hidden="true"></span>
         <span class="nav-toggle-bar" aria-hidden="true"></span>
@@ -18,7 +19,7 @@
     <button type="button"
             class="nav-backdrop"
             aria-label="Close navigation"
-            @onclick="CloseNav"></button>
+            @onclick="DismissNavAsync"></button>
 }
 
 <nav id="app-sidebar"
