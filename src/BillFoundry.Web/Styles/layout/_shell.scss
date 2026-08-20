@@ -8,7 +8,7 @@
 // Header
 .app-header {
     position: sticky;
-    top: 0;
+    top: var(--bf-demo-banner-height);
     z-index: 20;
     display: flex;
     align-items: center;
@@ -63,7 +63,7 @@
 // Mobile backdrop
 .nav-backdrop {
     position: fixed;
-    inset: var(--bf-header-height) 0 0 0;
+    inset: calc(var(--bf-header-height) + var(--bf-demo-banner-height)) 0 0 0;
     z-index: 15;
     margin: 0;
     padding: 0;
@@ -75,7 +75,7 @@
 // Sidebar
 .app-sidebar {
     position: fixed;
-    top: var(--bf-header-height);
+    top: calc(var(--bf-header-height) + var(--bf-demo-banner-height));
     left: 0;
     bottom: 0;
     z-index: 16;
@@ -115,13 +115,25 @@
     font-size: 0.9375rem;
 }
 
-.nav-link:hover {
-    background: rgba(255, 255, 255, 0.08);
+.nav-link:visited {
+    color: var(--bf-sidebar-text);
+}
+
+.nav-link:hover,
+.nav-link:hover:visited {
+    background: rgba(255, 255, 255, 0.14);
     color: #ffffff;
 }
 
-.nav-link.active {
+.nav-link.active,
+.nav-link.active:visited {
     background: var(--bf-accent);
+    color: #ffffff;
+}
+
+.nav-link.active:hover,
+.nav-link.active:hover:visited {
+    background: var(--bf-accent-hover);
     color: #ffffff;
 }
 

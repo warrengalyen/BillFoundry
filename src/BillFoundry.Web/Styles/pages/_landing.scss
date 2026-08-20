@@ -90,12 +90,22 @@ section + section {
 
 // Demo
 .demo-banner {
+    position: sticky;
+    top: 0;
+    z-index: 21;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--bf-demo-banner-height);
     margin: 0;
-    padding: 0.65rem $bf-space-5;
+    padding: 0 $bf-space-5;
     background: $bf-demo-bg;
     color: $bf-demo-text;
     text-align: center;
     font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .demo-credentials {

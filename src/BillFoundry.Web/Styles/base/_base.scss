@@ -9,7 +9,7 @@ a {
     color: var(--bf-accent);
 }
 
-a:hover:not(.button-primary):not(.button-secondary):not(.button-ghost):not(.button-destructive):not(.skip-link) {
+a:hover:not(.button-primary):not(.button-secondary):not(.button-ghost):not(.button-destructive):not(.skip-link):not(.nav-link) {
     color: var(--bf-accent-hover);
 }
 
