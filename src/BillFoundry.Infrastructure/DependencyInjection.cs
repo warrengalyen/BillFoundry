@@ -47,8 +47,11 @@ public static class DependencyInjection
         services.AddOptions<DatabaseOptions>()
             .Bind(configuration.GetSection(DatabaseOptions.SectionName))
             .ValidateDataAnnotations()
+            .Validate(options => Enum.IsDefined(options.Provider), "Database:Provider must be SqlServer or PostgreSql.")
             .ValidateOnStart();
 
+        var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
+            ?? new DatabaseOptions();
         var connectionString = configuration.GetConnectionString(DatabaseOptions.ConnectionStringName);
         if (!environment.IsDevelopment() && string.IsNullOrWhiteSpace(connectionString))
         {
@@ -58,27 +61,18 @@ public static class DependencyInjection
 
         services.AddScoped<AuditableInterceptor>();
         services.AddScoped<AuditAppendOnlyInterceptor>();
-        services.AddDbContext<BillFoundryDbContext>((serviceProvider, options) =>
-        {
-            var resolvedConnectionString = configuration.GetConnectionString(DatabaseOptions.ConnectionStringName);
-            if (string.IsNullOrWhiteSpace(resolvedConnectionString))
-            {
-                throw new InvalidOperationException(
-                    $"Connection string '{DatabaseOptions.ConnectionStringName}' is not configured.");
-            }
+        services.AddSingleton<PostgreSqlRowVersionInterceptor>();
 
-            var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-            options.AddInterceptors(
-                serviceProvider.GetRequiredService<AuditableInterceptor>(),
-                serviceProvider.GetRequiredService<AuditAppendOnlyInterceptor>());
-            options.UseSqlServer(
-                resolvedConnectionString,
-                sqlServer =>
-                {
-                    sqlServer.CommandTimeout(databaseOptions.CommandTimeoutSeconds);
-                    sqlServer.MigrationsAssembly(typeof(BillFoundryDbContext).Assembly.GetName().Name);
-                });
-        });
+        if (databaseOptions.Provider == DatabaseProvider.PostgreSql)
+        {
+            services.AddDbContext<BillFoundryDbContext, BillFoundryPostgreSqlDbContext>((serviceProvider, options) =>
+                ConfigureDbContext(options, serviceProvider, configuration, DatabaseProvider.PostgreSql));
+        }
+        else
+        {
+            services.AddDbContext<BillFoundryDbContext>((serviceProvider, options) =>
+                ConfigureDbContext(options, serviceProvider, configuration, DatabaseProvider.SqlServer));
+        }
 
         services.AddIdentityCore<ApplicationUser>(options => ConfigureIdentity(options))
             .AddRoles<IdentityRole<Guid>>()
@@ -129,6 +123,47 @@ public static class DependencyInjection
             .AddDbContextCheck<BillFoundryDbContext>("database", tags: ["ready"]);
 
         return services;
+    }
+
+    private static void ConfigureDbContext(
+        DbContextOptionsBuilder options,
+        IServiceProvider serviceProvider,
+        IConfiguration configuration,
+        DatabaseProvider provider)
+    {
+        var resolvedConnectionString = configuration.GetConnectionString(DatabaseOptions.ConnectionStringName);
+        if (string.IsNullOrWhiteSpace(resolvedConnectionString))
+        {
+            throw new InvalidOperationException(
+                $"Connection string '{DatabaseOptions.ConnectionStringName}' is not configured.");
+        }
+
+        var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+        options.AddInterceptors(
+            serviceProvider.GetRequiredService<AuditableInterceptor>(),
+            serviceProvider.GetRequiredService<AuditAppendOnlyInterceptor>());
+
+        if (provider == DatabaseProvider.PostgreSql)
+        {
+            options.AddInterceptors(serviceProvider.GetRequiredService<PostgreSqlRowVersionInterceptor>());
+            options.UseNpgsql(
+                resolvedConnectionString,
+                npgsql =>
+                {
+                    npgsql.CommandTimeout(databaseOptions.CommandTimeoutSeconds);
+                    npgsql.MigrationsAssembly(typeof(BillFoundryPostgreSqlDbContext).Assembly.GetName().Name);
+                    npgsql.MigrationsHistoryTable("__EFMigrationsHistory");
+                });
+            return;
+        }
+
+        options.UseSqlServer(
+            resolvedConnectionString,
+            sqlServer =>
+            {
+                sqlServer.CommandTimeout(databaseOptions.CommandTimeoutSeconds);
+                sqlServer.MigrationsAssembly(typeof(BillFoundryDbContext).Assembly.GetName().Name);
+            });
     }
 
     private static void ConfigureIdentity(IdentityOptions options)

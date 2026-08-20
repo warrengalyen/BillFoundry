@@ -14,10 +14,16 @@ internal static class DocumentSequenceAllocator
         ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentException.ThrowIfNullOrWhiteSpace(kind);
 
-        DocumentSequence sequence = await dbContext.DocumentSequences
-            .FromSql($"SELECT [Kind], [NextValue] FROM [DocumentSequences] WITH (UPDLOCK, HOLDLOCK) WHERE [Kind] = {kind}")
-            .SingleAsync(cancellationToken)
-            .ConfigureAwait(false);
+        DocumentSequence sequence = dbContext.Database.IsNpgsql()
+            ? await dbContext.DocumentSequences
+                .FromSql($"SELECT \"Kind\", \"NextValue\" FROM \"DocumentSequences\" WHERE \"Kind\" = {kind} FOR UPDATE")
+                .SingleAsync(cancellationToken)
+                .ConfigureAwait(false)
+            : await dbContext.DocumentSequences
+                .FromSql($"SELECT [Kind], [NextValue] FROM [DocumentSequences] WITH (UPDLOCK, HOLDLOCK) WHERE [Kind] = {kind}")
+                .SingleAsync(cancellationToken)
+                .ConfigureAwait(false);
+
         return sequence.Allocate();
     }
 }

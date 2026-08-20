@@ -12,7 +12,6 @@ using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Documents;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -271,7 +270,7 @@ internal sealed class InvoiceService(
             await RollbackTrackedAsync(transaction, cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Invalid([exception.Message]);
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             await RollbackTrackedAsync(transaction, cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Invalid(["An invoice with this number already exists. Try again."]);
@@ -518,7 +517,7 @@ internal sealed class InvoiceService(
             await RollbackTrackedAsync(transaction, cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Invalid([exception.Message]);
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             await RollbackTrackedAsync(transaction, cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Invalid(["An invoice with this number already exists. Try again."]);
@@ -748,7 +747,7 @@ internal sealed class InvoiceService(
             await RollbackTrackedAsync(transaction, cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Invalid([exception.Message]);
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             await RollbackTrackedAsync(transaction, cancellationToken).ConfigureAwait(false);
             return InvoiceResult.Invalid(["This estimate has already been converted to an invoice."]);
@@ -907,7 +906,7 @@ internal sealed class InvoiceService(
             AuditChangeTracker.DiscardPending(dbContext);
             return InvoiceResult.ConcurrencyConflict(await ReloadDetailsAsync(invoice, cancellationToken).ConfigureAwait(false));
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             AuditChangeTracker.DiscardPending(dbContext);
             return InvoiceResult.Invalid(
@@ -968,10 +967,6 @@ internal sealed class InvoiceService(
         exception.Message.StartsWith("Discount cannot exceed", StringComparison.Ordinal)
             ? "Discount cannot exceed the subtotal."
             : exception.Message;
-
-    private static bool IsUniqueConstraintViolation(DbUpdateException exception) =>
-        exception.InnerException is SqlException sql
-        && sql.Number is 2601 or 2627;
 
     private readonly record struct OrganizationSettings(
         CurrencyCode Currency,

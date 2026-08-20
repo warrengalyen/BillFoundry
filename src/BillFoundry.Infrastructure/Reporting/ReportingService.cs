@@ -399,17 +399,21 @@ internal sealed class ReportingService(
 
     private async Task<IReadOnlyList<AgingBucketRow>> LoadAgingAsync(DateOnly asOf, CancellationToken cancellationToken)
     {
+        DateOnly overdue30 = asOf.AddDays(-30);
+        DateOnly overdue60 = asOf.AddDays(-60);
+        DateOnly overdue90 = asOf.AddDays(-90);
+
         var rows = await ReportingQueries.OpenReceivables(dbContext.Invoices.AsNoTracking())
             .Select(invoice => new
             {
                 invoice.BalanceDue,
                 Bucket = invoice.DueDate >= asOf
                     ? 0
-                    : EF.Functions.DateDiffDay(invoice.DueDate, asOf) <= 30
+                    : invoice.DueDate >= overdue30
                         ? 1
-                        : EF.Functions.DateDiffDay(invoice.DueDate, asOf) <= 60
+                        : invoice.DueDate >= overdue60
                             ? 2
-                            : EF.Functions.DateDiffDay(invoice.DueDate, asOf) <= 90
+                            : invoice.DueDate >= overdue90
                                 ? 3
                                 : 4
             })

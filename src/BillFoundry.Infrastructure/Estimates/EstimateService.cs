@@ -10,7 +10,6 @@ using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Documents;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace BillFoundry.Infrastructure.Estimates;
@@ -246,7 +245,7 @@ internal sealed class EstimateService(
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             return EstimateResult.Invalid([exception.Message]);
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             return EstimateResult.Invalid(["An estimate with this number already exists. Try again."]);
@@ -492,7 +491,7 @@ internal sealed class EstimateService(
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             return EstimateResult.Invalid([exception.Message]);
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             return EstimateResult.Invalid(["An estimate with this number already exists. Try again."]);
@@ -666,7 +665,7 @@ internal sealed class EstimateService(
             AuditChangeTracker.DiscardPending(dbContext);
             return EstimateResult.ConcurrencyConflict(await ReloadDetailsAsync(estimate, cancellationToken).ConfigureAwait(false));
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             AuditChangeTracker.DiscardPending(dbContext);
             return EstimateResult.Invalid(
@@ -679,10 +678,6 @@ internal sealed class EstimateService(
         exception.Message.StartsWith("Discount cannot exceed", StringComparison.Ordinal)
             ? "Discount cannot exceed the subtotal."
             : exception.Message;
-
-    private static bool IsUniqueConstraintViolation(DbUpdateException exception) =>
-        exception.InnerException is SqlException sql
-        && sql.Number is 2601 or 2627;
 
     private readonly record struct OrganizationSettings(
         CurrencyCode Currency,

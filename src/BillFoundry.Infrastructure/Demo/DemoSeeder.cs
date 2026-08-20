@@ -87,8 +87,10 @@ internal sealed class DemoSeeder(
         await dbContext.Clients.ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await dbContext.CatalogItems.ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await dbContext.AuditEvents.ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-        await dbContext.Database
-            .ExecuteSqlRawAsync("UPDATE DocumentSequences SET NextValue = 1", cancellationToken)
+        await dbContext.DocumentSequences
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(sequence => sequence.NextValue, 1),
+                cancellationToken)
             .ConfigureAwait(false);
         dbContext.ChangeTracker.Clear();
     }

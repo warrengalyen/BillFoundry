@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class DocumentSequenceConfiguration : IEntityTypeConfiguration<DocumentSequence>
+internal sealed class DocumentSequenceConfiguration(RelationalSql sql) : IEntityTypeConfiguration<DocumentSequence>
 {
     public void Configure(EntityTypeBuilder<DocumentSequence> builder)
     {
@@ -12,7 +12,7 @@ internal sealed class DocumentSequenceConfiguration : IEntityTypeConfiguration<D
         {
             table.HasCheckConstraint(
                 "CK_DocumentSequences_NextValue",
-                "[NextValue] >= 1");
+                $"{sql.Ident("NextValue")} >= 1");
         });
 
         builder.HasKey(sequence => sequence.Kind);

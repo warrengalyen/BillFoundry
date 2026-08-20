@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
+internal sealed class AuditEventConfiguration(RelationalSql sql) : IEntityTypeConfiguration<AuditEvent>
 {
     public void Configure(EntityTypeBuilder<AuditEvent> builder)
     {
@@ -49,7 +49,10 @@ internal sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEv
             .HasMaxLength(AuditEvent.DescriptionMaxLength)
             .IsRequired();
 
-        builder.Property(audit => audit.MetadataJson)
-            .HasColumnType("nvarchar(max)");
+        if (!sql.IsPostgreSql)
+        {
+            builder.Property(audit => audit.MetadataJson)
+                .HasColumnType("nvarchar(max)");
+        }
     }
 }

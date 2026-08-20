@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class InvoicePaymentConfiguration : IEntityTypeConfiguration<InvoicePayment>
+internal sealed class InvoicePaymentConfiguration(RelationalSql sql) : IEntityTypeConfiguration<InvoicePayment>
 {
     public void Configure(EntityTypeBuilder<InvoicePayment> builder)
     {
@@ -12,13 +12,13 @@ internal sealed class InvoicePaymentConfiguration : IEntityTypeConfiguration<Inv
         {
             table.HasCheckConstraint(
                 "CK_InvoicePayments_Amount",
-                "[Amount] > 0");
+                $"{sql.Ident("Amount")} > 0");
             table.HasCheckConstraint(
                 "CK_InvoicePayments_Method",
-                "[Method] IN ('Cash', 'Check', 'BankTransfer', 'CreditCard', 'PayPal', 'Other')");
+                $"{sql.Ident("Method")} IN ('Cash', 'Check', 'BankTransfer', 'CreditCard', 'PayPal', 'Other')");
             table.HasCheckConstraint(
                 "CK_InvoicePayments_Reversal",
-                "([ReversesPaymentId] IS NULL AND [ReversalReason] IS NULL) OR ([ReversesPaymentId] IS NOT NULL AND [ReversalReason] IS NOT NULL)");
+                $"({sql.Ident("ReversesPaymentId")} IS NULL AND {sql.Ident("ReversalReason")} IS NULL) OR ({sql.Ident("ReversesPaymentId")} IS NOT NULL AND {sql.Ident("ReversalReason")} IS NOT NULL)");
         });
 
         builder.Property(payment => payment.Id)
@@ -57,7 +57,7 @@ internal sealed class InvoicePaymentConfiguration : IEntityTypeConfiguration<Inv
 
         builder.HasIndex(payment => payment.ReversesPaymentId)
             .IsUnique()
-            .HasFilter("[ReversesPaymentId] IS NOT NULL")
+            .HasFilter(sql.IsNotNull("ReversesPaymentId"))
             .HasDatabaseName("IX_InvoicePayments_ReversesPaymentId");
 
         builder.HasOne<InvoicePayment>()

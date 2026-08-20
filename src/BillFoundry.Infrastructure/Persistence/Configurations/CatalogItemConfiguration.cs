@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class CatalogItemConfiguration : IEntityTypeConfiguration<CatalogItem>
+internal sealed class CatalogItemConfiguration(RelationalSql sql) : IEntityTypeConfiguration<CatalogItem>
 {
     public void Configure(EntityTypeBuilder<CatalogItem> builder)
     {
@@ -12,10 +12,10 @@ internal sealed class CatalogItemConfiguration : IEntityTypeConfiguration<Catalo
         {
             table.HasCheckConstraint(
                 "CK_CatalogItems_UnitPrice",
-                "[DefaultUnitPrice] >= 0");
+                $"{sql.Ident("DefaultUnitPrice")} >= 0");
             table.HasCheckConstraint(
                 "CK_CatalogItems_UnitType",
-                "[UnitType] IN ('Hour', 'Day', 'Item', 'FlatFee')");
+                $"{sql.Ident("UnitType")} IN ('Hour', 'Day', 'Item', 'FlatFee')");
         });
 
         builder.Property(item => item.Id)
@@ -38,7 +38,7 @@ internal sealed class CatalogItemConfiguration : IEntityTypeConfiguration<Catalo
 
         builder.HasIndex(item => item.Sku)
             .IsUnique()
-            .HasFilter("[Sku] IS NOT NULL")
+            .HasFilter(sql.IsNotNull("Sku"))
             .HasDatabaseName("IX_CatalogItems_Sku");
 
         builder.Property(item => item.UnitType)
@@ -61,8 +61,7 @@ internal sealed class CatalogItemConfiguration : IEntityTypeConfiguration<Catalo
 
         builder.HasIndex(item => item.IsActive);
 
-        builder.Property(item => item.RowVersion)
-            .IsRowVersion();
+        sql.ConfigureRowVersion(builder, item => item.RowVersion);
 
         builder.Property(item => item.CreatedAtUtc)
             .IsRequired();

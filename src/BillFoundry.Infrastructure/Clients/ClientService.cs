@@ -6,7 +6,6 @@ using BillFoundry.Domain.Organizations;
 using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace BillFoundry.Infrastructure.Clients;
@@ -421,7 +420,7 @@ internal sealed class ClientService(
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             return ClientResult.ConcurrencyConflict(await ReloadDetailsAsync(client, cancellationToken).ConfigureAwait(false));
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             return ClientResult.Invalid(
@@ -475,7 +474,7 @@ internal sealed class ClientService(
             AuditChangeTracker.DiscardPending(dbContext);
             return ClientResult.ConcurrencyConflict(await ReloadDetailsAsync(client, cancellationToken).ConfigureAwait(false));
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             AuditChangeTracker.DiscardPending(dbContext);
             return ClientResult.Invalid(
@@ -506,8 +505,4 @@ internal sealed class ClientService(
             command.PostalCode,
             command.Country);
     }
-
-    private static bool IsUniqueConstraintViolation(DbUpdateException exception) =>
-        exception.InnerException is SqlException sql
-        && sql.Number is 2601 or 2627;
 }

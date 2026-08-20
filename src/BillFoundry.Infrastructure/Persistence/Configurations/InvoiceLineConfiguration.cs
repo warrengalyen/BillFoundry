@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class InvoiceLineConfiguration : IEntityTypeConfiguration<InvoiceLine>
+internal sealed class InvoiceLineConfiguration(RelationalSql sql) : IEntityTypeConfiguration<InvoiceLine>
 {
     public void Configure(EntityTypeBuilder<InvoiceLine> builder)
     {
@@ -13,19 +13,19 @@ internal sealed class InvoiceLineConfiguration : IEntityTypeConfiguration<Invoic
         {
             table.HasCheckConstraint(
                 "CK_InvoiceLines_Quantity",
-                "[Quantity] > 0");
+                $"{sql.Ident("Quantity")} > 0");
             table.HasCheckConstraint(
                 "CK_InvoiceLines_UnitPrice",
-                "[UnitPrice] >= 0");
+                $"{sql.Ident("UnitPrice")} >= 0");
             table.HasCheckConstraint(
                 "CK_InvoiceLines_LineAmount",
-                "[LineAmount] >= 0");
+                $"{sql.Ident("LineAmount")} >= 0");
             table.HasCheckConstraint(
                 "CK_InvoiceLines_Unit",
-                "[Unit] IN ('Hour', 'Day', 'Item', 'FlatFee')");
+                $"{sql.Ident("Unit")} IN ('Hour', 'Day', 'Item', 'FlatFee')");
             table.HasCheckConstraint(
                 "CK_InvoiceLines_SortOrder",
-                "[SortOrder] >= 0");
+                $"{sql.Ident("SortOrder")} >= 0");
         });
 
         builder.Property(line => line.Id)

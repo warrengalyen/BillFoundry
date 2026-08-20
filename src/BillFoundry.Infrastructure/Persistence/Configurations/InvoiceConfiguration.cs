@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
+internal sealed class InvoiceConfiguration(RelationalSql sql) : IEntityTypeConfiguration<Invoice>
 {
     public void Configure(EntityTypeBuilder<Invoice> builder)
     {
@@ -14,22 +14,22 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         {
             table.HasCheckConstraint(
                 "CK_Invoices_Status",
-                "[Status] IN ('Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'Void')");
+                $"{sql.Ident("Status")} IN ('Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'Void')");
             table.HasCheckConstraint(
                 "CK_Invoices_Discount",
-                "[Discount] >= 0 AND [Discount] <= [Subtotal]");
+                $"{sql.Ident("Discount")} >= 0 AND {sql.Ident("Discount")} <= {sql.Ident("Subtotal")}");
             table.HasCheckConstraint(
                 "CK_Invoices_TaxRate",
-                "[TaxRatePercent] >= 0 AND [TaxRatePercent] <= 100");
+                $"{sql.Ident("TaxRatePercent")} >= 0 AND {sql.Ident("TaxRatePercent")} <= 100");
             table.HasCheckConstraint(
                 "CK_Invoices_DueDate",
-                "[DueDate] >= [IssueDate]");
+                $"{sql.Ident("DueDate")} >= {sql.Ident("IssueDate")}");
             table.HasCheckConstraint(
                 "CK_Invoices_AmountPaid",
-                "[AmountPaid] >= 0 AND [AmountPaid] <= [Total]");
+                $"{sql.Ident("AmountPaid")} >= 0 AND {sql.Ident("AmountPaid")} <= {sql.Ident("Total")}");
             table.HasCheckConstraint(
                 "CK_Invoices_BalanceDue",
-                "[BalanceDue] >= 0");
+                $"{sql.Ident("BalanceDue")} >= 0");
         });
 
         builder.Property(invoice => invoice.Id)
@@ -96,9 +96,16 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 
         builder.HasIndex(invoice => invoice.Status);
 
-        builder.HasIndex(invoice => new { invoice.Status, invoice.DueDate })
-            .IncludeProperties(invoice => invoice.BalanceDue)
+        var agingIndex = builder.HasIndex(invoice => new { invoice.Status, invoice.DueDate })
             .HasDatabaseName("IX_Invoices_Status_DueDate");
+        if (sql.IsPostgreSql)
+        {
+            NpgsqlIndexBuilderExtensions.IncludeProperties(agingIndex, invoice => invoice.BalanceDue);
+        }
+        else
+        {
+            SqlServerIndexBuilderExtensions.IncludeProperties(agingIndex, invoice => invoice.BalanceDue);
+        }
 
         builder.Property(invoice => invoice.PurchaseOrder)
             .HasMaxLength(Invoice.PurchaseOrderMaxLength);
@@ -154,7 +161,7 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 
         builder.HasIndex(invoice => invoice.SourceEstimateId)
             .IsUnique()
-            .HasFilter("[SourceEstimateId] IS NOT NULL")
+            .HasFilter(sql.IsNotNull("SourceEstimateId"))
             .HasDatabaseName("IX_Invoices_SourceEstimateId");
 
         builder.HasOne<Domain.Estimates.Estimate>()
@@ -163,8 +170,7 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
             .OnDelete(DeleteBehavior.Restrict)
             .IsRequired(false);
 
-        builder.Property(invoice => invoice.RowVersion)
-            .IsRowVersion();
+        sql.ConfigureRowVersion(builder, invoice => invoice.RowVersion);
 
         builder.Property(invoice => invoice.CreatedAtUtc)
             .IsRequired();

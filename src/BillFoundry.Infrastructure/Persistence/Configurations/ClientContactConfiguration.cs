@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class ClientContactConfiguration : IEntityTypeConfiguration<ClientContact>
+internal sealed class ClientContactConfiguration(RelationalSql sql) : IEntityTypeConfiguration<ClientContact>
 {
     public void Configure(EntityTypeBuilder<ClientContact> builder)
     {
@@ -42,7 +42,7 @@ internal sealed class ClientContactConfiguration : IEntityTypeConfiguration<Clie
 
         builder.HasIndex(contact => new { contact.ClientId, contact.IsPrimary })
             .IsUnique()
-            .HasFilter("[IsPrimary] = 1")
+            .HasFilter($"{sql.Ident("IsPrimary")} = {sql.TrueLiteral}")
             .HasDatabaseName("IX_ClientContacts_PrimaryPerClient");
     }
 }

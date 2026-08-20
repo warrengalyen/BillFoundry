@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class EstimateConfiguration : IEntityTypeConfiguration<Estimate>
+internal sealed class EstimateConfiguration(RelationalSql sql) : IEntityTypeConfiguration<Estimate>
 {
     public void Configure(EntityTypeBuilder<Estimate> builder)
     {
@@ -14,16 +14,16 @@ internal sealed class EstimateConfiguration : IEntityTypeConfiguration<Estimate>
         {
             table.HasCheckConstraint(
                 "CK_Estimates_Status",
-                "[Status] IN ('Draft', 'Sent', 'Accepted', 'Declined', 'Expired', 'Converted')");
+                $"{sql.Ident("Status")} IN ('Draft', 'Sent', 'Accepted', 'Declined', 'Expired', 'Converted')");
             table.HasCheckConstraint(
                 "CK_Estimates_Discount",
-                "[Discount] >= 0 AND [Discount] <= [Subtotal]");
+                $"{sql.Ident("Discount")} >= 0 AND {sql.Ident("Discount")} <= {sql.Ident("Subtotal")}");
             table.HasCheckConstraint(
                 "CK_Estimates_TaxRate",
-                "[TaxRatePercent] >= 0 AND [TaxRatePercent] <= 100");
+                $"{sql.Ident("TaxRatePercent")} >= 0 AND {sql.Ident("TaxRatePercent")} <= 100");
             table.HasCheckConstraint(
                 "CK_Estimates_Expiration",
-                "[ExpirationDate] IS NULL OR [ExpirationDate] >= [IssueDate]");
+                $"{sql.Ident("ExpirationDate")} IS NULL OR {sql.Ident("ExpirationDate")} >= {sql.Ident("IssueDate")}");
         });
 
         builder.Property(estimate => estimate.Id)
@@ -104,8 +104,7 @@ internal sealed class EstimateConfiguration : IEntityTypeConfiguration<Estimate>
             .IsRequired()
             .IsUnicode(false);
 
-        builder.Property(estimate => estimate.RowVersion)
-            .IsRowVersion();
+        sql.ConfigureRowVersion(builder, estimate => estimate.RowVersion);
 
         builder.Property(estimate => estimate.CreatedAtUtc)
             .IsRequired();

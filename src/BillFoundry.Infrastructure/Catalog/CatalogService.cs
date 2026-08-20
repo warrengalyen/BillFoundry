@@ -6,7 +6,6 @@ using BillFoundry.Domain.Organizations;
 using BillFoundry.Infrastructure.Auditing;
 using BillFoundry.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace BillFoundry.Infrastructure.Catalog;
@@ -294,7 +293,7 @@ internal sealed class CatalogService(
                 ? CatalogItemResult.NotFound()
                 : CatalogItemResult.ConcurrencyConflict(await ToDetailsAsync(current, cancellationToken).ConfigureAwait(false));
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (UniqueConstraint.IsViolation(exception))
         {
             AuditChangeTracker.DiscardPending(dbContext);
             return CatalogItemResult.Invalid(
@@ -305,8 +304,4 @@ internal sealed class CatalogService(
 
     private static string? NormalizeSku(string? sku) =>
         string.IsNullOrWhiteSpace(sku) ? null : CatalogSku.Parse(sku).Value;
-
-    private static bool IsUniqueConstraintViolation(DbUpdateException exception) =>
-        exception.InnerException is SqlException sql
-        && sql.Number is 2601 or 2627;
 }

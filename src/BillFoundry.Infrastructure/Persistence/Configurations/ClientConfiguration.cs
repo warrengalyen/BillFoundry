@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
+internal sealed class ClientConfiguration(RelationalSql sql) : IEntityTypeConfiguration<Client>
 {
     public void Configure(EntityTypeBuilder<Client> builder)
     {
@@ -78,8 +78,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
 
         builder.HasIndex(client => client.IsActive);
 
-        builder.Property(client => client.RowVersion)
-            .IsRowVersion();
+        sql.ConfigureRowVersion(builder, client => client.RowVersion);
 
         builder.Property(client => client.CreatedAtUtc)
             .IsRequired();

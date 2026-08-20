@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class EstimateLineConfiguration : IEntityTypeConfiguration<EstimateLine>
+internal sealed class EstimateLineConfiguration(RelationalSql sql) : IEntityTypeConfiguration<EstimateLine>
 {
     public void Configure(EntityTypeBuilder<EstimateLine> builder)
     {
@@ -13,19 +13,19 @@ internal sealed class EstimateLineConfiguration : IEntityTypeConfiguration<Estim
         {
             table.HasCheckConstraint(
                 "CK_EstimateLines_Quantity",
-                "[Quantity] > 0");
+                $"{sql.Ident("Quantity")} > 0");
             table.HasCheckConstraint(
                 "CK_EstimateLines_UnitPrice",
-                "[UnitPrice] >= 0");
+                $"{sql.Ident("UnitPrice")} >= 0");
             table.HasCheckConstraint(
                 "CK_EstimateLines_LineAmount",
-                "[LineAmount] >= 0");
+                $"{sql.Ident("LineAmount")} >= 0");
             table.HasCheckConstraint(
                 "CK_EstimateLines_Unit",
-                "[Unit] IN ('Hour', 'Day', 'Item', 'FlatFee')");
+                $"{sql.Ident("Unit")} IN ('Hour', 'Day', 'Item', 'FlatFee')");
             table.HasCheckConstraint(
                 "CK_EstimateLines_SortOrder",
-                "[SortOrder] >= 0");
+                $"{sql.Ident("SortOrder")} >= 0");
         });
 
         builder.Property(line => line.Id)

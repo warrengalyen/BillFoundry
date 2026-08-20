@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BillFoundry.Infrastructure.Persistence.Configurations;
 
-internal sealed class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
+internal sealed class OrganizationConfiguration(RelationalSql sql) : IEntityTypeConfiguration<Organization>
 {
     public void Configure(EntityTypeBuilder<Organization> builder)
     {
@@ -12,10 +12,10 @@ internal sealed class OrganizationConfiguration : IEntityTypeConfiguration<Organ
         {
             table.HasCheckConstraint(
                 "CK_Organizations_SingletonId",
-                $"[Id] = '{Organization.SingletonId}'");
+                $"{sql.Ident("Id")} = '{Organization.SingletonId}'");
             table.HasCheckConstraint(
                 "CK_Organizations_PaymentTerms",
-                $"[DefaultPaymentTermsDays] >= {Organization.MinPaymentTermsDays} AND [DefaultPaymentTermsDays] <= {Organization.MaxPaymentTermsDays}");
+                $"{sql.Ident("DefaultPaymentTermsDays")} >= {Organization.MinPaymentTermsDays} AND {sql.Ident("DefaultPaymentTermsDays")} <= {Organization.MaxPaymentTermsDays}");
         });
 
         builder.HasKey(organization => organization.Id);
@@ -105,8 +105,7 @@ internal sealed class OrganizationConfiguration : IEntityTypeConfiguration<Organ
                 .HasColumnName("LogoSizeBytes");
         });
 
-        builder.Property(organization => organization.RowVersion)
-            .IsRowVersion();
+        sql.ConfigureRowVersion(builder, organization => organization.RowVersion);
 
         builder.Property(organization => organization.CreatedAtUtc)
             .IsRequired();
