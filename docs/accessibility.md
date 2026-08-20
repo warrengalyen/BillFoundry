@@ -36,7 +36,9 @@ announced.
 
 The reconnect UI is a native `dialog` with an accessible name, `type="button"`
 actions, and a visually hidden heading. The mobile navigation backdrop is a
-button named "Close navigation"; Escape still closes the sidebar.
+button named "Close navigation"; Escape still closes the sidebar and returns
+focus to the menu button. Closing via a destination link leaves focus to the
+destination page.
 
 Dashboard loading uses `role="status"`. List empty states explain whether
 filters hid rows or no records exist.
@@ -49,8 +51,10 @@ animation.
 
 - Named the reconnect dialog and gave Retry/Resume explicit button types
 - Turned the mobile nav overlay into a keyboard-operable close control
+- Restored focus to the menu button after Escape or backdrop close
 - Announced validation summaries with `role="alert"`
 - Marked dashboard loading as a status message
+- Labeled stacked invoice and estimate line-item cells when column headers hide
 
 ## Intentionally deferred
 
