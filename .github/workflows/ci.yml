@@ -23,4 +23,36 @@ jobs:
         run: dotnet build BillFoundry.slnx --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test BillFoundry.slnx --no-build --configuration Release --verbosity minimal
+        run: dotnet test BillFoundry.slnx --no-build --configuration Release --verbosity minimal --filter FullyQualifiedName!~PostgreSqlDemo
+
+  postgres-demo:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: billfoundry
+          POSTGRES_PASSWORD: DevOnly_P@ssw0rd
+          POSTGRES_DB: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U billfoundry -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Test PostgreSQL demo workflows
+        env:
+          BILLFOUNDRY_TEST_POSTGRES: Host=127.0.0.1;Port=5433;Database=postgres;Username=billfoundry;Password=DevOnly_P@ssw0rd
+        run: |
+          dotnet test tests/BillFoundry.Domain.Tests --configuration Release --verbosity minimal
+          dotnet test tests/BillFoundry.Application.Tests --configuration Release --verbosity minimal
+          dotnet test tests/BillFoundry.IntegrationTests --configuration Release --verbosity minimal --filter FullyQualifiedName~PostgreSqlDemo

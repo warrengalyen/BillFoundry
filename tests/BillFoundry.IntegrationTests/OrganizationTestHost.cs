@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using BillFoundry.Application;
+using BillFoundry.Application.Configuration;
 using BillFoundry.Application.Organizations;
 using BillFoundry.Application.Security;
 using BillFoundry.Domain.Identity;
@@ -18,13 +19,29 @@ internal static class OrganizationTestHost
         SqlServerFixture sql,
         ICurrentUser currentUser,
         TimeProvider? timeProvider = null,
+        IReadOnlyDictionary<string, string?>? extra = null) =>
+        Create(
+            sql.ConnectionString,
+            sql.LogoRoot,
+            currentUser,
+            DatabaseProvider.SqlServer,
+            timeProvider,
+            extra);
+
+    public static ServiceProvider Create(
+        string connectionString,
+        string logoRoot,
+        ICurrentUser currentUser,
+        DatabaseProvider provider,
+        TimeProvider? timeProvider = null,
         IReadOnlyDictionary<string, string?>? extra = null)
     {
         var settings = new Dictionary<string, string?>
         {
-            ["ConnectionStrings:BillFoundry"] = sql.ConnectionString,
+            ["ConnectionStrings:BillFoundry"] = connectionString,
+            ["Database:Provider"] = provider.ToString(),
             ["Database:CommandTimeoutSeconds"] = "30",
-            ["OrganizationLogoStorage:RootPath"] = sql.LogoRoot,
+            ["OrganizationLogoStorage:RootPath"] = logoRoot,
             ["IdentitySeed:Enabled"] = "false",
             ["DemoMode:Enabled"] = "false",
             ["DemoSeed:Enabled"] = "false"
