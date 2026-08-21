@@ -1,0 +1,56 @@
+# BillFoundry public demo on Render
+# Dashboard: New → Blueprint → connect this repo
+#
+# SQL Server remains the Community default. This Blueprint is only the hosted
+# demo: one web service plus Render Postgres (Basic). Set Database__Provider to
+# PostgreSql. Do not put passwords in this file.
+
+services:
+  - type: web
+    name: billfoundry-web
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./src/BillFoundry.Web/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    disk:
+      name: billfoundry-web-data
+      mountPath: /app/App_Data
+      sizeGB: 1
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PORT
+        value: "8080"
+      - key: ASPNETCORE_HTTP_PORTS
+        value: "8080"
+      - key: ForwardedHeaders__Enabled
+        value: "true"
+      - key: Database__Provider
+        value: PostgreSql
+      - key: Database__ApplyMigrationsOnStartup
+        value: "true"
+      - key: ConnectionStrings__BillFoundry
+        fromDatabase:
+          name: billfoundry-db
+          property: connectionString
+      - key: DataProtection__KeyPath
+        value: /app/App_Data/data-protection-keys
+      - key: OrganizationLogoStorage__RootPath
+        value: /app/App_Data/organization-logos
+      - key: DemoMode__Enabled
+        value: "true"
+      - key: DemoSeed__Enabled
+        value: "true"
+      - key: DemoSeed__ResetOnStartup
+        value: "true"
+      - key: IdentitySeed__Enabled
+        value: "false"
+
+databases:
+  - name: billfoundry-db
+    databaseName: billfoundry
+    user: billfoundry
+    plan: basic-256mb
+    region: oregon
