@@ -16,6 +16,11 @@ Domain and Application tests do not need SQL Server. Integration tests that
 touch persistence use SQL Server LocalDB and create an isolated database per
 fixture.
 
+PostgreSQL demo workflows live in `PostgreSqlDemoPersistenceTests`. They
+require a reachable Postgres server (`compose.demo.postgres.yaml` or
+`BILLFOUNDRY_TEST_POSTGRES`). They skip when that server is not available.
+Do not use EF Core InMemory for those tests.
+
 `WebApplicationFactory` tests disable `IdentitySeed` and `DemoSeed` unless a
 test turns them on. Authentication tests do not require SQL Server except when
 they exercise the database.
@@ -34,7 +39,8 @@ they exercise the database.
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on `windows-latest` so
-LocalDB is available. The workflow restores, builds, and tests in Release
-using the SDK from `global.json`. Treat warnings as errors is already set in
-`Directory.Build.props`.
+GitHub Actions (`.github/workflows/ci.yml`) runs a Windows job so LocalDB is
+available for SQL Server integration tests (PostgreSQL demo tests are filtered
+out there). A second Ubuntu job runs Domain/Application tests plus the
+PostgreSQL demo workflows against a Postgres service container. Treat warnings
+as errors is already set in `Directory.Build.props`.

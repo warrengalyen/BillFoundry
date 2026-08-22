@@ -54,10 +54,12 @@ BillFoundry is a modular monolith.
 | `BillFoundry.Infrastructure` | EF Core, Identity, PDF, seeding, file storage |
 | `BillFoundry.Web` | Blazor UI and composition root |
 
-There is one process and one SQL Server database. Community Edition has a
-single organization per installation. Application code uses `TimeProvider`
-instead of `DateTime.Now`. Privileged work is authorized in application
-services, not only by hiding links.
+There is one process and one database. Community Edition has a single
+organization per installation. Self-hosted installs use SQL Server. The live
+public demo uses PostgreSQL on Render because that is the managed database
+Render provides. Application code uses `TimeProvider` instead of
+`DateTime.Now`. Privileged work is authorized in application services, not
+only by hiding links.
 
 See [docs/architecture.md](docs/architecture.md) and
 [docs/domain-model.md](docs/domain-model.md).
@@ -68,7 +70,7 @@ See [docs/architecture.md](docs/architecture.md) and
 - SQL Server LocalDB, SQL Server, or the Compose SQL Server service
 
 `GET /health` does not need a database. Sign-in and the rest of the app do.
-`GET /health/ready` checks SQL Server.
+`GET /health/ready` checks the configured database.
 
 ## Run locally
 
@@ -142,11 +144,21 @@ The image listens on HTTP 8080, runs as a non-root user, and does not apply
 migrations unless you set `Database__ApplyMigrationsOnStartup=true`. Put TLS on
 a reverse proxy. See [docs/deployment.md](docs/deployment.md).
 
+The same image can use SQL Server or PostgreSQL through `Database__Provider`.
+The public Render demo sets `PostgreSql`. Self-hosted Community installs keep
+the SQL Server default.
+
+Public demo on Render: connect this repo as a Blueprint (`render.yaml`). That
+stack is the Docker web image plus Render Postgres, with Demo Mode and
+fictional seed data. It is not a production business host. Locally,
+`compose.demo.postgres.yaml` exercises the same provider path.
+
 ## Configuration
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
-| `ConnectionStrings:BillFoundry` | empty | SQL Server. Required outside Development. |
+| `ConnectionStrings:BillFoundry` | empty | SQL Server (default) or PostgreSQL when `Database:Provider` is `PostgreSql`. Required outside Development. |
+| `Database:Provider` | `SqlServer` | `PostgreSql` only for the hosted public demo. |
 | `Database:ApplyMigrationsOnStartup` | `false` | Apply pending migrations at start. Never drops the database. |
 | `IdentitySeed:Enabled` | `false` | Development-only local accounts. Ignored in Production. |
 | `DemoMode:Enabled` | `false` | Public demo restrictions. |

@@ -31,6 +31,14 @@ Used in tests to read generated PDF text. Apache License 2.0.
 
 https://github.com/UglyToad/PdfPig
 
+## Npgsql
+
+EF Core provider for PostgreSQL, used only so the public Render demo can run
+against managed Postgres. PostgreSQL License.
+
+https://github.com/npgsql/efcore.pg
+https://www.postgresql.org/about/licence/
+
 ## xUnit.net
 
 Test framework. Apache License 2.0.

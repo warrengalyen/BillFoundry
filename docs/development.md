@@ -223,14 +223,25 @@ Production (non-Development) startup fails if
 
 ## Database
 
-EF Core is registered against SQL Server through `BillFoundryDbContext`, which
-includes ASP.NET Core Identity, the installation organization profile,
-clients, the service catalog, estimates, invoices, invoice payments, document number sequences, and the business audit trail. Apply
+EF Core is registered through `BillFoundryDbContext`. SQL Server is the
+default (`Database:Provider=SqlServer`). PostgreSQL is selected only when
+`Database:Provider=PostgreSql` for the hosted public demo.
+
+The context includes ASP.NET Core Identity, the installation organization
+profile, clients, the service catalog, estimates, invoices, invoice payments,
+document number sequences, and the business audit trail. Apply SQL Server
 migrations before first sign-in:
 
 ```bash
 dotnet ef migrations add MigrationName --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
 dotnet ef database update --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
+```
+
+PostgreSQL demo migrations (do not mix with the SQL Server set):
+
+```bash
+dotnet ef migrations add MigrationName --context BillFoundryPostgreSqlDbContext --output-dir Persistence/Migrations/PostgreSql --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
+dotnet ef database update --context BillFoundryPostgreSqlDbContext --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
 ```
 
 The Web project references `Microsoft.EntityFrameworkCore.Design` so the EF tools
@@ -264,6 +275,15 @@ with the Development Identity seed accounts.
 
 `docker compose down` stops containers and keeps the SQL volume.
 `docker compose down -v` deletes database data.
+
+To validate the Render PostgreSQL demo path without replacing SQL Server
+Compose:
+
+```bash
+docker compose -f compose.demo.postgres.yaml up --build
+```
+
+That stack listens on `http://localhost:8081` and Postgres on host port 5433.
 
 ## Identity seed (Development)
 

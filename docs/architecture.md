@@ -126,9 +126,10 @@ dotnet ef database update --project src/BillFoundry.Infrastructure --startup-pro
 
 ## Configuration and time
 
-Strongly typed `DatabaseOptions` bind database command timeout settings.
-The SQL Server connection string uses the standard
-`ConnectionStrings:BillFoundry` key.
+Strongly typed `DatabaseOptions` bind the provider (default SQL Server),
+command timeout, and migration-on-startup settings. The connection string uses
+the standard `ConnectionStrings:BillFoundry` key for both SQL Server and the
+PostgreSQL demo.
 
 Application code should use `TimeProvider` rather than `DateTime.Now` or
 `DateTime.UtcNow`. `TimeProvider.System` is registered in Application DI.
@@ -142,7 +143,7 @@ and Infrastructure services, Identity cookies, Razor components with Interactive
 Server support, ProblemDetails, a centralized `IExceptionHandler`, logging, and
 health checks.
 
-- `/health` is a liveness probe, allows anonymous access, and does not require SQL Server.
+- `/health` is a liveness probe, allows anonymous access, and does not require a database.
 - `/health/ready` includes an EF Core database check and allows anonymous access.
 - Optional `Database:ApplyMigrationsOnStartup` applies pending EF Core migrations
   at process start. It never drops the database. Default is false.
