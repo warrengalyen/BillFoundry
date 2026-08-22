@@ -1,8 +1,10 @@
 # Deployment
 
-BillFoundry Community Edition is a single ASP.NET Core app plus SQL Server.
-This document covers the production container image and the local Compose
-environment. It is not Kubernetes, Helm, or a service-mesh guide.
+BillFoundry Community Edition is a single ASP.NET Core app. Self-hosted
+Community installs use SQL Server. This document covers the production
+container image, the SQL Server Compose environment, and the Render public
+demo that uses managed PostgreSQL. It is not Kubernetes, Helm, or a
+service-mesh guide.
 
 ## Production image
 
@@ -35,7 +37,8 @@ Put TLS on a reverse proxy. The container speaks HTTP.
 
 | Setting | Purpose |
 | --- | --- |
-| `ConnectionStrings__BillFoundry` | SQL Server connection string. Production startup fails if this is missing. |
+| `ConnectionStrings__BillFoundry` | SQL Server or PostgreSQL connection string. Production startup fails if this is missing. |
+| `Database__Provider` | `SqlServer` (default) or `PostgreSql` (public Render demo only). |
 | `DataProtection__KeyPath` | Directory for the data-protection key ring. Mount a volume. |
 | `OrganizationLogoStorage__RootPath` | Logo file root. Mount a volume if logos must survive recreates. |
 
@@ -122,16 +125,65 @@ docker compose -f compose.yaml -f compose.demo.yaml up --build
 
 The overlay sets Production, enables Demo Mode, enables demo seed with
 `DemoSeed__ResetOnStartup=true`, and keeps Identity development seed off.
-All seeded business data is fictional.
+All seeded business data is fictional. That overlay still uses SQL Server.
+
+## Local PostgreSQL demo validation
+
+`compose.demo.postgres.yaml` is a separate stack for checking the Render
+database path. It does not replace `compose.yaml`.
+
+```bash
+docker compose -f compose.demo.postgres.yaml up --build
+```
+
+Then open `http://localhost:8081`. The web process sets
+`Database__Provider=PostgreSql`, applies the PostgreSQL migration set at
+startup, and loads fictional demo seed. Postgres is published on host port
+**5433**. Integration tests use that port when `BILLFOUNDRY_TEST_POSTGRES` is
+unset.
+
+## Public demo on Render
+
+`render.yaml` is a Render Blueprint for the public demo only. Dashboard:
+**New → Blueprint** and connect this repository.
+
+It deploys:
+
+- `billfoundry-web` — the production Docker image (`starter`, Oregon)
+- `billfoundry-db` — Render Postgres (`basic-256mb`, Oregon)
+
+Required non-secret environment values are in the Blueprint:
+
+- `Database__Provider=PostgreSql`
+- `Database__ApplyMigrationsOnStartup=true`
+- `ConnectionStrings__BillFoundry` from the Postgres `connectionString`
+- Demo Mode and demo seed with reset on startup
+- `ForwardedHeaders__Enabled=true`
+- `ASPNETCORE_ENVIRONMENT=Production`
+
+The first web start applies the PostgreSQL migrations, then seeds fictional
+North Beacon Studio data. `EnsureCreated` / `EnsureDeleted` are not used.
+
+After the Blueprint syncs, you still need to:
+
+- Confirm the Postgres plan matches the workspace (Basic)
+- Attach a custom domain if you want one other than `*.onrender.com`
+- Wait for the first deploy; SQL-style crash loops should not occur because
+  `/health` does not require the database, but the app is not usable until
+  migrations and seed finish
+
+Do not use this Blueprint for a real freelance install.
 
 ## Health checks
 
-- `GET /health` - process is up. No SQL.
-- `GET /health/ready` - SQL Server is reachable.
+- `GET /health` - process is up. No database.
+- `GET /health/ready` - the configured database is reachable.
 
 Orchestrators should use liveness → `/health` and readiness → `/health/ready`.
+Render's web health check uses `/health`.
 
 ## Intentionally not included
 
-Kubernetes, Helm, service mesh, Redis, extra databases, and cloud-specific
-ingress controllers are out of scope for this Community Edition host.
+Kubernetes, Helm, service mesh, Redis, and generic cloud ingress controllers
+are out of scope for this Community Edition host. The Render Blueprint is only
+the public demo stack. PostgreSQL is not a second Community default database.
