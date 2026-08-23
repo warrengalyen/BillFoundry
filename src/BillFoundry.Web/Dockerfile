@@ -6,6 +6,10 @@
 # This image does not apply EF Core migrations. Set Database__ApplyMigrationsOnStartup=true
 # only when you intentionally want pending migrations applied at process start.
 # That option never drops the database.
+#
+# BillFoundry.Web.csproj sets RequiresAspNetWebAssets so restore (csproj-only in this
+# stage) still pulls Microsoft.AspNetCore.App.Internal.Assets. That pack supplies
+# _framework/blazor.web.js for Interactive Server. Do not drop that property.
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS restore
 WORKDIR /src

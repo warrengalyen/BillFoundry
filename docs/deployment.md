@@ -30,6 +30,10 @@ The runtime image:
   path is writable
 - Exposes HTTP `8080`. The image HEALTHCHECK opens that TCP port. HTTP
   liveness is `GET /health`; readiness is `GET /health/ready`.
+- Serves `_framework/blazor.web.js` (Interactive Server). The Web project sets
+  `RequiresAspNetWebAssets` so Docker's csproj-only restore still includes that
+  script. Without it, action buttons on estimate and invoice details do nothing
+  and `EditForm` posts return 400.
 
 Put TLS on a reverse proxy. The container speaks HTTP.
 

@@ -3,6 +3,10 @@
   <PropertyGroup>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <UserSecretsId>4031da95-50f5-4f00-b80b-9d691c9be922</UserSecretsId>
+    <!-- .NET 10 ships blazor.web.js as a restore-time static asset pack. Docker restore
+         copies only the .csproj, so the SDK cannot infer Blazor from .razor files unless
+         this is explicit. Without it, Production publish omits _framework/blazor.web.js. -->
+    <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
   </PropertyGroup>
 
   <ItemGroup>

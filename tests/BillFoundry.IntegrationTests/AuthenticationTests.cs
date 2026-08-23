@@ -25,6 +25,18 @@ public sealed class AuthenticationTests : IClassFixture<BillFoundryWebApplicatio
     }
 
     [Fact]
+    public async Task Blazor_web_script_is_available_for_interactive_pages()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync(new Uri("/_framework/blazor.web.js", UriKind.Relative));
+        string body = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("blazor", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Dashboard_redirects_unauthenticated_users_to_login()
     {
         using HttpClient client = _factory.CreateClient(new WebApplicationFactoryClientOptions
