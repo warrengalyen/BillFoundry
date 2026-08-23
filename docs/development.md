@@ -78,7 +78,7 @@ src/BillFoundry.Web/Styles/
     _responsive.scss         Global layout transitions at breakpoints
 
   components/
-    _buttons.scss            Primary, secondary, ghost, destructive variants
+    _buttons.scss            Primary, secondary, ghost, destructive, and icon-button variants
     _forms.scss              Form fields, grids, fieldsets, checkboxes, validation
     _tables.scss             Data tables, sort buttons, table actions, responsive line-item stacking
     _status.scss             Status badges, definition lists, activity timeline
@@ -155,9 +155,11 @@ shown as a badge. Filter state is preserved when the section collapses.
 
 ### Navigation icons
 
-Lucide SVG icons (ISC license) are embedded inline in `NavMenu.razor`.
-Icons use `aria-hidden="true"` since text labels provide the accessible name.
-Licensed in [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md).
+Lucide SVG icons (ISC license) are embedded inline in `NavMenu.razor` and
+`LineItemActions.razor`. Nav icons use `aria-hidden="true"` because text
+labels provide the accessible name. Line-item action icons are icon-only
+buttons with `aria-label` and a CSS tooltip. Licensed in
+[THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md).
 
 ### Adding new page/component styles
 

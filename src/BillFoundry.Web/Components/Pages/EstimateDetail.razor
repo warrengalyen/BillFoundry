@@ -172,22 +172,12 @@ else if (Estimate is not null)
                                 @if (Estimate.CanEdit)
                                 {
                                     <td data-label="Actions">
-                                        <div class="table-actions">
-                                            <button type="button" class="button-secondary" @onclick="() => BeginEditLine(line)">Edit</button>
-                                            <button type="button"
-                                                    class="button-secondary"
-                                                    disabled="@(line.SortOrder == 0)"
-                                                    @onclick="() => MoveLineAsync(line.Id, -1)">
-                                                Move up
-                                            </button>
-                                            <button type="button"
-                                                    class="button-secondary"
-                                                    disabled="@(line.SortOrder == Estimate.Lines.Count - 1)"
-                                                    @onclick="() => MoveLineAsync(line.Id, 1)">
-                                                Move down
-                                            </button>
-                                            <button type="button" class="button-secondary" @onclick="() => RemoveLineAsync(line.Id)">Remove</button>
-                                        </div>
+                                        <LineItemActions CanMoveUp="line.SortOrder > 0"
+                                                         CanMoveDown="line.SortOrder < Estimate.Lines.Count - 1"
+                                                         OnEdit="() => BeginEditLine(line)"
+                                                         OnMoveUp="() => MoveLineAsync(line.Id, -1)"
+                                                         OnMoveDown="() => MoveLineAsync(line.Id, 1)"
+                                                         OnRemove="() => RemoveLineAsync(line.Id)" />
                                     </td>
                                 }
                             </tr>

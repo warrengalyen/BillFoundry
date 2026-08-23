@@ -45,7 +45,8 @@ filters hid rows or no records exist.
 
 `:focus-visible` outlines are 3px on the accent color. The skip link becomes
 visible on focus. `prefers-reduced-motion` is respected for the reconnect
-animation.
+animation. Estimate and invoice line-item actions are icon-only buttons with
+`aria-label` names and a hover/focus tooltip.
 
 ## Changes made
 

@@ -28,6 +28,16 @@
     }
 }
 
+// Keep line-item action buttons visible: a 100% table can shrink a flex
+// cell below its content width, which clips the icon row.
+@include respond-above($bp-md) {
+    .data-table--line-items th:last-child,
+    .data-table--line-items td:last-child {
+        width: 1%;
+        white-space: nowrap;
+    }
+}
+
 .sort-button {
     border: 0;
     padding: 0;
@@ -44,6 +54,12 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
+}
+
+.table-actions--icons {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    min-width: max-content;
 }
 
 .results-header {
