@@ -150,8 +150,13 @@ the SQL Server default.
 
 Public demo on Render: connect this repo as a Blueprint (`render.yaml`). That
 stack is the Docker web image plus Render Postgres, with Demo Mode and
-fictional seed data. It is not a production business host. Locally,
-`compose.demo.postgres.yaml` exercises the same provider path.
+fictional seed data. It is not a production business host. Locally:
+
+```bash
+docker compose -f compose.yaml -f compose.demo.postgres.yaml up --build
+```
+
+That overlay replaces SQL Server with Postgres (`http://localhost:8083`).
 
 ## Configuration
 

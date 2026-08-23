@@ -276,14 +276,23 @@ with the Development Identity seed accounts.
 `docker compose down` stops containers and keeps the SQL volume.
 `docker compose down -v` deletes database data.
 
-To validate the Render PostgreSQL demo path without replacing SQL Server
-Compose:
+To validate the Render PostgreSQL demo path, use the same two-file overlay
+pattern as `compose.demo.yaml`. The overlay **replaces** the SQL Server `db`
+service with Postgres; do not mix it with a running `docker compose up` SQL
+stack on the default project name:
+
+```bash
+docker compose -f compose.yaml -f compose.demo.postgres.yaml up --build
+```
+
+Standalone is equivalent when you are not layering demo flags onto
+`compose.yaml`:
 
 ```bash
 docker compose -f compose.demo.postgres.yaml up --build
 ```
 
-That stack listens on `http://localhost:8081` and Postgres on host port 5433.
+That stack listens on `http://localhost:8083` and Postgres on host port 5433.
 
 ## Identity seed (Development)
 

@@ -129,14 +129,19 @@ All seeded business data is fictional. That overlay still uses SQL Server.
 
 ## Local PostgreSQL demo validation
 
-`compose.demo.postgres.yaml` is a separate stack for checking the Render
-database path. It does not replace `compose.yaml`.
+`compose.demo.postgres.yaml` overlays `compose.yaml` and **replaces** SQL
+Server with Postgres for checking the Render database path. Use the same
+two-file command as `compose.demo.yaml`:
 
 ```bash
-docker compose -f compose.demo.postgres.yaml up --build
+docker compose -f compose.yaml -f compose.demo.postgres.yaml up --build
 ```
 
-Then open `http://localhost:8081`. The web process sets
+Standalone (`docker compose -f compose.demo.postgres.yaml up --build`) is
+the same stack. Do not leave a SQL Server Compose project running on host
+port 1433/8080 and expect this overlay to share those containers.
+
+Then open `http://localhost:8083`. The web process sets
 `Database__Provider=PostgreSql`, applies the PostgreSQL migration set at
 startup, and loads fictional demo seed. Postgres is published on host port
 **5433**. Integration tests use that port when `BILLFOUNDRY_TEST_POSTGRES` is
