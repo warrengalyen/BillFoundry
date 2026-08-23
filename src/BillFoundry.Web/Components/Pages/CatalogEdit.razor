@@ -54,7 +54,7 @@ else
         <EditForm Model="Input" OnValidSubmit="SaveAsync">
             <DataAnnotationsValidator />
             <ValidationSummary class="form-errors" role="alert" />
-            <CatalogEditorFields Input="Input" CurrencyCode="CurrencyCode" />
+            <CatalogEditorFields Input="Input" CurrencyCode="@CurrencyCode" />
             <div class="form-actions">
                 <button type="submit" class="button-primary">Save item</button>
                 <a class="button-secondary" href="@($"/Catalog/{Id}")">Cancel</a>

@@ -49,7 +49,7 @@ else
         <EditForm Model="Input" OnValidSubmit="SaveAsync">
             <DataAnnotationsValidator />
             <ValidationSummary class="form-errors" role="alert" />
-            <InvoiceEditorFields Input="Input" Clients="Clients" CurrencyCode="CurrencyCode" />
+            <InvoiceEditorFields Input="Input" Clients="Clients" CurrencyCode="@CurrencyCode" />
             <div class="form-actions">
                 <button type="submit" class="button-primary">Create invoice</button>
                 <a class="button-secondary" href="/Invoices">Cancel</a>

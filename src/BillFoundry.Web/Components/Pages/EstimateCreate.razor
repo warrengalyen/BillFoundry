@@ -49,7 +49,7 @@ else
         <EditForm Model="Input" OnValidSubmit="SaveAsync">
             <DataAnnotationsValidator />
             <ValidationSummary class="form-errors" role="alert" />
-            <EstimateEditorFields Input="Input" Clients="Clients" CurrencyCode="CurrencyCode" />
+            <EstimateEditorFields Input="Input" Clients="Clients" CurrencyCode="@CurrencyCode" />
             <div class="form-actions">
                 <button type="submit" class="button-primary">Create estimate</button>
                 <a class="button-secondary" href="/Estimates">Cancel</a>
