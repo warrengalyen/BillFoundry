@@ -147,7 +147,7 @@ public static class DependencyInjection
         {
             options.AddInterceptors(serviceProvider.GetRequiredService<PostgreSqlRowVersionInterceptor>());
             options.UseNpgsql(
-                resolvedConnectionString,
+                PostgreSqlConnectionString.ToKeywordValue(resolvedConnectionString),
                 npgsql =>
                 {
                     npgsql.CommandTimeout(databaseOptions.CommandTimeoutSeconds);
