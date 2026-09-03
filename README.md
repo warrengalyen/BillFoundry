@@ -11,8 +11,8 @@ Copyright (C) 2026 Warren Galyen
 
 Most invoicing products are either a spreadsheet or a hosted SaaS account.
 BillFoundry is software you run yourself. It keeps client and financial records
-in SQL Server, signs people in with ASP.NET Core Identity, and generates
-documents from data the application already stored.
+in PostgreSQL or SQL Server, signs people in with ASP.NET Core Identity, and
+generates documents from data the application already stored.
 
 The Community Edition is licensed under AGPLv3. A separate commercial license
 may be offered later for a Pro edition. That possibility does not change the
@@ -37,7 +37,7 @@ AGPLv3 terms that apply to this code.
 
 - .NET 10 / C# 14
 - ASP.NET Core Blazor Web App (Interactive Server where the UI needs it)
-- Entity Framework Core 10 and SQL Server
+- Entity Framework Core 10 (PostgreSQL and SQL Server)
 - ASP.NET Core Identity
 - Sass (Dart Sass via EmbeddedSass.Net) for the UI
 - PDFsharp for documents, PdfPig in tests
@@ -55,11 +55,11 @@ BillFoundry is a modular monolith.
 | `BillFoundry.Web` | Blazor UI and composition root |
 
 There is one process and one database. Community Edition has a single
-organization per installation. Self-hosted installs use SQL Server. The live
-public demo uses PostgreSQL on Render because that is the managed database
-Render provides. Application code uses `TimeProvider` instead of
-`DateTime.Now`. Privileged work is authorized in application services, not
-only by hiding links.
+organization per installation. BillFoundry supports PostgreSQL and SQL Server
+through Entity Framework Core. PostgreSQL is the default development and
+self-hosting option. The public demo runs on PostgreSQL on Render.
+Application code uses `TimeProvider` instead of `DateTime.Now`. Privileged
+work is authorized in application services, not only by hiding links.
 
 See [docs/architecture.md](docs/architecture.md) and
 [docs/domain-model.md](docs/domain-model.md).
@@ -67,7 +67,7 @@ See [docs/architecture.md](docs/architecture.md) and
 ## Requirements
 
 - .NET 10 SDK matching `global.json`
-- SQL Server LocalDB, SQL Server, or the Compose SQL Server service
+- PostgreSQL (default) or SQL Server, or the matching Compose database service
 
 `GET /health` does not need a database. Sign-in and the rest of the app do.
 `GET /health/ready` checks the configured database.
@@ -99,13 +99,13 @@ dotnet user-secrets set "ConnectionStrings:BillFoundry" "YOUR_CONNECTION_STRING"
 ```
 
 The equivalent environment variable is `ConnectionStrings__BillFoundry`.
-Non-secret defaults live in `src/BillFoundry.Web/appsettings.json`. LocalDB is
-configured in `appsettings.Development.json`.
+Non-secret defaults live in `src/BillFoundry.Web/appsettings.json`. PostgreSQL
+on `localhost:5432` is configured in `appsettings.Development.json`.
 
-Apply schema with:
+Apply the PostgreSQL schema with:
 
 ```bash
-dotnet ef database update --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
+dotnet ef database update --context BillFoundryPostgreSqlDbContext --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
 ```
 
 Or set `Database:ApplyMigrationsOnStartup` to `true`. That option never drops
@@ -119,10 +119,16 @@ Development stack:
 docker compose up --build
 ```
 
-Then open `http://localhost:8080`. Compose uses placeholder SQL credentials
-(`DevOnly_P@ssw0rd` unless you set `MSSQL_SA_PASSWORD` in a gitignored `.env`).
+Then open `http://localhost:8080`. Compose uses placeholder PostgreSQL credentials
+(`DevOnly_P@ssw0rd` unless you set `POSTGRES_PASSWORD` in a gitignored `.env`).
 Copy `.env.example` to `.env` to override them. Do not use those values in
 production.
+
+SQL Server alternative:
+
+```bash
+docker compose -f compose.yaml -f compose.sqlserver.yaml up --build
+```
 
 Public demo overlay:
 
@@ -144,26 +150,19 @@ The image listens on HTTP 8080, runs as a non-root user, and does not apply
 migrations unless you set `Database__ApplyMigrationsOnStartup=true`. Put TLS on
 a reverse proxy. See [docs/deployment.md](docs/deployment.md).
 
-The same image can use SQL Server or PostgreSQL through `Database__Provider`.
-The public Render demo sets `PostgreSql`. Self-hosted Community installs keep
-the SQL Server default.
+The same image can use PostgreSQL or SQL Server through `Database__Provider`.
+PostgreSQL is the Community default. The public Render demo is PostgreSQL-only.
 
 Public demo on Render: connect this repo as a Blueprint (`render.yaml`). That
 stack is the Docker web image plus Render Postgres, with Demo Mode and
-fictional seed data. It is not a production business host. Locally:
-
-```bash
-docker compose -f compose.yaml -f compose.demo.postgres.yaml up --build
-```
-
-That overlay replaces SQL Server with Postgres (`http://localhost:8083`).
+fictional seed data. It is not a production business host.
 
 ## Configuration
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
-| `ConnectionStrings:BillFoundry` | empty | SQL Server (default) or PostgreSQL when `Database:Provider` is `PostgreSql`. Required outside Development. |
-| `Database:Provider` | `SqlServer` | `PostgreSql` only for the hosted public demo. |
+| `ConnectionStrings:BillFoundry` | empty | PostgreSQL or SQL Server connection string. Required outside Development. |
+| `Database:Provider` | `PostgreSql` | `SqlServer` for the Microsoft database stack. |
 | `Database:ApplyMigrationsOnStartup` | `false` | Apply pending migrations at start. Never drops the database. |
 | `IdentitySeed:Enabled` | `false` | Development-only local accounts. Ignored in Production. |
 | `DemoMode:Enabled` | `false` | Public demo restrictions. |
@@ -197,9 +196,10 @@ visitors can still sign in. An operator reseeds with `DemoSeed:ResetOnStartup`.
 dotnet test
 ```
 
-Domain and Application tests do not need SQL Server. Integration tests that
-touch persistence use SQL Server LocalDB. GitHub Actions runs restore, build,
-and test on Windows with .NET 10.
+Domain and Application tests do not need a database. Integration tests that
+touch persistence use SQL Server LocalDB on Windows and PostgreSQL when a
+server is reachable. GitHub Actions runs SQL Server tests on Windows and
+critical PostgreSQL persistence tests on Ubuntu.
 
 ## Accessibility and security
 

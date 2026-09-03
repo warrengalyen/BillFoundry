@@ -18,7 +18,7 @@ An estimate stores:
 - Document-level discount and tax rate
 - Persisted subtotal, taxable subtotal, tax, and total
 - Currency snapshotted from the organization when the estimate is created
-- Audit metadata and a SQL Server `rowversion` concurrency token
+- Audit metadata and an optimistic concurrency token
 
 Lines store a historical snapshot:
 
@@ -119,9 +119,9 @@ Authorized Administrator or User roles (`ManageEstimates`) can:
 
 - Create a draft (number allocated atomically)
 - Edit the header while Draft
-Add, edit, remove, and reorder lines while Draft. Reorder writes a temporary
-unique sort order, saves, then writes the final 0-based order so SQL Server's
-unique `(EstimateId, SortOrder)` index can accept swaps.
+- Add, edit, remove, and reorder lines while Draft. Reorder writes a temporary
+  unique sort order, saves, then writes the final 0-based order so the
+  unique `(EstimateId, SortOrder)` index can accept swaps.
 - View detail for any status
 - Duplicate any estimate into a new Draft with copied snapshots and a new number
 - Apply the user-facing status transitions above

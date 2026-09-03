@@ -1,7 +1,7 @@
 # Architecture
 
 BillFoundry is a modular monolith. Features share one ASP.NET Core process and
-one SQL Server database. Project boundaries exist so the Community Edition stays
+one relational database (PostgreSQL by default, or SQL Server). Project boundaries exist so the Community Edition stays
 maintainable and so a later Pro edition can extend the same core without
 introducing microservices or a mediator pipeline for demonstration.
 
@@ -98,13 +98,14 @@ are reversed. See [payments.md](payments.md). US Letter PDF invoices and
 estimates are generated in memory from persisted values; see [pdf.md](pdf.md).
 
 Postal address, currency, document prefixes, and logo metadata are modeled as
-value objects. Logo bytes are not stored in SQL Server; metadata points at an
+value objects. Logo bytes are not stored in the database; metadata points at an
 `IOrganizationLogoStore` implementation. The default store writes generated
 file names under `OrganizationLogoStorage:RootPath` (relative paths are
 resolved from the web content root). Submitted upload names are never used.
 
-Organization updates use SQL Server rowversion optimistic concurrency.
-Client profile and contact changes use the same rowversion token on `Client`.
+Organization updates use optimistic concurrency (SQL Server `rowversion`,
+PostgreSQL `bytea` tokens).
+Client profile and contact changes use the same token on `Client`.
 Catalog item edits use a rowversion token on `CatalogItem`.
 Estimate header, line, and status changes use a rowversion token on `Estimate`.
 Invoice header, line, send, void, payment, reversal, and conversion changes use
@@ -126,10 +127,10 @@ dotnet ef database update --project src/BillFoundry.Infrastructure --startup-pro
 
 ## Configuration and time
 
-Strongly typed `DatabaseOptions` bind the provider (default SQL Server),
+Strongly typed `DatabaseOptions` bind the provider (default PostgreSQL),
 command timeout, and migration-on-startup settings. The connection string uses
-the standard `ConnectionStrings:BillFoundry` key for both SQL Server and the
-PostgreSQL demo.
+the standard `ConnectionStrings:BillFoundry` key for both PostgreSQL and
+SQL Server.
 
 Application code should use `TimeProvider` rather than `DateTime.Now` or
 `DateTime.UtcNow`. `TimeProvider.System` is registered in Application DI.
@@ -172,9 +173,9 @@ the solution on Windows with the .NET SDK pinned by `global.json`.
   catalog pricing rules, estimate rounding, estimate status transitions,
   invoice rounding, overdue derivation, invoice lifecycle, and payment integrity.
 - Integration tests use `WebApplicationFactory` against the Web host.
-- Authentication tests disable development identity seeding and do not require SQL Server
-  except when a test explicitly exercises the database.
-- Organization, client, catalog, estimate, invoice, payment, reporting, and
-  demo-seed persistence tests require SQL Server LocalDB.
-- GitHub Actions (`.github/workflows/ci.yml`) restores, builds, and tests on
-  Windows with the SDK from `global.json`.
+- Authentication tests disable development identity seeding and do not require a
+  database except when a test explicitly exercises persistence.
+- SQL Server persistence tests require LocalDB. Critical PostgreSQL workflows
+  run against a real Postgres server when one is available.
+- GitHub Actions restores, builds, and tests on Windows (SQL Server) and runs
+  PostgreSQL persistence tests on Ubuntu.

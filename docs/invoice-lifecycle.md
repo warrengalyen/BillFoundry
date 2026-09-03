@@ -22,7 +22,7 @@ An invoice stores:
 - Optional `SourceEstimateId` when the invoice was converted from an estimate
 - Optional void reason
 - Ordered **payments** (receipts and reversals); see [payments.md](payments.md)
-- Audit metadata and a SQL Server `rowversion` concurrency token
+- Audit metadata and an optimistic concurrency token
 
 Lines store a historical snapshot:
 
@@ -189,7 +189,7 @@ Authorized Administrator or User roles (`ManageInvoices`) can:
 - Create a draft (number allocated atomically)
 - Edit the header while Draft
 - Add, edit, remove, and reorder lines while Draft. Reorder writes a temporary
-  unique sort order, saves, then writes the final 0-based order so SQL Server's
+  unique sort order, saves, then writes the final 0-based order so the
   unique `(InvoiceId, SortOrder)` index can accept swaps
 - View detail for any status
 - Duplicate any invoice into a new Draft with copied snapshots and a new number

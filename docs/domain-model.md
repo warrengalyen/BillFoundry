@@ -8,7 +8,7 @@ tenant key and no multi-organization support.
 A singleton `Organization` holds legal and display names, postal address,
 contact details, default currency, payment terms, document prefixes, default
 notes, payment instructions, and optional logo metadata. Logo bytes live on
-disk, not in SQL Server. Updates use a SQL Server `rowversion` token.
+disk, not in the database. Updates use an optimistic concurrency token.
 
 ## Identity
 

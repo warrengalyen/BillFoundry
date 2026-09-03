@@ -1,6 +1,6 @@
 # Security
 
-BillFoundry uses ASP.NET Core Identity with Entity Framework Core and SQL Server.
+BillFoundry uses ASP.NET Core Identity with Entity Framework Core.
 This document describes the authentication and authorization model for the
 Community Edition.
 

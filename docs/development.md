@@ -3,7 +3,8 @@
 ## Prerequisites
 
 - .NET 10 SDK matching `global.json` (`10.0.302` or a later 10.0 feature band)
-- SQL Server LocalDB, or another SQL Server instance, when you need the database
+- PostgreSQL for the default local database, or SQL Server / LocalDB when using
+  `Database:Provider=SqlServer`
 
 The solution file is `BillFoundry.slnx`.
 
@@ -39,9 +40,9 @@ source of truth.
 
 Do not iterate on CSS against `docker compose` web. Compose publishes a
 Release image; `app.css` is copied at build time and will not pick up editor
-saves. Leave SQL Server in Compose if you want (`docker compose up db -d`) and
-point the connection string at `localhost,1433`, or use LocalDB from
-`appsettings.Development.json`.
+saves. Leave PostgreSQL in Compose if you want (`docker compose up db -d`) and
+point the connection string at `localhost:5432`, or use SQL Server LocalDB
+with `Database:Provider=SqlServer`.
 
 Scoped CSS (`*.razor.css`) still goes through the Blazor bundle. Those files
 need `dotnet watch` or a rebuild.
@@ -202,8 +203,8 @@ solve a current problem.
 Configuration sources:
 
 - `appsettings.json` - non-secret defaults, including logging and database option defaults
-- `appsettings.Development.json` - local development values, including a LocalDB connection string
-- User Secrets - secrets and non-LocalDB credentials on a developer machine
+- `appsettings.Development.json` - local development values, including a PostgreSQL connection string
+- User Secrets - secrets and non-default credentials on a developer machine
 - Environment variables - secrets and overrides in deployed environments
 
 Set a secret connection string:
@@ -225,25 +226,25 @@ Production (non-Development) startup fails if
 
 ## Database
 
-EF Core is registered through `BillFoundryDbContext`. SQL Server is the
-default (`Database:Provider=SqlServer`). PostgreSQL is selected only when
-`Database:Provider=PostgreSql` for the hosted public demo.
+EF Core is registered through `BillFoundryDbContext`. PostgreSQL is the
+default (`Database:Provider=PostgreSql`). SQL Server is selected when
+`Database:Provider=SqlServer`.
 
 The context includes ASP.NET Core Identity, the installation organization
 profile, clients, the service catalog, estimates, invoices, invoice payments,
-document number sequences, and the business audit trail. Apply SQL Server
+document number sequences, and the business audit trail. Apply PostgreSQL
 migrations before first sign-in:
-
-```bash
-dotnet ef migrations add MigrationName --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
-dotnet ef database update --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
-```
-
-PostgreSQL demo migrations (do not mix with the SQL Server set):
 
 ```bash
 dotnet ef migrations add MigrationName --context BillFoundryPostgreSqlDbContext --output-dir Persistence/Migrations/PostgreSql --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
 dotnet ef database update --context BillFoundryPostgreSqlDbContext --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
+```
+
+SQL Server migrations (do not mix with the PostgreSQL set):
+
+```bash
+dotnet ef migrations add MigrationName --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
+dotnet ef database update --project src/BillFoundry.Infrastructure --startup-project src/BillFoundry.Web
 ```
 
 The Web project references `Microsoft.EntityFrameworkCore.Design` so the EF tools
@@ -261,7 +262,7 @@ gitignored. Do not place uploaded logos in `wwwroot`.
 
 ## Docker Compose
 
-`compose.yaml` runs BillFoundry and SQL Server 2022 for local container work.
+`compose.yaml` runs BillFoundry and PostgreSQL 16 for local container work.
 See [deployment.md](deployment.md) for image details, volumes, and health
 checks.
 
@@ -270,31 +271,22 @@ docker compose up --build
 ```
 
 The stack is **development only**. It sets `ASPNETCORE_ENVIRONMENT=Development`,
-applies pending migrations at startup, and uses the placeholder SA password
-`DevOnly_P@ssw0rd` unless you override `MSSQL_SA_PASSWORD` in a gitignored
-`.env` file (see `.env.example`). Open `http://localhost:8080` and sign in
-with the Development Identity seed accounts.
+applies pending migrations at startup, and uses the placeholder PostgreSQL
+password `DevOnly_P@ssw0rd` unless you override `POSTGRES_PASSWORD` in a
+gitignored `.env` file (see `.env.example`). Open `http://localhost:8080` and
+sign in with the Development Identity seed accounts.
 
-`docker compose down` stops containers and keeps the SQL volume.
+`docker compose down` stops containers and keeps the PostgreSQL volume.
 `docker compose down -v` deletes database data.
 
-To validate the Render PostgreSQL demo path, use the same two-file overlay
-pattern as `compose.demo.yaml`. The overlay **replaces** the SQL Server `db`
-service with Postgres; do not mix it with a running `docker compose up` SQL
-stack on the default project name:
+SQL Server alternative:
 
 ```bash
-docker compose -f compose.yaml -f compose.demo.postgres.yaml up --build
+docker compose -f compose.yaml -f compose.sqlserver.yaml up --build
 ```
 
-Standalone is equivalent when you are not layering demo flags onto
-`compose.yaml`:
-
-```bash
-docker compose -f compose.demo.postgres.yaml up --build
-```
-
-That stack listens on `http://localhost:8083` and Postgres on host port 5433.
+That overlay replaces the PostgreSQL `db` service with SQL Server 2022. Do not
+run it alongside a default `docker compose up` stack on host ports 8080/5432.
 
 ## Identity seed (Development)
 
@@ -304,7 +296,7 @@ development placeholders. Override them with User Secrets if you prefer not to
 use the committed Development values, and never use them in production.
 
 Seeding runs only when `IdentitySeed:Enabled` is true **and** the environment is
-Development. If SQL Server is unavailable, seed failure is logged and startup
+Development. If the database is unavailable, seed failure is logged and startup
 continues.
 
 ```bash
@@ -344,7 +336,7 @@ notification details.
 
 ## Health checks
 
-- `GET /health` - liveness. Does not contact SQL Server.
+- `GET /health` - liveness. Does not contact the database.
 - `GET /health/ready` - readiness, including an EF Core database check.
 
 Smoke tests use `/health` so they can run without a database. Unauthenticated
@@ -368,11 +360,12 @@ See [accessibility.md](accessibility.md) for the Community Edition review.
 ## Tests
 
 Test projects live under `tests/`. Integration tests reference the Web project
-and use `Microsoft.AspNetCore.Mvc.Testing`. They should not require SQL Server
-unless they specifically exercise database behavior. Organization, client,
-catalog, estimate, invoice, and payment persistence, concurrency, and constraint tests create a
-LocalDB database named `BillFoundry_IT_{guid}` and drop it when the fixture
-completes. Client, catalog, estimate, and invoice lists are queried with server-side
+and use `Microsoft.AspNetCore.Mvc.Testing`. They should not require a database
+unless they specifically exercise database behavior. SQL Server persistence
+tests create a LocalDB database named `BillFoundry_IT_{guid}` and drop it when
+the fixture completes. PostgreSQL persistence tests create
+`billfoundry_it_{guid}` when a server is reachable (Compose or
+`BILLFOUNDRY_TEST_POSTGRES`). Client, catalog, estimate, and invoice lists are queried with server-side
 search, status filtering, sorting, and paging.
 
 Estimate rounding, status transitions, and number allocation are documented in

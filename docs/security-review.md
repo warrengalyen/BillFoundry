@@ -87,7 +87,7 @@ requests from a TLS-terminating proxy mark the cookie Secure. Forcing
 - HTML error page shows a request id, not exception details
 - JSON errors use generic ProblemDetails titles
 - `/health` is anonymous and does not touch the database; `/health/ready`
-  is anonymous and checks SQL Server (needed for orchestrator probes)
+  is anonymous and checks the configured database (needed for orchestrator probes)
 
 ## Intentionally deferred
 
