@@ -8,10 +8,10 @@ public sealed class DatabaseOptions
     public const string ConnectionStringName = "BillFoundry";
 
     /// <summary>
-    /// Relational provider. Defaults to SQL Server. Set to PostgreSQL only for
-    /// the hosted public demo (for example <c>Database__Provider=PostgreSql</c>).
+    /// Relational provider. Defaults to PostgreSQL. Set
+    /// <c>Database__Provider=SqlServer</c> for the Microsoft database stack.
     /// </summary>
-    public DatabaseProvider Provider { get; init; } = DatabaseProvider.SqlServer;
+    public DatabaseProvider Provider { get; init; } = DatabaseProvider.PostgreSql;
 
     [Range(1, 300)]
     public int CommandTimeoutSeconds { get; init; } = 30;
