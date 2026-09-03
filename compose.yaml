@@ -1,7 +1,10 @@
-# Local BillFoundry + SQL Server environment.
+# Local BillFoundry + PostgreSQL environment (Community default).
 # DEVELOPMENT ONLY. Passwords below are placeholders, not production secrets.
 #
 #   docker compose up --build
+#
+# SQL Server alternative:
+#   docker compose -f compose.yaml -f compose.sqlserver.yaml up --build
 #
 # The web process applies pending EF Core migrations at startup because
 # Database__ApplyMigrationsOnStartup=true. That option never drops the database.
@@ -11,26 +14,21 @@ name: billfoundry
 
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:16
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_PID: Developer
-      # DEVELOPMENT ONLY. Override with MSSQL_SA_PASSWORD in a gitignored .env file.
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-DevOnly_P@ssw0rd}
+      POSTGRES_USER: billfoundry
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-DevOnly_P@ssw0rd}
+      POSTGRES_DB: billfoundry
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sql-data:/var/opt/mssql
+      - pg-data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" -b -o /dev/null || exit 1"
-        ]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U billfoundry -d billfoundry"]
+      interval: 5s
       timeout: 5s
       retries: 12
-      start_period: 40s
+      start_period: 10s
 
   web:
     build:
@@ -39,10 +37,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: "8080"
+      Database__Provider: PostgreSql
       Database__ApplyMigrationsOnStartup: "true"
       DataProtection__KeyPath: /app/data-protection-keys
       OrganizationLogoStorage__RootPath: /app/App_Data/organization-logos
-      ConnectionStrings__BillFoundry: "Server=db,1433;Database=BillFoundry;User Id=sa;Password=${MSSQL_SA_PASSWORD:-DevOnly_P@ssw0rd};TrustServerCertificate=True;MultipleActiveResultSets=True"
+      ConnectionStrings__BillFoundry: "Host=db;Port=5432;Database=billfoundry;Username=billfoundry;Password=${POSTGRES_PASSWORD:-DevOnly_P@ssw0rd};Timeout=30"
     ports:
       - "8080:8080"
     volumes:
@@ -59,6 +58,6 @@ services:
       start_period: 45s
 
 volumes:
-  sql-data:
+  pg-data:
   data-protection-keys:
   organization-logos:

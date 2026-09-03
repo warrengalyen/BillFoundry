@@ -1,5 +1,8 @@
-# Public demonstration overlay. Use with:
+# Public demonstration overlay. Use with the default PostgreSQL stack:
 #   docker compose -f compose.yaml -f compose.demo.yaml up --build
+#
+# Or with SQL Server:
+#   docker compose -f compose.yaml -f compose.sqlserver.yaml -f compose.demo.yaml up --build
 #
 # Production environment plus fictional demo seed. Identity development seed stays off.
 
