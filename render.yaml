@@ -1,9 +1,9 @@
 # BillFoundry public demo on Render
 # Dashboard: New → Blueprint → connect this repo
 #
-# SQL Server remains the Community default. This Blueprint is only the hosted
-# demo: one web service plus Render Postgres (Basic). Set Database__Provider to
-# PostgreSql. Do not put passwords in this file.
+# This Blueprint is the hosted public demo only: one web service plus Render
+# Postgres. It is not a provider-selection UI. Database__Provider is PostgreSql.
+# Do not put passwords in this file.
 
 services:
   - type: web

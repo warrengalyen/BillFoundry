@@ -1,10 +1,13 @@
 # Deployment
 
 BillFoundry Community Edition is a single ASP.NET Core app. Self-hosted
-Community installs use SQL Server. This document covers the production
-container image, the SQL Server Compose environment, and the Render public
-demo that uses managed PostgreSQL. It is not Kubernetes, Helm, or a
+Community installs use PostgreSQL by default, or SQL Server when configured.
+This document covers the production container image, local Compose, and the
+Render public demo (PostgreSQL only). It is not Kubernetes, Helm, or a
 service-mesh guide.
+
+For provider selection, connection strings, and migration commands, see
+[database.md](database.md).
 
 ## Production image
 
@@ -41,8 +44,8 @@ Put TLS on a reverse proxy. The container speaks HTTP.
 
 | Setting | Purpose |
 | --- | --- |
-| `ConnectionStrings__BillFoundry` | SQL Server or PostgreSQL connection string. Production startup fails if this is missing. |
-| `Database__Provider` | `SqlServer` (default) or `PostgreSql` (public Render demo only). |
+| `ConnectionStrings__BillFoundry` | PostgreSQL or SQL Server connection string. Production startup fails if this is missing. |
+| `Database__Provider` | `PostgreSql` (default) or `SqlServer`. The Render demo is PostgreSQL only. |
 | `DataProtection__KeyPath` | Directory for the data-protection key ring. Mount a volume. |
 | `OrganizationLogoStorage__RootPath` | Logo file root. Mount a volume if logos must survive recreates. |
 
@@ -74,7 +77,7 @@ The proxy must overwrite `X-Forwarded-For` and `X-Forwarded-Proto`. Cookie
 
 ## Local Compose
 
-`compose.yaml` is a **development** stack: the web app, SQL Server 2022, and
+`compose.yaml` is a **development** stack: the web app, PostgreSQL 16, and
 named volumes.
 
 ```bash
@@ -88,15 +91,16 @@ documented in [development.md](development.md) (`admin@localhost` /
 Compose sets:
 
 - `ASPNETCORE_ENVIRONMENT=Development` so Identity seed may run
+- `Database__Provider=PostgreSql`
 - `Database__ApplyMigrationsOnStartup=true` so pending migrations apply
-- SQL Server SA password `${MSSQL_SA_PASSWORD:-DevOnly_P@ssw0rd}`
+- PostgreSQL password `${POSTGRES_PASSWORD:-DevOnly_P@ssw0rd}`
 
 That password is a **development placeholder**. Copy `.env.example` to `.env`
 (gitignored) to override it. Do not use it in production.
 
 Volumes:
 
-- `sql-data` - SQL Server data files
+- `pg-data` - PostgreSQL data files
 - `data-protection-keys` - ASP.NET Core key ring
 - `organization-logos` - uploaded logos
 
@@ -111,13 +115,20 @@ docker compose down
 docker compose up
 ```
 
-`docker compose down -v` **deletes** the SQL volume. That is destructive and
+`docker compose down -v` **deletes** the PostgreSQL volume. That is destructive and
 is not part of normal restart.
 
-### SQL Server client port
+### SQL Server overlay
 
-Compose publishes `1433` for local tools. The SA password is the Compose
-placeholder unless `.env` overrides it.
+```bash
+docker compose -f compose.yaml -f compose.sqlserver.yaml up --build
+```
+
+The overlay replaces PostgreSQL with SQL Server 2022, sets
+`Database__Provider=SqlServer`, and publishes host port `1433`. It uses a
+separate Compose project name so PostgreSQL volumes are not reused. The SA
+password is `${MSSQL_SA_PASSWORD:-DevOnly_P@ssw0rd}`. Do not run it at the
+same time as the default PostgreSQL stack on port 8080.
 
 ## Public demo Compose overlay
 
@@ -129,27 +140,14 @@ docker compose -f compose.yaml -f compose.demo.yaml up --build
 
 The overlay sets Production, enables Demo Mode, enables demo seed with
 `DemoSeed__ResetOnStartup=true`, and keeps Identity development seed off.
-All seeded business data is fictional. That overlay still uses SQL Server.
+All seeded business data is fictional. That overlay uses the default
+PostgreSQL database.
 
-## Local PostgreSQL demo validation
-
-`compose.demo.postgres.yaml` overlays `compose.yaml` and **replaces** SQL
-Server with Postgres for checking the Render database path. Use the same
-two-file command as `compose.demo.yaml`:
+SQL Server demo (optional, not the hosted public demo):
 
 ```bash
-docker compose -f compose.yaml -f compose.demo.postgres.yaml up --build
+docker compose -f compose.yaml -f compose.sqlserver.yaml -f compose.demo.yaml up --build
 ```
-
-Standalone (`docker compose -f compose.demo.postgres.yaml up --build`) is
-the same stack. Do not leave a SQL Server Compose project running on host
-port 1433/8080 and expect this overlay to share those containers.
-
-Then open `http://localhost:8083`. The web process sets
-`Database__Provider=PostgreSql`, applies the PostgreSQL migration set at
-startup, and loads fictional demo seed. Postgres is published on host port
-**5433**. Integration tests use that port when `BILLFOUNDRY_TEST_POSTGRES` is
-unset.
 
 ## Public demo on Render
 
@@ -195,4 +193,4 @@ Render's web health check uses `/health`.
 
 Kubernetes, Helm, service mesh, Redis, and generic cloud ingress controllers
 are out of scope for this Community Edition host. The Render Blueprint is only
-the public demo stack. PostgreSQL is not a second Community default database.
+the public demo stack and is PostgreSQL-only.
