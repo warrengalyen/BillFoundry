@@ -5,13 +5,13 @@ using Npgsql;
 namespace BillFoundry.IntegrationTests;
 
 /// <summary>
-/// Isolated PostgreSQL database for Render-demo workflow tests. Skips when a
+/// Isolated PostgreSQL database for Community persistence tests. Skips when a
 /// server is not reachable (Windows CI uses LocalDB and does not start Postgres).
 /// </summary>
 public sealed class PostgreSqlFixture : IAsyncLifetime
 {
     public const string DefaultAdminConnectionString =
-        "Host=127.0.0.1;Port=5433;Database=postgres;Username=billfoundry;Password=DevOnly_P@ssw0rd";
+        "Host=127.0.0.1;Port=5432;Database=postgres;Username=billfoundry;Password=DevOnly_P@ssw0rd";
 
     public bool IsAvailable { get; private set; }
 

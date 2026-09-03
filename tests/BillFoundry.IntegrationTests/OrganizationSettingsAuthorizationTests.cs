@@ -164,6 +164,7 @@ internal sealed class SqlAuthenticatedWebApplicationFactory : AuthenticatedWebAp
     {
         base.ConfigureWebHost(builder);
         builder.UseSetting("ConnectionStrings:BillFoundry", _sql.ConnectionString);
+        builder.UseSetting("Database:Provider", "SqlServer");
         builder.UseSetting("OrganizationLogoStorage:RootPath", _sql.LogoRoot);
         builder.UseSetting("IdentitySeed:Enabled", "false");
     }
