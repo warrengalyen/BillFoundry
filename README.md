@@ -178,6 +178,8 @@ clients or published demo passwords.
 
 ## Live demo
 
+Try the hosted public demo at [billfoundry.mechanikadesign.com](https://billfoundry.mechanikadesign.com).
+
 When Demo Mode is on, `/` explains the product and how to sign in. Published
 accounts:
 

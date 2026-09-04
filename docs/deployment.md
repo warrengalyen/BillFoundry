@@ -167,7 +167,7 @@ Required non-secret environment values are in the Blueprint:
 
 - `Database__Provider=PostgreSql`
 - `Database__ApplyMigrationsOnStartup=true`
-- `ConnectionStrings__BillFoundry` from the Postgres `connectionString`
+- `ConnectionStrings__BillFoundry` from the Postgres `connectionString` (a `postgres://` URL; the app converts it to Npgsql keyword-value form at startup)
 - Demo Mode and demo seed with reset on startup
 - `ForwardedHeaders__Enabled=true`
 - `ASPNETCORE_ENVIRONMENT=Production`
