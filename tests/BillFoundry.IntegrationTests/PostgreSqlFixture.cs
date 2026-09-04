@@ -11,7 +11,7 @@ namespace BillFoundry.IntegrationTests;
 public sealed class PostgreSqlFixture : IAsyncLifetime
 {
     public const string DefaultAdminConnectionString =
-        "Host=127.0.0.1;Port=5432;Database=postgres;Username=billfoundry;Password=DevOnly_P@ssw0rd";
+        "Host=127.0.0.1;Port=5433;Database=postgres;Username=billfoundry;Password=DevOnly_P@ssw0rd;SSL Mode=Disable";
 
     public bool IsAvailable { get; private set; }
 
@@ -49,9 +49,15 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
             await db.Database.MigrateAsync();
             IsAvailable = true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             IsAvailable = false;
+            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BILLFOUNDRY_TEST_POSTGRES")))
+            {
+                throw new InvalidOperationException(
+                    "BILLFOUNDRY_TEST_POSTGRES is set but PostgreSQL did not accept a connection.",
+                    ex);
+            }
         }
     }
 

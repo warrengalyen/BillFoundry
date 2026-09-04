@@ -95,6 +95,10 @@ Compose sets:
 - `Database__ApplyMigrationsOnStartup=true` so pending migrations apply
 - PostgreSQL password `${POSTGRES_PASSWORD:-DevOnly_P@ssw0rd}`
 
+Host port **5433** maps to Postgres 5432 in the container so a local
+PostgreSQL install on 5432 is left alone. Inside the Compose network the
+database is still `db:5432`.
+
 That password is a **development placeholder**. Copy `.env.example` to `.env`
 (gitignored) to override it. Do not use it in production.
 

@@ -41,7 +41,7 @@ source of truth.
 Do not iterate on CSS against `docker compose` web. Compose publishes a
 Release image; `app.css` is copied at build time and will not pick up editor
 saves. Leave PostgreSQL in Compose if you want (`docker compose up db -d`) and
-point the connection string at `localhost:5432`, or use SQL Server LocalDB
+point the connection string at `localhost:5433`, or use SQL Server LocalDB
 with `Database:Provider=SqlServer`.
 
 Scoped CSS (`*.razor.css`) still goes through the Blazor bundle. Those files
@@ -286,7 +286,7 @@ docker compose -f compose.yaml -f compose.sqlserver.yaml up --build
 ```
 
 That overlay replaces the PostgreSQL `db` service with SQL Server 2022. Do not
-run it alongside a default `docker compose up` stack on host ports 8080/5432.
+run it alongside a default `docker compose up` stack on host ports 8080/5433.
 
 ## Identity seed (Development)
 

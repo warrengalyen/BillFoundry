@@ -12,7 +12,7 @@ internal sealed class BillFoundryPostgreSqlDbContextFactory
     public BillFoundryPostgreSqlDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<BillFoundryPostgreSqlDbContext>()
-            .UseNpgsql("Host=127.0.0.1;Port=5432;Database=billfoundry;Username=billfoundry;Password=unused")
+            .UseNpgsql("Host=127.0.0.1;Port=5433;Database=billfoundry;Username=billfoundry;Password=unused")
             .Options;
         return new BillFoundryPostgreSqlDbContext(options);
     }

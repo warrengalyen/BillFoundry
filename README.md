@@ -100,7 +100,7 @@ dotnet user-secrets set "ConnectionStrings:BillFoundry" "YOUR_CONNECTION_STRING"
 
 The equivalent environment variable is `ConnectionStrings__BillFoundry`.
 Non-secret defaults live in `src/BillFoundry.Web/appsettings.json`. PostgreSQL
-on `localhost:5432` is configured in `appsettings.Development.json`.
+on `localhost:5433` is configured in `appsettings.Development.json`.
 
 Apply the PostgreSQL schema with:
 

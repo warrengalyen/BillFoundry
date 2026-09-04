@@ -30,7 +30,7 @@ recreates the database.
 ## Engine
 
 - PostgreSQL is the Community default (Compose `postgres:16`, development
-  connection on `localhost:5432`)
+  connection on host port `5433`)
 - SQL Server remains fully supported (LocalDB for Windows CI and optional
   local work, SQL Server 2022 via `compose.sqlserver.yaml`)
 - Money as `decimal` (typically `decimal(19,4)` for unit prices and
@@ -58,7 +58,7 @@ PostgreSQL:
 
 ```text
 Database__Provider=PostgreSql
-ConnectionStrings__BillFoundry=Host=127.0.0.1;Port=5432;Database=billfoundry;Username=billfoundry;Password=DevOnly_P@ssw0rd
+ConnectionStrings__BillFoundry=Host=127.0.0.1;Port=5433;Database=billfoundry;Username=billfoundry;Password=DevOnly_P@ssw0rd
 ```
 
 SQL Server:
@@ -106,8 +106,8 @@ estimates and invoices are seeded so allocation can lock a row.
 
 ## Environments
 
-- Development: PostgreSQL database `billfoundry` on `localhost:5432` unless you
-  override the connection string and provider
+- Development: PostgreSQL database `billfoundry` on `localhost:5433` (Compose
+  host mapping) unless you override the connection string and provider
 - Integration tests: PostgreSQL `billfoundry_it_{guid}` when a server is
   reachable; SQL Server LocalDB `BillFoundry_IT_{guid}` on Windows CI
 - Compose: PostgreSQL `billfoundry` on the `db` service (`docker compose up`)

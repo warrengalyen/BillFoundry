@@ -17,8 +17,8 @@ tests that touch persistence use LocalDB and create an isolated database per
 fixture.
 
 PostgreSQL persistence workflows live in `PostgreSqlPersistenceTests`. They
-require a reachable Postgres server (`docker compose up db` or
-`BILLFOUNDRY_TEST_POSTGRES`). They skip when that server is not available
+require a reachable Postgres server (`docker compose up db` on host port 5433,
+or `BILLFOUNDRY_TEST_POSTGRES`). They skip when that server is not available
 unless the environment variable is set (then they fail). Do not use EF Core
 InMemory for those tests.
 
